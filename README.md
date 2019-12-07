@@ -3,6 +3,8 @@ Reads and writes data (e.g. power, mode, fan status etc.) from/to a Mitsubishi H
 air conditioner (AC) via SPI controlled by MQTT. The AC is the SPI master and the ESP8266 is the SPI slave.
 The program has a draft status and your input is welcome.
 
+![IoT MQTT Panel](/images/IoT-MQTT-Panel.jpg)
+
 # Attention:
 You have to open the indoor unit to have access to the SPI. Opening of the indoor unit should be done by 
 a qualified professional because faulty handling may cause leakage of water, electric shock or fire!
