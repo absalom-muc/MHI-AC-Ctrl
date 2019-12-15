@@ -5,8 +5,10 @@ You have to adapt the server (broker) name and the port if needed in the row:
 ```MQTTclient.setServer("ds218p", 1883);```
 
 # MQTT topic
-The topic consists for reads of the root name (MQTT_PREFIX) and function (e.g. MHI-AC-Ctrl/Power).
-For writes it consists of the root name (MQTT_PREFIX), the prefix for set commands (MQTT_SET_PREFIX) and function (e.g. MHI-AC-Ctrl/set/Power).
+The topic consists for reads of the root name (MQTT_PREFIX) and function (e.g. MHI-AC-Ctrl/Power)
+
+For writes it consists of the root name (MQTT_PREFIX), the prefix for set commands (MQTT_SET_PREFIX) and function (e.g. MHI-AC-Ctrl/set/Power)
+
 You can change MQTT_PREFIX and MQTT_SET_PREFIX in the program, per default it is
 
 ```
@@ -14,7 +16,8 @@ You can change MQTT_PREFIX and MQTT_SET_PREFIX in the program, per default it is
 #define MQTT_SET_PREFIX "set/"
 ```
 
-The following data topics/messages are available (prefix is not listed). They are only published when there is a change of the message.
+With the default prefixes, the following data topics/messages are available (prefix is not listed)
+They are only published when there is a change of the message.
 
 topic|r/w|value|comment
 ---|---|---|---
@@ -25,8 +28,9 @@ Fan|r/w|1 ... 4|Fan level
 Vanes|r/w|1 ... 5|Vanes up/down position
 Troom|r|0 ... 35|Room temperature (float) in °C.
 Toutside|r|-23.5 ... 40.25|Outdoor temperature (float) in °C
+Errorcode|r|0 .. 255|error code (unsigned int)
 
-Additionally the following control topics/messages are available:
+Additionally, the following control topics/messages are available:
 
 topic | r/w| value |comment
 ---|---|---|---
@@ -34,7 +38,7 @@ connected|r|0, 1|ESP8266 connection status to broker
 synced|r|0, 1|synchronization to SPI rx frame
 runtime|r|0 ... (2^32 - 1)/1000|seconds since start (unsigned long)
 raw|r||raw data *1)
-cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feeback for last set command
+cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feedback for last set command
 
 *1) The raw data are a array of 43 bytes. The following table shows the structure. The raw data are only published when there is change of the data:
 

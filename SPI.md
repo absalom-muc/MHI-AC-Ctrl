@@ -245,13 +245,16 @@ The same coding is used for setting Vanes. The set bit in the MISO frame is DB0[
 
 
 ### Room temperature (read only)
-The room temperature is coded in MOSI DB3[7:0] according to the  formula T[°C]=(DB3[7:0]-61)/4
+The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
 The resolution is 0.25°C.
 
 ### Temperature setpoint
 The temperature setpoint is coded in MOSI DB2[6:0] according to the formula T[°C]=DB2[6:0]/2
 The resolution of 0.5°C is supported by the wired remote control [RC-E5](https://www.mhi-mth.co.jp/en/products/pdf/pjz012a087b_german.pdf). The IR remote control supports a resolution of 1°C only.
 The same coding is used for setting the temperature. The set bit in the MISO frame is DB2[7].
+
+### Error code
+The Error code is coded in MOSI DB4[7:0]. It is a number between 0 ... 255. 0 means no error. I've so far not checked if the error code here is consistent with the error numbers in the AC user manual.
 
 ## Checksum
 The checksum is calculated by the sum of the signature bytes plus the databytes. The low byte of the checksum is stored at byte position 18 and the low byte of the checksum is stored at byte position 19. Maximum value of the checksum is 0x0fe1. Therefore bit [7:4] of the checksum high byte is always 0.
@@ -271,11 +274,11 @@ Fan|DB1[3] and DB6[4] for Fan=4
 Vanes|DB0[7]
 Tsetpoint|DB2[7]
 
-When writing the corresonding bit in the MOSI frame is set. It seems that it is only cleared when the IR remote control ia used.
+When writing the corresponding bit in the MOSI frame is set. It seems that it is only cleared when the IR remote control is used.
 
 ## Variants
 **The following chapter is in draft status!**
-Different variants were seen when using the commercial wired RC. The MISO frame (data from RC to MHI-AC) requests data. The variant of the data is identified via MISO-db9. MHI-AC answers with the same value in MOSI-db9 (but only when bit2 of MISO-db14 is set).
+Different variants were seen when using the commercial wired RC. The MISO frame (data from RC to MHI-AC) requests data. The variant of the data is identified via MISO-DB9. MHI-AC answers with the same value in MOSI-DB9 (but only when bit2 of MISO-DB14 is set).
 
 The following screenshot shows some SPI traffic:
 ![MISO MOSI traffic](/images/MISO-MOSI_1.JPG)
@@ -293,5 +296,5 @@ MISO-DB9	| Variant | MOSI
 note: the numbering of the variants 0..2 is reused from [rjdekker's code here](https://raw.githubusercontent.com/rjdekker/MHI2MQTT/master/src/MHI-SPI2ESP.ino)
 
 ## Unknown
-In the MOSI frame are more information coded than known for me. E.g. the error code, fan active, outdoor fan active, compressor active etc.
+In the MOSI frame are more information coded than known for me. E.g. fan active, outdoor fan active, compressor active etc.
 I hope that you support to close the gaps.

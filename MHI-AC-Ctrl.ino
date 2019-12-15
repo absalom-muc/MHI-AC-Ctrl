@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl v1.0 by absalom-muc
+// MHI-AC-Ctrl v1.1 by absalom-muc
 // read + write data via SPI controlled by MQTT
 
 #include <ESP8266WiFi.h>
@@ -12,7 +12,7 @@
 #define MQTT_SET_PREFIX "set/"
 
 const char* ssid = "**********";
-const char* password = "************";
+const char* password = "**********";
 const char* hostname = "MHI-AC-Ctrl";
 WiFiClient espClient;
 PubSubClient MQTTclient(espClient);
@@ -20,7 +20,6 @@ PubSubClient MQTTclient(espClient);
 bool sync = 0;
 uint8_t rx_SPIframe[20];
 
-// constants for tx and rx frames
 #define SB0 0
 #define SB1 SB0 + 1
 #define SB2 SB0 + 2
@@ -28,6 +27,7 @@ uint8_t rx_SPIframe[20];
 #define DB1 SB2 + 2
 #define DB2 SB2 + 3
 #define DB3 SB2 + 4
+#define DB4 SB2 + 5
 #define DB6 SB2 + 7
 #define DB9 SB2 + 10
 #define DB11 SB2 + 12
@@ -75,6 +75,7 @@ void setupOTA() {
 }
 
 void MQTTreconnect() {
+  unsigned long runtimeMillisMQTT;
   Serial.println("MQTTreconnect");
   while (!MQTTclient.connected()) { // Loop until we're reconnected
     update_sync(false);
@@ -91,8 +92,11 @@ void MQTTreconnect() {
       Serial.print("failed, rc=");
       Serial.print(MQTTclient.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      runtimeMillisMQTT = millis();
+      while (millis() - runtimeMillisMQTT > 5000) { // Wait 5 seconds before retrying
+        delay(0);
+        ArduinoOTA.handle();
+      }
     }
   }
 }
@@ -227,20 +231,25 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  setupOTA();
   Serial.printf(" connected to %s, IP address: %s\n", ssid, WiFi.localIP().toString().c_str());
   MQTTclient.setServer("ds218p", 1883);
   MQTTclient.setCallback(MQTT_subscribe_callback);
   MQTTreconnect();
-  setupOTA();
 }
 
 //                           sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
 byte tx_SPIframe[20]   =  { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04, 0x05, 0xF5 };
+//const byte frameVariant[3][8]  {                                                { 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04 },  //variant number 0
+//                                                                                { 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
+//                                                                                { 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }}; //variant number 2
 const byte frameVariant[3][9]  {                                                { 0x40, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04 },  //variant number 0
-                                                                                { 0x80, 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
-                                                                                { 0x80, 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }
-};
-
+  { 0x80, 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
+  { 0x80, 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }
+}; //variant number 2
+//const byte frameVariant[3][6]  {                                                                   { 0x80, 0xFF, 0xFF, 0x00, 0x0F, 0x04 },  //variant number 0
+//                                                                                                   { 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
+//                                                                                                   { 0xF1, 0xF7, 0xFF, 0x00, 0x0F, 0x04 }}; //variant number 2
 uint16_t calc_tx_checksum() {
   uint16_t checksum = 0;
   for (int i = 0; i < CBH; i++)
@@ -254,6 +263,7 @@ void loop() {
   uint8_t power_old = 0xff;
   uint8_t mode_old = 0xff;
   uint8_t mosi_db3_old = 0xff;
+  uint8_t mosi_db4_old = 0xff;
   uint8_t mosi_db11_old = 0xff;
   uint8_t tsetpoint_old = 0xff;
   char strtmp[10]; // for the MQTT strings to send
@@ -268,6 +278,7 @@ void loop() {
   uint8_t variantnumber = 0;
   uint8_t doubleframe = 1;
   uint8_t frame = 1;
+
 
   while (1) {
 
@@ -289,6 +300,9 @@ void loop() {
       if (doubleframe % 2) {
         variantnumber = (variantnumber + 1) % 3;
         memcpy(&tx_SPIframe[DB6], &frameVariant[variantnumber][0], 9);
+        //memcpy(&tx_SPIframe[10], &frameVariant[variantnumber][0], 8);
+        //memcpy(&tx_SPIframe[12], &frameVariant[variantnumber][0], 6);
+
         tx_SPIframe[DB0] = 0;
         tx_SPIframe[DB1] = 0;
         tx_SPIframe[DB2] = 0;
@@ -335,10 +349,10 @@ void loop() {
 
     new_datapacket_received = false;
     uint16_t rx_checksum = 0;
-    for (int byte_cnt = 0; byte_cnt < 20; byte_cnt++) { // read+write 1 data packet of 20 bytes
+    for (uint8_t byte_cnt = 0; byte_cnt < 20; byte_cnt++) { // read+write 1 data packet of 20 bytes
       payload_byte = 0;
       byte bit_mask = 1;
-      for (int i = 0; i < 8; i++) { // read 1 byte
+      for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read 1 byte
         while (digitalRead(SCK)) {} // wait for falling edge
         if ((tx_SPIframe[byte_cnt] & bit_mask) > 0)
           digitalWrite(MISO, 1);
@@ -464,6 +478,12 @@ void loop() {
           tsetpoint_old = (rx_SPIframe[DB2] & 0x7f) >> 1;
           itoa(tsetpoint_old, strtmp, 10);
           MQTTclient.publish(MQTT_PREFIX "Tsetpoint", strtmp, true);
+        }
+
+        if (rx_SPIframe[DB4] != mosi_db4_old) { // error code
+          mosi_db4_old = rx_SPIframe[DB4];
+          itoa(mosi_db4_old, strtmp, 10);
+          MQTTclient.publish(MQTT_PREFIX "Errorcode", strtmp, true);
         }
 
         if (rx_SPIframe[DB9] == 0x80) { // indicates variant 0 => outdoor temperature
