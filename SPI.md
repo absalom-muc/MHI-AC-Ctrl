@@ -191,12 +191,18 @@ But for setting Fan=4 DB6[4], not DB6[6] of the MISO frame is used:
 </table>
 
 ### Vanes
-The vanes up/down level is coded in MOSI DB1[5:4] and in DB0[6].
+Vanes up/down swing is enabled in DB0[7]. When vanes up/down swing is disabled the vanes up/down position in MOSI DB1[5:4] is used. 
+
+DB0	| Function
+---- | -----
+Bit 7| vanes up/down swing
+0 | off
+1 | on
+
 <table style="width: 273px; height: 68px;">
 <thead>
 <tr>
 <td style="width: 66.9667px;" colspan="2"><strong>DB1</strong></td>
-<td style="width: 66.9667px;"><strong>DB0</strong></td>
 <td style="width: 66.9667px;"><strong>Function</strong></td>
 </tr>
 </thead>
@@ -204,45 +210,37 @@ The vanes up/down level is coded in MOSI DB1[5:4] and in DB0[6].
 <tr>
 <td style="width: 66.9667px;">bit 5</td>
 <td style="width: 71.4333px;">bit 4</td>
-<td style="width: 66.9667px;">bit 6</td>
-<td style="width: 66.9667px;">Vanes (up/down)</td>
+<td style="width: 66.9667px;">Vanes up/down position</td>
 </tr>
 <tr>
 <td style="width: 66.9667px;">0</td>
 <td style="width: 71.4333px;">0</td>
-<td style="width: 66.9667px;">0</td>
 <td style="width: 66.9667px;">1</td>
 </tr>
 <tr>
 <td style="width: 66.9667px;">0</td>
 <td style="width: 71.4333px;">1</td>
-<td style="width: 66.9667px;">0</td>
 <td style="width: 66.9667px;">2</td>
 </tr>
 <tr>
 <td style="width: 66.9667px;">1</td>
 <td style="width: 71.4333px;">0</td>
-<td style="width: 66.9667px;">0</td>
 <td style="width: 66.9667px;">3</td>
 </tr>
 <tr>
 <td style="width: 66.9667px;">1</td>
 <td style="width: 71.4333px;">1</td>
-<td style="width: 66.9667px;">0</td>
 <td style="width: 66.9667px;">4</td>
-</tr>
-<tr>
-<td style="width: 66.9667px;">x</td>
-<td style="width: 71.4333px;">x</td>
-<td style="width: 66.9667px;">1</td>
-<td style="width: 66.9667px;">swing</td>
 </tr>
 </tbody>
 </table>
-Vanes status is not updated when using IR remote control!
 
-The same coding is used for setting Vanes. The set bit in the MISO frame is DB0[7].
+note: Vanes status is not updated when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
 
+The same coding is used for setting vanes.
+The set bit for enabling vanes up/down swing in the MISO frame is DB0[7].
+The set bit for vanes up/down position in the MISO frame is DB1[7].
+Swing is disabled when a new postion is set via DB1.
 
 ### Room temperature (read only)
 The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
@@ -289,9 +287,9 @@ MISO-DB9	| Variant | MOSI
 ---- | ----- | -----
 0xff| default | default when no SPI RC is connected or no 'special' data are requested
 0x80| 0 | DB9=0x80, DB10=0x10, Outdoor temperature: T[°C]=(DB11[7:0]-94)/4 (formula is not finally confirmed). It is rarely possible that DB10=0x20, then DB11 doesn't represent the room temperature. This case is so far not considered in the SW.
+0x80| 0 | DB9=0xd2, DB10=0x10, rarely seen during heating - meaning unclear
 0x32| 1 | DB9=0x32, DB10=0x49, DB11=0x02 - meaning unclear
 0xf1| 2 | DB9=0xf1, DB10=0x17, DB11=0x06 - meaning unclear
-0xd2| 3 | DB9=0xd2, DB10=?, DB11=?, only seen once during heating
 
 note: the numbering of the variants 0..2 is reused from [rjdekker's code here](https://raw.githubusercontent.com/rjdekker/MHI2MQTT/master/src/MHI-SPI2ESP.ino)
 
