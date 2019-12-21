@@ -8,6 +8,9 @@
 
 You find the eagle schematic and the PCB in the [eagle folder](/eagle).
 
+## Assembled PCB
+![Assembled PCB](/images/Assembled-PCB.jpg)
+
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2 mm (0.079''). It is out of the [PH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=199). You can buy 1:1 cables or cables with interchanged conncections. **I strongly recommend that you use a voltage meter to find out where the +12V is located before you connect the PCB to your AC.** The position of the connector is visible on the following photo of the indoor unit PCB.
 ![Indoor PCSchematicB](/images/SRK-PCB.jpg)
