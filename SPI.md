@@ -23,9 +23,9 @@ In the ESP8266 and in the description mainly the short names are used.
 
 raw byte # | long name | short name
 ---- | ---- | ----
-0|signature byte | SB0
-1|signature byte | SB1
-2|signature byte | SB2
+0|signature byte 0| SB0
+1|signature byte 1| SB1
+2|signature byte 2| SB2
 3|data byte 0| DB0
 4|data byte 1| DB1
 5|data byte 2| DB2
@@ -57,7 +57,7 @@ The MOSI signature bytes indicate the start of a frame with the 3 bytes 0x6c, 0x
 The usual MISO frame has the signature 0xa9, 0x00, 0x07. (During start of the Intesis remote control once the signature 0x53, 0x80, 0x00 with DB13=0x0f and all other data bytes equal 0x00 is used. The meaning is unclear)
 
 ## Data
-The following clauses describe the MOSI/MISO decoding for power, mode, fan, vanes, temperature setpoint and room/outdoor temperature
+The following clauses describe the MOSI/MISO decoding for power, mode, fan, vanes, temperature setpoint and room/outdoor temperature.
 ### Power
 Power status is coded in MOSI DB0[0].
 
@@ -236,11 +236,12 @@ Bit 7| vanes up/down swing
 </table>
 
 note: Vanes status is not updated when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
+The latest vanes status is only visible when MOSI DB0[7]=1 or MOSI DB1[7]=1.
 
 The same coding is used for setting vanes.
 The set bit for enabling vanes up/down swing in the MISO frame is DB0[7].
 The set bit for vanes up/down position in the MISO frame is DB1[7].
-Swing is disabled when a new postion is set via DB1.
+Swing is disabled when a new postion is set via DB1. When MISO DB0[7]=1 and MISO DB1[7]=1 the new position is stored and swing is enabled.
 
 ### Room temperature (read only)
 The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
@@ -251,10 +252,10 @@ The temperature setpoint is coded in MOSI DB2[6:0] according to the formula T[°
 The resolution of 0.5°C is supported by the wired remote control [RC-E5](https://www.mhi-mth.co.jp/en/products/pdf/pjz012a087b_german.pdf). The IR remote control supports a resolution of 1°C only.
 The same coding is used for setting the temperature. The set bit in the MISO frame is DB2[7].
 
-### Error code
+### Error code (read only)
 The Error code is coded in MOSI DB4[7:0]. It is a number between 0 ... 255. 0 means no error. I've so far not checked if the error code here is consistent with the error numbers in the AC user manual.
 
-## Checksum
+## Checksum (read only)
 The checksum is calculated by the sum of the signature bytes plus the databytes. The low byte of the checksum is stored at byte position 18 and the low byte of the checksum is stored at byte position 19. Maximum value of the checksum is 0x0fe1. Therefore bit [7:4] of the checksum high byte is always 0.
 checksum = sum(SB0:SB2) + sum(DB0:DB14)
 CBH = checksum[11:8]
