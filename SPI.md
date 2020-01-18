@@ -189,13 +189,14 @@ But for setting Fan=4 DB6[4], not DB6[6] of the MISO frame is used:
 </tr>
 </tbody>
 </table>
+note: With the IR remote control you can select "auto" for the fan. But this is not reflected by the SPI payload.
 
 ### Vanes
-Vanes up/down swing is enabled in DB0[7]. When vanes up/down swing is disabled the vanes up/down position in MOSI DB1[5:4] is used. 
+Vanes up/down swing is enabled in DB0[6]. When vanes up/down swing is disabled the vanes up/down position in MOSI DB1[5:4] is used. 
 
 DB0	| Function
 ---- | -----
-Bit 7| vanes up/down swing
+Bit 6| vanes up/down swing
 0 | off
 1 | on
 
@@ -235,13 +236,13 @@ Bit 7| vanes up/down swing
 </tbody>
 </table>
 
-note: Vanes status is not updated when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
+note: Vanes status is not applicable when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
 The latest vanes status is only visible when MOSI DB0[7]=1 or MOSI DB1[7]=1.
 
 The same coding is used for setting vanes.
 The set bit for enabling vanes up/down swing in the MISO frame is DB0[7].
 The set bit for vanes up/down position in the MISO frame is DB1[7].
-Swing is disabled when a new postion is set via DB1. When MISO DB0[7]=1 and MISO DB1[7]=1 the new position is stored and swing is enabled.
+Swing is disabled when a new position is set via DB1. When MISO DB0[7]=1 and MISO DB1[7]=1 the new position is stored and swing is enabled.
 
 ### Room temperature (read only)
 The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
@@ -263,17 +264,18 @@ CBL = checksum[7:0]
 
 
 ## Settings
-For writing MHI-AC - depending on the function - a specific MISO set bit is used:
+For writing MHI-AC - depending on the function - a specific MISO set-bit is used:
 
-function | set bit
+function | set-bit
 ---- | ----
 Power|DB0[1]
 Mode|DB0[5]
 Fan|DB1[3] and DB6[4] for Fan=4
-Vanes|DB0[7]
+Vanes|DB0[7] for swing and DB1[7] for up/down position
 Tsetpoint|DB2[7]
 
-When writing the corresponding bit in the MOSI frame is set. It seems that it is only cleared when the IR remote control is used.
+Once a set-bit is set to 1, the according bit in the MOSI frame becomes and remains '1' until the IR remote control is used.
+All set-bits are cleared when the IR remote control is used. Settings can be done independent from the power state.
 
 ## Variants
 **The following chapter is in draft status!**
@@ -282,18 +284,24 @@ Different variants were seen when using the commercial wired RC. The MISO frame 
 The following screenshot shows some SPI traffic:
 ![MISO MOSI traffic](/images/MISO-MOSI_1.JPG)
 
-In the marked row MISO-DB9=0x80 and MISO-DB14[2] is set, so variant 0 is selected. MOSI-DB9=0x80 indicates that the outdoor temperature is coded in MOSI-DB11.
+In the marked row MISO-DB9=0x80 and MISO-DB14[2] is set, so variant 0 is selected. MOSI-DB9=0x80 together with MOSI-DB10=0x10 indicate that the outdoor temperature is coded in MOSI-DB11.
 
-MISO-DB9	| Variant | MOSI
----- | ----- | -----
-0xff| default | default when no SPI RC is connected or no 'special' data are requested
-0x80| 0 | DB9=0x80, DB10=0x10, Outdoor temperature: T[°C]=(DB11[7:0]-94)/4 (formula is not finally confirmed). It is rarely possible that DB10=0x20, then DB11 doesn't represent the room temperature. This case is so far not considered in the SW.
-0x80| 0 | DB9=0xd2, DB10=0x10, rarely seen during heating - meaning unclear
-0x32| 1 | DB9=0x32, DB10=0x49, DB11=0x02 - meaning unclear
-0xf1| 2 | DB9=0xf1, DB10=0x17, DB11=0x06 - meaning unclear
+
+The following table shows the known variant information (consider MISO-DB14[2] is set). 
+
+MISO-DB9|MISO-DB10|MISO-DB10|Variant|MOSI-DB9|MOSI-DB10|MOSI-DB10|Meaning
+--------|---------|---------|-------|--------|---------|---------|   
+0x00|0x00|0x00|Default|?|?|?|When no SPI RC is connected or no 'special' data are requested.
+0x80|0xff|0xff|0|0x80|0x10|Outdoor temperature|T[°C]=(DB11[7:0]-94)/4 (formula is not finally confirmed).
+0x80|0xff|0xff|0|0x80|0x20|?|unknown
+0x80|0xff|0xff|0|0xd2|0x10|0x01|unknown (rarely seen during heating)
+0x32|0xd6|0x01|1|0x32|0x49|0x02|unknown
+0xf1|0xf7|0xff|2|0xf1|0x17|0x06|unknown
 
 note: the numbering of the variants 0..2 is reused from [rjdekker's code here](https://raw.githubusercontent.com/rjdekker/MHI2MQTT/master/src/MHI-SPI2ESP.ino)
 
 ## Unknown
-In the MOSI frame are more information coded than known for me. E.g. fan active, outdoor fan active, compressor active etc.
-I hope that you support to close the gaps.
+In the SPI frames are more information coded than known for me. E.g. fan active, outdoor fan active, compressor active etc.
+In MOSI-DB13 some bits seem to represent the status of the outdoor unit.
+
+I would appreciate your support to close the gaps.

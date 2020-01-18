@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl v1.1 by absalom-muc
+// MHI-AC-Ctrl v1.2 by absalom-muc
 // read + write data via SPI controlled by MQTT
 
 #include <ESP8266WiFi.h>
@@ -8,17 +8,22 @@
 #define SCK 14
 #define MOSI 13
 #define MISO 12
+
+#define MQTT_SERVER "ds218p"
+#define MQTT_PORT 1883
 #define MQTT_PREFIX "MHI-AC-Ctrl/"
-#define MQTT_SET_PREFIX "set/"
+#define MQTT_SET_PREFIX MQTT_PREFIX "set/"
 
 const char* ssid = "**********";
 const char* password = "**********";
 const char* hostname = "MHI-AC-Ctrl";
+
 WiFiClient espClient;
 PubSubClient MQTTclient(espClient);
 
 bool sync = 0;
-uint8_t rx_SPIframe[20];
+byte rx_SPIframe[20];
+bool updateMQTTStatus=true;
 
 #define SB0 0
 #define SB1 SB0 + 1
@@ -30,6 +35,7 @@ uint8_t rx_SPIframe[20];
 #define DB4 SB2 + 5
 #define DB6 SB2 + 7
 #define DB9 SB2 + 10
+#define DB10 SB2 + 11
 #define DB11 SB2 + 12
 #define DB14 SB2 + 15
 #define CBH 18
@@ -56,17 +62,11 @@ void setupOTA() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
+    if (error == OTA_AUTH_ERROR) { Serial.println("Auth Failed"); }
+    else if (error == OTA_BEGIN_ERROR) { Serial.println("Begin Failed"); }
+    else if (error == OTA_CONNECT_ERROR) { Serial.println("Connect Failed"); }
+    else if (error == OTA_RECEIVE_ERROR) { Serial.println("Receive Failed"); }
+    else if (error == OTA_END_ERROR) { Serial.println("End Failed"); }
   });
   ArduinoOTA.begin();
   Serial.println("OTA Ready");
@@ -80,15 +80,13 @@ void MQTTreconnect() {
   while (!MQTTclient.connected()) { // Loop until we're reconnected
     update_sync(false);
     Serial.print("Attempting MQTT connection...");
-    if (MQTTclient.connect (hostname, MQTT_PREFIX "connected", 0, true, "0")) {
+    if (MQTTclient.connect (hostname, MQTT_PREFIX "connected", 0, true, "false")) {
       Serial.println("connected");
-      MQTTclient.publish(MQTT_PREFIX "connected", "1", true);
-      MQTTclient.subscribe(MQTT_PREFIX MQTT_SET_PREFIX "Power");
-      MQTTclient.subscribe(MQTT_PREFIX MQTT_SET_PREFIX "Mode");
-      MQTTclient.subscribe(MQTT_PREFIX MQTT_SET_PREFIX "Tsetpoint");
-      MQTTclient.subscribe(MQTT_PREFIX MQTT_SET_PREFIX "Fan");
-      MQTTclient.subscribe(MQTT_PREFIX MQTT_SET_PREFIX "Vanes");
-    } else {
+      MQTTclient.publish(MQTT_PREFIX "connected", "true", true);
+      MQTTclient.subscribe(MQTT_SET_PREFIX "#");
+      updateMQTTStatus=true;
+    }
+    else {
       Serial.print("failed, rc=");
       Serial.print(MQTTclient.state());
       Serial.println(" try again in 5 seconds");
@@ -107,9 +105,8 @@ void update_sync(bool sync_new) {
     Serial.printf("sync=%i\n", sync);
     if (sync)
       MQTTclient.publish (MQTT_PREFIX "synced", "1", true);
-    else {
+    else 
       MQTTclient.publish (MQTT_PREFIX "synced", "0", true);
-    }
   }
 }
 
@@ -139,7 +136,7 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
   memcpy(payload_str, payload, length);
   payload_str[length] = '\0';
 
-  if (strcmp(topic, MQTT_PREFIX MQTT_SET_PREFIX "Power") == 0) {
+  if (strcmp(topic, MQTT_SET_PREFIX "Power") == 0) {
     new_Power = rx_SPIframe[DB0] | 0b11;
     if (strcmp(payload_str, "On") == 0) {
       set_Power = true;
@@ -154,36 +151,36 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp(topic, MQTT_PREFIX MQTT_SET_PREFIX "Mode") == 0) {
+  else if (strcmp(topic, MQTT_SET_PREFIX "Mode") == 0) {
     if (strcmp(payload_str, "Auto") == 0) {
       set_Mode = true;
-      new_Mode = 0b00100010;
+      new_Mode = 0b00100000;
       publish_cmd_ok();
     }
     else if (strcmp(payload_str, "Dry") == 0) {
       set_Mode = true;
-      new_Mode = 0b00100110;
+      new_Mode = 0b00100100;
       publish_cmd_ok();
     }
     else if (strcmp(payload_str, "Cool") == 0) {
       set_Mode = true;
-      new_Mode = 0b00101010;
+      new_Mode = 0b00101000;
       publish_cmd_ok();
     }
     else if (strcmp(payload_str, "Fan") == 0) {
       set_Mode = true;
-      new_Mode = 0b00101110;
+      new_Mode = 0b00101100;
       publish_cmd_ok();
     }
     else if (strcmp(payload_str, "Heat") == 0) {
       set_Mode = true;
-      new_Mode = 0b00110010;
+      new_Mode = 0b00110000;
       publish_cmd_ok();
     }
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp(topic, MQTT_PREFIX MQTT_SET_PREFIX "Tsetpoint") == 0) {
+  else if (strcmp(topic, MQTT_SET_PREFIX "Tsetpoint") == 0) {
     new_Tsetpoint = atoi(payload_str);
     if ((new_Tsetpoint >= 18) & (new_Tsetpoint <= 30)) {
       set_Tsetpoint = true;
@@ -192,7 +189,7 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp(topic, MQTT_PREFIX MQTT_SET_PREFIX "Fan") == 0) {
+  else if (strcmp(topic, MQTT_SET_PREFIX "Fan") == 0) {
     new_Fan = atoi(payload_str);
     if ((new_Fan >= 1) & (new_Fan <= 4)) {
       set_Fan = true;
@@ -201,14 +198,21 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp(topic, MQTT_PREFIX MQTT_SET_PREFIX "Vanes") == 0) {
-    new_Vanes = atoi(payload_str);
-    if ((new_Vanes >= 1) & (new_Vanes <= 5)) {
+  else if (strcmp(topic, MQTT_SET_PREFIX "Vanes") == 0) {
+    if(strcmp(payload_str, "Swing") == 0) {
+      new_Vanes = 5;
       set_Vanes = true;
       publish_cmd_ok();
     }
-    else
-      publish_cmd_invalidparameter();
+    else {
+      new_Vanes = atoi(payload_str);
+      if ((new_Vanes >= 1) & (new_Vanes <= 5)) {
+        set_Vanes = true;
+        publish_cmd_ok();
+      }
+      else 
+        publish_cmd_invalidparameter();  
+    }
   }
   else
     publish_cmd_unknown();
@@ -233,23 +237,17 @@ void setup() {
   }
   setupOTA();
   Serial.printf(" connected to %s, IP address: %s\n", ssid, WiFi.localIP().toString().c_str());
-  MQTTclient.setServer("ds218p", 1883);
+  MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
   MQTTclient.setCallback(MQTT_subscribe_callback);
   MQTTreconnect();
 }
 
-//                           sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
-byte tx_SPIframe[20]   =  { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04, 0x05, 0xF5 };
-//const byte frameVariant[3][8]  {                                                { 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04 },  //variant number 0
-//                                                                                { 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
-//                                                                                { 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }}; //variant number 2
-const byte frameVariant[3][9]  {                                                { 0x40, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04 },  //variant number 0
-  { 0x80, 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
-  { 0x80, 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }
-}; //variant number 2
-//const byte frameVariant[3][6]  {                                                                   { 0x80, 0xFF, 0xFF, 0x00, 0x0F, 0x04 },  //variant number 0
-//                                                                                                   { 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
-//                                                                                                   { 0xF1, 0xF7, 0xFF, 0x00, 0x0F, 0x04 }}; //variant number 2
+//                        sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
+byte tx_SPIframe[20] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04, 0x05, 0xF5 };
+const byte frameVariant[3][9] {                                              { 0x40, 0x00, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0x0F, 0x04 },  //variant number 0
+																				                                     { 0x80, 0x00, 0x00, 0x32, 0xD6, 0x01, 0x00, 0x0F, 0x04 },  //variant number 1
+																				                                     { 0x80, 0x00, 0x00, 0xF1, 0xF7, 0xFF, 0xFF, 0x0F, 0x04 }}; //variant number 2
+
 uint16_t calc_tx_checksum() {
   uint16_t checksum = 0;
   for (int i = 0; i < CBH; i++)
@@ -262,14 +260,13 @@ void loop() {
   uint8_t vanes_old = 0xff;
   uint8_t power_old = 0xff;
   uint8_t mode_old = 0xff;
-  uint8_t mosi_db3_old = 0xff;
-  uint8_t mosi_db4_old = 0xff;
-  uint8_t mosi_db11_old = 0xff;
-  uint8_t tsetpoint_old = 0xff;
+  uint8_t errorcode_old = 0xff;
+  byte troom_old = 0xff;
+  byte toutdoor_old = 0xff;
+  byte tsetpoint_old = 0xff;
   char strtmp[10]; // for the MQTT strings to send
   byte payload_byte;
   unsigned long lastDatapacketMillis = 0;
-  unsigned long runtimeMillis = 0;
   unsigned long SCKMillis;
   bool valid_datapacket_received = false;
   bool new_datapacket_received = false;
@@ -292,20 +289,18 @@ void loop() {
       }
     }
 
-    // setup tx frame
-    if (frame++ > 19) {
+    if (frame++ > 19) { // setup tx frame
       doubleframe++;  // toggle between 0 and 1
       tx_SPIframe[DB14] = doubleframe % 2;
       frame = 1;
       if (doubleframe % 2) {
         variantnumber = (variantnumber + 1) % 3;
         memcpy(&tx_SPIframe[DB6], &frameVariant[variantnumber][0], 9);
-        //memcpy(&tx_SPIframe[10], &frameVariant[variantnumber][0], 8);
-        //memcpy(&tx_SPIframe[12], &frameVariant[variantnumber][0], 6);
 
         tx_SPIframe[DB0] = 0;
         tx_SPIframe[DB1] = 0;
         tx_SPIframe[DB2] = 0;
+       
         if (set_Power) {
           tx_SPIframe[DB0] = new_Power;
           set_Power = false;
@@ -334,8 +329,7 @@ void loop() {
         if (set_Vanes) {
           if (new_Vanes == 5) //5: swing
             tx_SPIframe[DB0] = 0b11000000;
-          else {
-            tx_SPIframe[DB0] = 0b10000000;
+          else { // when setting a new vanes position, swing is automatically disabled
             tx_SPIframe[DB1] = (1 << 7) | ((new_Vanes - 1) << 4);
           }
           set_Vanes = false;
@@ -349,10 +343,10 @@ void loop() {
 
     new_datapacket_received = false;
     uint16_t rx_checksum = 0;
-    for (uint8_t byte_cnt = 0; byte_cnt < 20; byte_cnt++) { // read+write 1 data packet of 20 bytes
+    for (uint8_t byte_cnt = 0; byte_cnt < 20; byte_cnt++) { // read and write a data packet of 20 bytes
       payload_byte = 0;
       byte bit_mask = 1;
-      for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read 1 byte
+      for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read and write 1 byte
         while (digitalRead(SCK)) {} // wait for falling edge
         if ((tx_SPIframe[byte_cnt] & bit_mask) > 0)
           digitalWrite(MISO, 1);
@@ -387,17 +381,17 @@ void loop() {
       lastDatapacketMillis = millis();
 
       digitalWrite(LED_BUILTIN, HIGH);
-      if (new_datapacket_received) { // new datapacket received
+      if (new_datapacket_received) {
         new_datapacket_received = false;
-        MQTTclient.beginPublish (MQTT_PREFIX "raw", 43, true);
+        /*MQTTclient.beginPublish (MQTT_PREFIX "raw", 43, true);  // raw data are usually not needed
         MQTTclient.write(highByte(packet_cnt));
         MQTTclient.write(lowByte(packet_cnt));
         MQTTclient.write(rx_SPIframe, 20);
         MQTTclient.write(tx_SPIframe, 20);
         MQTTclient.write(repetitionNo);
-        MQTTclient.endPublish();
+        MQTTclient.endPublish();*/
         repetitionNo = 0;
-        if ((rx_SPIframe[DB0] & 0x01) != power_old) { // Power
+        if (updateMQTTStatus | ((rx_SPIframe[DB0] & 0x01) != power_old)) { // Power
           power_old = rx_SPIframe[DB0] & 0x01;
           if (power_old == 0)
             MQTTclient.publish(MQTT_PREFIX "Power", "Off", true);
@@ -405,7 +399,7 @@ void loop() {
             MQTTclient.publish(MQTT_PREFIX "Power", "On", true);
         }
 
-        if ((rx_SPIframe[DB0] & 0x1c) != mode_old) { // Mode
+        if (updateMQTTStatus | ((rx_SPIframe[DB0] & 0x1c) != mode_old)) { // Mode
           mode_old = rx_SPIframe[DB0] & 0x1c;
           switch (mode_old) {
             case 0x00:
@@ -434,19 +428,21 @@ void loop() {
           fantmp = 4;
         else
           fantmp = (rx_SPIframe[DB1] & 0x03) + 1;
-        if (fantmp != fan_old) {
+        if (updateMQTTStatus | (fantmp != fan_old)) {
           fan_old = fantmp;
           itoa(fan_old, strtmp, 10);
           MQTTclient.publish(MQTT_PREFIX "Fan", strtmp, true);
         }
 
         // Only updated when Vanes command via wired RC
-        uint vanestmp = (rx_SPIframe[DB0] & 0x40) + ((rx_SPIframe[DB1] & 0x30) >> 4);
-        if (vanestmp != vanes_old) {
-          if ((vanestmp & 0x40) > 0) // Vanes status swing
-            MQTTclient.publish(MQTT_PREFIX "Vanes", "5", true);
+        uint vanestmp = (rx_SPIframe[DB0] & 0xc0) + ((rx_SPIframe[DB1] & 0xB0) >> 4);
+        if (updateMQTTStatus | (vanestmp != vanes_old)) {
+          if ((vanestmp & 0x88) == 0) // last vanes update was via IR-RC, so status is not known
+            MQTTclient.publish(MQTT_PREFIX "Vanes", "?", true);
+          else if ((vanestmp & 0x40) != 0) // Vanes status swing
+            MQTTclient.publish(MQTT_PREFIX "Vanes", "Swing", true);
           else {
-            switch (vanestmp) {
+            switch (vanestmp & 0x03) {
               case 0x00:
                 MQTTclient.publish(MQTT_PREFIX "Vanes", "1", true);  // up
                 break;
@@ -459,49 +455,41 @@ void loop() {
               case 0x03:
                 MQTTclient.publish(MQTT_PREFIX "Vanes", "4", true);  // down
                 break;
-              default:
-                MQTTclient.publish(MQTT_PREFIX "Vanes", "invalid", true);
-                break;
             }
           }
           vanes_old = vanestmp;
         }
 
-        if (abs(rx_SPIframe[DB3] - mosi_db3_old) > 1) { // Room temperature delta > 0.25°C
-          mosi_db3_old = rx_SPIframe[DB3];
-          float troom = (float)(rx_SPIframe[DB3] - 61) / 4.0;
-          dtostrf(troom, 6, 2, strtmp);
+        if (updateMQTTStatus | (abs(rx_SPIframe[DB3] - troom_old) > 1)) { // Room temperature delta > 0.25°C
+          troom_old = rx_SPIframe[DB3];
+          float troom = (float)(troom_old - 61) / 4.0;
+          dtostrf(troom, 0, 2, strtmp);
           MQTTclient.publish(MQTT_PREFIX "Troom", strtmp, true);
         }
 
-        if ((rx_SPIframe[DB2] & 0x7f) >> 1 != tsetpoint_old) { // Temperature setpoint
+        if (updateMQTTStatus | ((rx_SPIframe[DB2] & 0x7f) >> 1 != tsetpoint_old)) { // Temperature setpoint
           tsetpoint_old = (rx_SPIframe[DB2] & 0x7f) >> 1;
           itoa(tsetpoint_old, strtmp, 10);
           MQTTclient.publish(MQTT_PREFIX "Tsetpoint", strtmp, true);
         }
 
-        if (rx_SPIframe[DB4] != mosi_db4_old) { // error code
-          mosi_db4_old = rx_SPIframe[DB4];
-          itoa(mosi_db4_old, strtmp, 10);
+        if (updateMQTTStatus | (rx_SPIframe[DB4] != errorcode_old)) { // error code
+          errorcode_old = rx_SPIframe[DB4];
+          itoa(errorcode_old, strtmp, 10);
           MQTTclient.publish(MQTT_PREFIX "Errorcode", strtmp, true);
         }
 
-        if (rx_SPIframe[DB9] == 0x80) { // indicates variant 0 => outdoor temperature
-          if (abs(rx_SPIframe[DB11] - mosi_db11_old) > 1) { // Outdoor temperature delta > 0.25°C to prevent toggling
-            mosi_db11_old = rx_SPIframe[DB11];
-            float toutdoor = (float)(rx_SPIframe[DB11] - 94) / 4.0;
-            dtostrf(toutdoor, 6, 2, strtmp);
+        if (updateMQTTStatus | ((rx_SPIframe[DB9] == 0x80) & (rx_SPIframe[DB10] == 0x10))) { // indicates variant 0 => outdoor temperature
+          if (abs(rx_SPIframe[DB11] - toutdoor_old) > 1) { // Outdoor temperature delta > 0.25°C to prevent toggling
+            toutdoor_old = rx_SPIframe[DB11];
+            float toutdoor = (float)(toutdoor_old - 94) / 4.0;
+            dtostrf(toutdoor, 0, 2, strtmp);
             MQTTclient.publish(MQTT_PREFIX "Toutdoor", strtmp, true);
           }
         }
+        updateMQTTStatus = false;
       } // if(new_datapacket_received)
     } // if(valid_datapacket_received)
-
-    if (millis() - runtimeMillis > 1000) { // output runtime 1/second
-      runtimeMillis += 1000;
-      itoa(millis() / 1000, strtmp, 10);
-      MQTTclient.publish(MQTT_PREFIX "runtime", strtmp, true);
-    }
 
     if (!MQTTclient.connected())
       MQTTreconnect();
