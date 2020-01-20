@@ -25,12 +25,17 @@ U$5  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
 U1   |TSR_1-2450       |TSR-1
 
 ## Connector
-The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2 mm (0.079''). It is out of the [PH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=199). You can buy 1:1 cables or cables with interchanged conncections. **I strongly recommend that you use a voltage meter to find out where the +12V is located before you connect the PCB to your AC.** The position of the connector is visible on the following photo of the indoor unit PCB.
+The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the indoor unit PCB.
 ![Indoor PCSchematicB](/images/SRK-PCB.jpg)
+
+The PCB of the remote control uses also a 5 pin CNS connector but with a pitch of 2 mm. It is out of the [PH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=199).
+Please consider that there is no 1:1 connection between AC and the remote control. The Pins SCL and MOSI are (unfortunately) swapped. Your cable connection of the AC with the remote control PCB should consider that. The position of the connector is visible on the following photo of the indoor unit PCB.
+![Indoor PCSchematicB](/images/SRK-PCB-RC.jpg)
+Please consider using an oscilloscope to confirm the layout of the pins before you connect the remote control PCB to your AC.
 
 **Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!**
 
-## Power Supply
+# Power Supply
 The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) is used to convert it to +5V.
 
 ## Signal Connection
