@@ -91,7 +91,7 @@ void MQTTreconnect() {
       Serial.print(MQTTclient.state());
       Serial.println(" try again in 5 seconds");
       runtimeMillisMQTT = millis();
-      while (millis() - runtimeMillisMQTT > 5000) { // Wait 5 seconds before retrying
+      while (millis() - runtimeMillisMQTT < 5000) { // Wait 5 seconds before retrying
         delay(0);
         ArduinoOTA.handle();
       }
