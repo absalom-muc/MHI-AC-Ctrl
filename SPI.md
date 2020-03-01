@@ -1,6 +1,6 @@
 # SPI Bus
 ## Interface
-The AC is the SPI master and the ESP8266 is the SPI slave. MHI uses the signals SCK, MOSI, MISO.  A slave select signal is not supported.
+The AC is the SPI master and the ESP8266 is the SPI slave. MHI uses the signals SCK, MOSI and MISO.  A slave select signal is not supported.
 
 Name | Function |input/output
 ------------ | ------------- |--------------
@@ -10,7 +10,7 @@ MISO | Master In, Slave Out | Input for MHI, output for ESP8266
 
 ## Protocol
 Clock polarity: CPOL=1 => clock idles at 1, and each cycle consists of a pulse of 0
-Clock timing: CPHA=1 => data is captures with the rising clock edge, data changes with the falling edge
+Clock timing: CPHA=1 => data is captured with the rising clock edge, data changes with the falling edge
 ## Timing
 A byte consists of 8 bits. SCK has a frequency of 32kHz. One bit takes 31.25µs, so one byte takes 8x31.25µs=250µs. There is a pause of 250µs between two bytes.
 A frame consists of 20 bytes. A frame consumes 20x2x250µs=10ms. Between 2 frames is a pause of 40ms. So 20 frames per second will be transmitted. The following oscilloscope screenshot shows 3 bytes:
@@ -19,7 +19,7 @@ A frame consists of 20 bytes. A frame consumes 20x2x250µs=10ms. Between 2 frame
 Yellow: SCK; Purple: MOSI
 # SPI Frame
 A frame starts with three signature bytes, followed by 15 data bytes and 2 bytes for a checksum. The following table shows the structure of a frame.
-In the ESP8266 and in the description mainly the short names are used.
+In the ESP8266 program code and in the description mainly the short names are used.
 
 raw byte # | long name | short name
 ---- | ---- | ----
@@ -46,18 +46,17 @@ raw byte # | long name | short name
 
 In the description we differ between
 
-MOSI frame -> frame send by MHI-AC, received by ESP8266.
+    MOSI frame -> frame send by MHI-AC, received by ESP8266.
+    MISO frame -> frame send by ESP8266, received by MHI-AC.
 
-MISO frame -> frame send by ESP8266, received by MHI-AC.
-
-For the testing and evaluation of the protocol the Intesis remote control MH-AC-WIFI-1 was used.
+For the testing and evaluation of the protocol the remote controls [MH-AC-WIFI-1](https://www.intesisbox.com/de/mitsubishi-heavy-ascii-wifi-ac-mh-ac-wmp-1/gateway/) and [RC-E5](https://www.mhi-mth.co.jp/en/products/pdf/pjz012a087b_german.pdf) were used.
 
 ## Signature
-The MOSI signature bytes indicate the start of a frame with the 3 bytes 0x6c, 0x80, 0x04.
-The usual MISO frame has the signature 0xa9, 0x00, 0x07. (During start of the Intesis remote control once the signature 0x53, 0x80, 0x00 with DB13=0x0f and all other data bytes equal 0x00 is used. The meaning is unclear)
+The MOSI signature bytes indicate the start of a frame with the 3 bytes 0x6c, 0x80, 0x04. The first signature byte varies with the AC. For some [Mitsubishi AC models](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issue-558530669) 0x6d is used.
+The MISO frame has the signature 0xa9, 0x00, 0x07. 
 
 ## Data
-The following clauses describe the MOSI/MISO decoding for power, mode, fan, vanes, temperature setpoint and room/outdoor temperature.
+The following clauses describe the MOSI/MISO decoding for power, mode, fan, vanes, temperature setpoint and room temperature.
 ### Power
 Power status is coded in MOSI DB0[0].
 
@@ -254,13 +253,15 @@ The resolution of 0.5°C is supported by the wired remote control [RC-E5](https:
 The same coding is used for setting the temperature. The set bit in the MISO frame is DB2[7].
 
 ### Error code (read only)
-The Error code is coded in MOSI DB4[7:0]. It is a number between 0 ... 255. 0 means no error. I've so far not checked if the error code here is consistent with the error numbers in the AC user manual.
+The Error code is a number 0 ... 255 in MOSI DB4[7:0]. 0 means no error. 
+According my understanding the error codes listed [here](https://www.hrponline.co.uk/files/images/HRP/Catalogues/HRP_NEW_ServiceSupportHandbook.pdf#page=14) are supported, but I haven't really checked it.
 
 ## Checksum (read only)
-The checksum is calculated by the sum of the signature bytes plus the databytes. The low byte of the checksum is stored at byte position 18 and the low byte of the checksum is stored at byte position 19. Maximum value of the checksum is 0x0fe1. Therefore bit [7:4] of the checksum high byte is always 0.
-checksum = sum(SB0:SB2) + sum(DB0:DB14)
-CBH = checksum[11:8]
-CBL = checksum[7:0]
+The two byte checksum is calculated by the sum of the signature bytes plus the databytes. The high byte of the checksum CBH is stored at byte position 18 and the low byte of the checksum CBL is stored at byte position 19.
+
+    checksum[15:0] = sum(SB0:SB2) + sum(DB0:DB14)
+    CBH = checksum[15:8]
+    CBL = checksum[7:0]
 
 
 ## Settings
@@ -277,28 +278,17 @@ Tsetpoint|DB2[7]
 Once a set-bit is set to 1, the according bit in the MOSI frame becomes and remains '1' until the IR remote control is used.
 All set-bits are cleared when the IR remote control is used. Settings can be done independent from the power state.
 
-## Variants
-**The following chapter is in draft status!**
-Different variants were seen when using the commercial wired RC. The MISO frame (data from RC to MHI-AC) requests data. The variant of the data is identified via MISO-DB9. MHI-AC answers with the same value in MOSI-DB9 (but only when bit2 of MISO-DB14 is set).
+## Operation Data
 
-The following screenshot shows some SPI traffic:
-![MISO MOSI traffic](/images/MISO-MOSI_1.JPG)
+You can read different operating data of the AC related to the indoor and outdoor unit.
+The following example shows the reading of the outdoor air temperature:
 
-In the marked row MISO-DB9=0x80 and MISO-DB14[2] is set, so variant 0 is selected. MOSI-DB9=0x80 together with MOSI-DB10=0x10 indicate that the outdoor temperature is coded in MOSI-DB11.
+MISO-DB6 | MISO-DB9 | MISO-DB10 | MISO-DB11 | MISO-DB12 | MOSI-DB9 | MOSI-DB10 | MOSI-DB11 
+ --------| ---------| ----------| ----------| ----------| ---------| ----------| ----------
+  0x40   | 0x80     | 0xff      | 0xff      | 0xff      | 0x80     | 0x10      |  temperature 
 
+Please check the program code for further details. You find [here](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md#mqtt-topics-related-to-operating-data) the list of supported topics related to operating data.
 
-The following table shows the known variant information (consider MISO-DB14[2] is set). 
-
-MISO-DB9|MISO-DB10|MISO-DB10|Variant|MOSI-DB9|MOSI-DB10|MOSI-DB10|Meaning
---------|---------|---------|-------|--------|---------|---------|   
-0x00|0x00|0x00|Default|?|?|?|When no SPI RC is connected or no 'special' data are requested.
-0x80|0xff|0xff|0|0x80|0x10|Outdoor temperature|T[°C]=(DB11[7:0]-94)/4 (formula is not finally confirmed).
-0x80|0xff|0xff|0|0x80|0x20|?|unknown
-0x80|0xff|0xff|0|0xd2|0x10|0x01|unknown (rarely seen during heating)
-0x32|0xd6|0x01|1|0x32|0x49|0x02|unknown
-0xf1|0xf7|0xff|2|0xf1|0x17|0x06|unknown
-
-note: the numbering of the variants 0..2 is reused from [rjdekker's code here](https://raw.githubusercontent.com/rjdekker/MHI2MQTT/master/src/MHI-SPI2ESP.ino)
 
 ## Unknown
 In the SPI frames are more information coded than known for me. E.g. fan active, outdoor fan active, compressor active etc.

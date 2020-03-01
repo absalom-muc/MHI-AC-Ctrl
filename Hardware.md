@@ -33,10 +33,10 @@ Please consider that there is no 1:1 connection between AC and the remote contro
 ![Indoor PCSchematicB](/images/SRK-PCB-RC.jpg)
 Please consider using an oscilloscope to confirm the layout of the pins before you connect the remote control PCB to your AC.
 
-**Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!**
+:warning: **Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!** :warning:
 
 # Power Supply
-The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) is used to convert it to +5V.
+The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) is used to convert the +12V to +5V.
 
 ## Signal Connection
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
