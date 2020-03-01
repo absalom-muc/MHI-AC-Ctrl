@@ -23,8 +23,8 @@ More details are described [here](/Hardware.md).
 ## Software:
 The program uses the [MQTT client library](https://github.com/knolleary/pubsubclient) from Nick O'Leary (knolleary). Thank you Nick - great job!
 Please check his GitHub page to see how to install it.
-Create a sub-directory "MHI-AC-Ctrl" and copy the files from [here](https://github.com/absalom-muc/MHI-AC-Ctrl/src) in this sub-directory.
-Adapt ssid, password in [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/src/MHI-AC-Ctrl.h). Further configuration options are described in [MQTT.md](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md).
+Create a sub-directory "MHI-AC-Ctrl" and copy the files from the src directory in your MHI-AC-Ctrl sub-directory.
+Adapt ssid, password in [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/src/MHI-AC-Ctrl.h). Further configuration options are described in [MQTT.md](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md).
 Currently [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) is used for remote upload.
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
