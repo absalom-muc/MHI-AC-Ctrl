@@ -3,7 +3,7 @@ The program uses the [MQTT client library](https://github.com/knolleary/pubsubcl
 If you are not familiar with MQTT you find on the Internet endless numbers of descriptions and tutorials. My favorites are [here](https://www.hivemq.com/blog/how-to-get-started-with-mqtt/) and [here](https://www.heise.de/developer/artikel/Kommunikation-ueber-MQTT-3238975.html).
 I recommend [MQTT Explorer](http://mqtt-explorer.com/) an all-round MQTT client that provides a structured topic overview for the first steps.
 
-Please adapt [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/src/MHI-AC-Ctrl.h) according to your needs.
+Please adapt [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/src/MHI-AC-Ctrl.h) according to your needs.
 You have to adapt the server (broker) name and the port if needed:
 
 ```
@@ -65,7 +65,7 @@ Publishing of the raw data is per default commented out to reduce broker's work 
 
 # MQTT topics related to operating data
 
-MHI-AC-Ctrl can also provide operating data of the indoor and outdoor unit. These data are not needed for daily use, but might be interesting in specific use cases. They are only published when there is a change of the message. The retained flag is 'true'.
+MHI-AC-Ctrl can also provide operating data of the indoor and outdoor unit. This data is not needed for daily use, but might be interesting in specific use cases. Operating data is only published when there is a change of the content. The retained flag is 'true'.
 The path to the operating data topic can be adapted.
 
 ```
