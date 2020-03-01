@@ -38,4 +38,4 @@ The control via MQTT is described [here](/MQTT.md)
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Acknowledgments
-The coding of the SPI protocol of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
+The coding of the [SPI protocol](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
