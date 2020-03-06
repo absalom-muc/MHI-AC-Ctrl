@@ -235,13 +235,12 @@ Bit 6| vanes up/down swing
 </tbody>
 </table>
 
-note: Vanes status is not applicable when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
+note: Vanes status is **not** applicable when using IR remote control. The latest vanes status is only visible when it was changed by the SPI-RC.
 The latest vanes status is only visible when MOSI DB0[7]=1 or MOSI DB1[7]=1.
 
 The same coding is used for setting vanes.
 The set bit for enabling vanes up/down swing in the MISO frame is DB0[7].
 The set bit for vanes up/down position in the MISO frame is DB1[7].
-Swing is disabled when a new position is set via DB1. When MISO DB0[7]=1 and MISO DB1[7]=1 the new position is stored and swing is enabled.
 
 ### Room temperature (read only)
 The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
