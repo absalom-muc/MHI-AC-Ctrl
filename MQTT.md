@@ -38,9 +38,11 @@ Power|r/w|"On", "Off"|
 Mode|r/w|"Auto", "Dry", "Cool", "Fan" or "Heat"
 Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
 Fan|r/w|1 ... 4|Fan level
-Vanes|r/w|1,2,3,4,"Swing"|Vanes up/down position
+Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
 Troom|r|0 ... 35|Room temperature (float) in °C.
 Errorcode|r|0 .. 255|error code (unsigned int)
+
+<sup>1</sup> When the last Vanes related command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.
 
 Additionally, the following program status topics are available:
 
@@ -48,10 +50,10 @@ topic | r/w| value |comment
 ---|---|---|---
 connected|r|0, 1|ESP8266 connection status to broker
 synced|r|0, 1|synchronization to SPI rx frame
-raw|r||raw data *1)
+raw|r||raw data
 cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feedback for last set command
 
-*1) The raw data is a byte array of 43 bytes. The following table shows the structure. The raw data are only published when there is change of the data:
+The raw data is a byte array of 43 bytes. The following table shows the structure. The raw data are only published when there is change of the data:
 
 byte |comment
 ---|---
