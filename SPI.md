@@ -52,7 +52,7 @@ In the description we differ between
 For the testing and evaluation of the protocol the remote controls [MH-AC-WIFI-1](https://www.intesisbox.com/de/mitsubishi-heavy-ascii-wifi-ac-mh-ac-wmp-1/gateway/) and [RC-E5](https://www.mhi-mth.co.jp/en/products/pdf/pjz012a087b_german.pdf) were used.
 
 ## Signature
-The MOSI signature bytes indicate the start of a frame with the 3 bytes 0x6c, 0x80, 0x04. The first signature byte varies with the AC. For some [Mitsubishi AC models](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issue-558530669) 0x6d is used.
+The MOSI signature bytes indicate the start of a frame with the 3 bytes 0x6c, 0x80, 0x04. The first signature byte varies with the AC. For some [Mitsubishi AC models](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issue-558530669) it is 0x6d.
 The MISO frame has the signature 0xa9, 0x00, 0x07. 
 
 ## Data
@@ -288,9 +288,34 @@ MISO-DB6 | MISO-DB9 | MISO-DB10 | MISO-DB11 | MISO-DB12 | MOSI-DB9 | MOSI-DB10 |
 
 Please check the program code for further details. You find [here](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md#mqtt-topics-related-to-operating-data) the list of supported topics related to operating data.
 
+## Last Error Operation Data
+The AC stores some operation data of the last error event. This error operation data can be read with the command:
+
+MISO-DB6[7]  | MISO-DB9 
+ ------------| --------
+     1       | 0x45    
+  
+AC answers with the following MOSI data sequence:
+
+MOSI-DB6[7] | MOSI-DB9 | MOSI-DB10 | MOSI-DB11 
+ ---------- | -------- | --------- | --------  
+ 1          | 0x45     | 0x11      | error code
+
+If error code > 0 the following MOSI data sequence is send in addition:
+
+MOSI-DB6[7] | MOSI-DB9 | MOSI-DB10 | MOSI-DB11 
+ ---------- | -------- | --------- | --------  
+ 1          | 0x45     | 0x12      | count of the following error operation data
+
+Examples for error operation data
+
+MOSI-DB6[7] | MOSI-DB9 | MOSI-DB10 | MOSI-DB11 
+ ---------- | -------- | --------- | --------  
+ 1          | 0x02     | 0x30=Stop, 0x31=Dry, 0x32=Cold, 0x33=Fan, 0x34=heat
+ 1          | 0x05     | 0x33      | SET TEMP = MOSI-DB11 / 2
+ 1          | 0x1e     | 0x30      | TOTAL I/U RUN = MOSI-DB11 * 100
+
 
 ## Unknown
-In the SPI frames are more information coded than known for me. E.g. fan active, outdoor fan active, compressor active etc.
-In MOSI-DB13 some bits seem to represent the status of the outdoor unit.
-
-I would appreciate your support to close the gaps.
+In the SPI frames are more information coded than known for me. In MOSI-DB13 some bits seem to represent the status of the outdoor unit.
+I would appreciate your support to close these gaps.

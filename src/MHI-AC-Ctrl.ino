@@ -1,13 +1,6 @@
-// MHI-AC-Ctrl v1.3 by absalom-muc
+// MHI-AC-Ctrl v1.4 by absalom-muc
 // read + write data via SPI controlled by MQTT
-
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h> // see https://github.com/knolleary/pubsubclient
-#include <ArduinoOTA.h>
 #include "MHI-AC-Ctrl.h"
-
-WiFiClient espClient;
-PubSubClient MQTTclient(espClient);
 
 bool sync = 0;
 byte rx_SPIframe[20];
@@ -16,13 +9,21 @@ uint updateMQTTStatus_opdata=opdataCnt;
 
 void MQTTreconnect() {
   unsigned long runtimeMillisMQTT;
-  Serial.println("MQTTreconnect");
+  char strtmp[10];
   while (!MQTTclient.connected()) { // Loop until we're reconnected
     update_sync(false);
     Serial.print("Attempting MQTT connection...");
-    if (MQTTclient.connect (hostname, MQTT_USER, MQTT_PASSWORD, MQTT_PREFIX "connected", 0, true, "0")) {
+    if (MQTTclient.connect (HOSTNAME, MQTT_USER, MQTT_PASSWORD, MQTT_PREFIX "connected", 0, true, "0")) {
       Serial.println("connected");
       MQTTclient.publish(MQTT_PREFIX "connected", "1", true);
+      itoa(rising_edge_cnt_SCK, strtmp, 10);
+      MQTTclient.publish(MQTT_PREFIX "fSCK", strtmp, true);
+      itoa(rising_edge_cnt_MOSI, strtmp, 10);
+      MQTTclient.publish(MQTT_PREFIX "fMOSI", strtmp, true);
+      itoa(rising_edge_cnt_MISO, strtmp, 10);
+      MQTTclient.publish(MQTT_PREFIX "fMISO", strtmp, true);
+      itoa(WiFi.RSSI(), strtmp, 10);
+      MQTTclient.publish(MQTT_PREFIX "RSSI", strtmp, true);
       MQTTclient.subscribe(MQTT_SET_PREFIX "#");
       updateMQTTStatus=true;
       updateMQTTStatus_opdata=opdataCnt;
@@ -71,6 +72,7 @@ bool set_Fan = false;
 byte new_Fan;
 bool set_Vanes = false;
 byte new_Vanes;
+bool request_erropData = false;
 
 void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
   char payload_str[20];
@@ -155,6 +157,19 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
         publish_cmd_invalidparameter();  
     }
   }
+  else if (strcmp(topic, MQTT_SET_PREFIX "ErrOpData") == 0) {
+    request_erropData = true;
+    publish_cmd_ok();
+  }
+  else if (strcmp(topic, MQTT_SET_PREFIX "reset") == 0) {
+    if(strcmp(payload_str, "reset") == 0) {
+      publish_cmd_ok();
+      delay(500);
+      ESP.restart();
+    }
+    else 
+      publish_cmd_invalidparameter();  
+  }
   else
     publish_cmd_unknown();
 }
@@ -165,19 +180,33 @@ void setup() {
   Serial.println();
   Serial.println("MHI-AC-Ctrl starting");
 
-  WiFi.hostname(hostname);
-  WiFi.begin(ssid, password);
+  WiFi.hostname(HOSTNAME);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   MeasureFrequency();
   pinMode(SCK, INPUT);
   pinMode(MOSI, INPUT);
   pinMode(MISO, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);  // indicates that a frame was received, active low
   digitalWrite(LED_BUILTIN, HIGH);
+#if TEMP_MEASURE_PERIOD > 0
+  sensors.begin();
+  Serial.print("Found ");
+  // Serial.print(sensors.getDeviceCount(), DEC);
+  Serial.print(sensors.getDS18Count(), DEC);
+  Serial.println(" DS18xxx family devices.");
+  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  Serial.print("Device 0 Address: ");
+  printAddress(insideThermometer);
+  Serial.println();
+  sensors.setResolution(insideThermometer, 9); // set the resolution to 9 bit
+  sensors.setWaitForConversion(false);
+  sensors.requestTemperatures(); // Send the command to get temperatures
+#endif
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.printf(" connected to %s, IP address: %s\n", ssid, WiFi.localIP().toString().c_str());
+  Serial.printf(" connected to %s, IP address: %s\n", WIFI_SSID, WiFi.localIP().toString().c_str());
   setupOTA();
   MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
   MQTTclient.setCallback(MQTT_subscribe_callback);
@@ -195,6 +224,7 @@ uint16_t calc_tx_checksum() {
 }
 
 void loop() {
+  // old status
   uint8_t fan_old = 0xff;
   uint8_t vanes_old = 0xff;
   uint8_t power_old = 0xff;
@@ -202,15 +232,24 @@ void loop() {
   uint8_t errorcode_old = 0xff;
   byte troom_old = 0xff;
   byte tsetpoint_old = 0xff;
-  uint16_t ou_eev_old = 0xffff;
-  byte total_iu_run_old = 0;
-  byte outdoor_old = 0xff;
-  byte return_air_old = 0xff;
-  byte ou_fanspeed_old = 0xff;
-  byte total_comp_run_old = 0; 
-  byte protection_no_old = 0xff; 
-  char strtmp[10]; // for the MQTT strings to send
-  byte payload_byte;
+  // old operating data
+  byte op_settemp_old = 0xff;
+  byte op_mode_old = 0xff;
+  uint16_t op_ou_eev_old = 0xffff;
+  byte op_total_iu_run_old = 0;
+  byte op_iu_fanspeed_old = 0xff;
+  byte op_ou_fanspeed_old = 0xff;
+  byte op_outdoor_old = 0xff;
+  byte op_return_air_old = 0xff;
+  byte op_total_comp_run_old = 0; 
+  byte op_protection_no_old = 0xff; 
+  byte op_defrost_old = 0x00; 
+  uint16_t op_comp_old = 0xffff;
+  byte op_tdsh_old = 0xff;
+  byte op_ct_old = 0xff;
+  
+  char strtmp[10];    // for the MQTT strings to send
+  byte payload_byte;  // received MOSI byte
   unsigned long lastDatapacketMillis = 0;
   unsigned long SCKMillis;
   bool valid_datapacket_received = false;
@@ -218,8 +257,11 @@ void loop() {
   uint16_t packet_cnt = 0;
   uint8_t repetitionNo = 0;
   uint8_t opdataNo = 0;
+  uint8_t erropdataCnt = 0;
   uint8_t doubleframe = 1;
   uint8_t frame = 1;
+  unsigned long DS1820Millis = millis();
+  int16_t tempR_old = 0xffff;
 
   while (1) {
 
@@ -240,16 +282,25 @@ void loop() {
       tx_SPIframe[DB14] = (doubleframe % 2) << 2;
       frame = 1;
       if (doubleframe % 2) {
-        tx_SPIframe[DB0] = 0x00;
-        tx_SPIframe[DB1] = 0x00;
-        tx_SPIframe[DB2] = 0x00;
-        tx_SPIframe[DB6]  = opdata[opdataNo][0];
-        tx_SPIframe[DB9]  = opdata[opdataNo][1];
-        tx_SPIframe[DB10] = opdata[opdataNo][2];
-        tx_SPIframe[DB11] = opdata[opdataNo][3];
-        tx_SPIframe[DB12] = opdata[opdataNo][4];
-        opdataNo = (opdataNo + 1) % opdataCnt;
-
+        if (erropdataCnt == 0) {
+          tx_SPIframe[DB0] = 0x00;
+          tx_SPIframe[DB1] = 0x00;
+          tx_SPIframe[DB2] = 0x00;
+          tx_SPIframe[DB6]  = opdata[opdataNo][0];
+          tx_SPIframe[DB9]  = opdata[opdataNo][1];
+          tx_SPIframe[DB10] = opdata[opdataNo][2];
+          tx_SPIframe[DB11] = opdata[opdataNo][3];
+          tx_SPIframe[DB12] = opdata[opdataNo][4];
+          opdataNo = (opdataNo + 1) % opdataCnt;
+        }
+        else { // error operating data available
+          tx_SPIframe[DB6]  = 0x80;
+          tx_SPIframe[DB9]  = 0xff;
+          tx_SPIframe[DB10] = 0xff;
+          tx_SPIframe[DB11] = 0xff;
+          tx_SPIframe[DB12] = 0xff;
+          erropdataCnt--;
+        }
         if (set_Power) {
           tx_SPIframe[DB0] = new_Power;
           set_Power = false;
@@ -270,18 +321,27 @@ void loop() {
             tx_SPIframe[DB1] = 0b1010;
             tx_SPIframe[DB6] |= 0b00010000;
           }
-          else
+          else {
             tx_SPIframe[DB1] = (1 << 3) | (new_Fan - 1);
+          }
           set_Fan = false;
         }
 
         if (set_Vanes) {
-          if (new_Vanes == 5) //5: swing
+          if (new_Vanes == 5) { //5: swing
             tx_SPIframe[DB0] = 0b11000000;
-          else { // when setting a new vanes position, swing is automatically disabled
+          }
+          else {
+            tx_SPIframe[DB0] = 0b10000000; // disable swing
             tx_SPIframe[DB1] = (1 << 7) | ((new_Vanes - 1) << 4);
           }
           set_Vanes = false;
+        }
+
+        if (request_erropData) {
+          tx_SPIframe[DB6] = 0x80;
+          tx_SPIframe[DB9] = 0x45;
+          request_erropData = false;
         }
       }
     }
@@ -315,14 +375,15 @@ void loop() {
       if (byte_cnt < 18)
         rx_checksum += payload_byte;
     }
-    if (((rx_SPIframe[SB0] & 0xfe) == 0x6c) & (rx_SPIframe[SB1] == 0x80) & (rx_SPIframe[SB2] == 0x04) & ((rx_SPIframe[CBH]<<8 | rx_SPIframe[CBL]) == rx_checksum))
+    if (((rx_SPIframe[SB0] & 0xfe) == 0x6c) & (rx_SPIframe[SB1] == 0x80) & (rx_SPIframe[SB2] == 0x04) & ((rx_SPIframe[CBH]<<8 | rx_SPIframe[CBL]) == rx_checksum)) {
       valid_datapacket_received = true;
+    }
     else {
       update_sync(false);
       Serial.printf("Wrong MOSI signature: 0x%.2X 0x%.2X 0x%.2X or checksum received!\n", rx_SPIframe[SB0], rx_SPIframe[SB1], rx_SPIframe[SB2]);
     }
     
-    if (valid_datapacket_received) { // valid frame received
+    if (valid_datapacket_received) { // valid MOSI frame received
       packet_cnt++;
       repetitionNo++;
       valid_datapacket_received = false;
@@ -410,7 +471,8 @@ void loop() {
           vanes_old = vanestmp;
         }
 
-        if (updateMQTTStatus | (abs(rx_SPIframe[DB3] - troom_old) > 1)) { // Room temperature delta > 0.25°C
+        int8_t troom_diff = rx_SPIframe[DB3] - troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/  
+        if (updateMQTTStatus | (abs(troom_diff) > 1)) { // Room temperature delta > 0.25°C
           troom_old = rx_SPIframe[DB3];
           float troom = (float)(troom_old - 61) / 4.0;
           dtostrf(troom, 0, 2, strtmp);
@@ -431,79 +493,223 @@ void loop() {
 
         // Operating Data
         switch (rx_SPIframe[DB9]) {
-          case 0x80: // 3 RETURN-AIR or 21 OUTDOOR
-            if ((rx_SPIframe[DB10] == 0x20) & ((rx_SPIframe[DB6] & 0x80) != 0)){ // 3 RETURN-AIR
-              if ((rx_SPIframe[DB11] != return_air_old) | (updateMQTTStatus_opdata > 0)){
-                if (updateMQTTStatus_opdata > 0)
-                  updateMQTTStatus_opdata--;
-                return_air_old = rx_SPIframe[DB11];
-                dtostrf(return_air_old * 0.25f - 15, 0, 2, strtmp);
-                if(!MQTTclient.publish(MQTT_OP_PREFIX "RETURN-AIR", strtmp, true))
-                  return_air_old = 0xff;
+          case 0x02: // 1 MODE
+            if ((rx_SPIframe[DB6] & 0x80) != 0){
+              if ((rx_SPIframe[DB10] | 0x30) == 0x30){
+                eval_op_mode(strtmp, rx_SPIframe[DB10]);
+                MQTTclient.publish(MQTT_ERR_OP_PREFIX "Mode", strtmp, true);
               }
-            }
-            else if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){ // 21 OUTDOOR
-              if ((rx_SPIframe[DB11] != outdoor_old) | (updateMQTTStatus_opdata > 0)){
+              else if ((rx_SPIframe[DB10] != op_mode_old) | (updateMQTTStatus_opdata > 0)){
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
-                outdoor_old = rx_SPIframe[DB11];
-                dtostrf((outdoor_old - 94) * 0.25f, 0, 2, strtmp);
-                if(!MQTTclient.publish(MQTT_OP_PREFIX "OUTDOOR", strtmp, true))
-                  outdoor_old = 0xff;
+                op_mode_old = rx_SPIframe[DB10];
+                eval_op_mode(strtmp, rx_SPIframe[DB10]);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "Mode", strtmp, true))
+                  op_mode_old = 0xff;
               }
             }
             break;
-          case 0x13: // 38 OU-EEV
-            if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){ // 38 OU-EEV
-              if (((rx_SPIframe[DB12] << 8 | rx_SPIframe[DB11]) != ou_eev_old) | (updateMQTTStatus_opdata > 0)){
+          case 0x05: // 1 SET-TEMP
+            if ((rx_SPIframe[DB10] == 0x13) & ((rx_SPIframe[DB6] & 0x80) != 0)) {
+              if ((rx_SPIframe[DB11] != op_settemp_old) | (updateMQTTStatus_opdata > 0)){
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
-                ou_eev_old = rx_SPIframe[DB12] << 8 | rx_SPIframe[DB11];
-                itoa(ou_eev_old, strtmp, 10);
-                if(!MQTTclient.publish(MQTT_OP_PREFIX "OU-EEV", strtmp, true))
-                  ou_eev_old = 0xffff;
+                op_settemp_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11] >> 1, strtmp, 10);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "SET-TEMP", strtmp, true))
+                  op_settemp_old = 0xff;
+              }
+            }
+            else if ((rx_SPIframe[DB10] == 0x33) & ((rx_SPIframe[DB6] & 0x80) != 0)) { // last error data
+                itoa(rx_SPIframe[DB11] >> 1, strtmp, 10);
+                MQTTclient.publish(MQTT_ERR_OP_PREFIX "SET-TEMP", strtmp, true);
+            }
+            break;
+          case 0x80: // 3 RETURN-AIR or 21 OUTDOOR
+            if ((rx_SPIframe[DB10] == 0x20) & ((rx_SPIframe[DB6] & 0x80) != 0)) { // 3 RETURN-AIR
+              if ((rx_SPIframe[DB11] != op_return_air_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_return_air_old = rx_SPIframe[DB11];
+                dtostrf(rx_SPIframe[DB11] * 0.25f - 15, 0, 2, strtmp);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "RETURN-AIR", strtmp, true))
+                  op_return_air_old = 0xff;
+              }
+            }
+            else if ((rx_SPIframe[DB10] == 0x30) & ((rx_SPIframe[DB6] & 0x80) != 0)) { // 3 RETURN-AIR last error data
+                dtostrf(rx_SPIframe[DB11] * 0.25f - 15, 0, 2, strtmp);
+                MQTTclient.publish(MQTT_ERR_OP_PREFIX "RETURN-AIR", strtmp, true);
+            }
+            else if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)) { // 21 OUTDOOR
+              if ((rx_SPIframe[DB11] != op_outdoor_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_outdoor_old = rx_SPIframe[DB11];
+                dtostrf((rx_SPIframe[DB11] - 94) * 0.25f, 0, 2, strtmp);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "OUTDOOR", strtmp, true))
+                  op_outdoor_old = 0xff;
+              }
+            }
+            break;
+          case 0x1f: // 8 IU-FANSPEED or 34 OU-FANSPEED
+            if ((rx_SPIframe[DB6] & 0x80) != 0) {
+              if ((rx_SPIframe[DB10] & 0x30) == 0x10) { // 8 IU-FANSPEED
+                if ((rx_SPIframe[DB10] != op_iu_fanspeed_old) | (updateMQTTStatus_opdata > 0)) {
+                  if (updateMQTTStatus_opdata > 0)
+                    updateMQTTStatus_opdata--;
+                  op_iu_fanspeed_old = rx_SPIframe[DB10];
+                  itoa(rx_SPIframe[DB10] & 0x0f, strtmp, 10);
+                  if(!MQTTclient.publish(MQTT_OP_PREFIX "IU-FANSPEED", strtmp, true))
+                    op_iu_fanspeed_old = 0xff;
+                }
+              }
+              else if ((rx_SPIframe[DB10] & 0x30) == 0x30) { // 8 IU-FANSPEED last error data
+                itoa(rx_SPIframe[DB10] & 0x0f, strtmp, 10);
+                MQTTclient.publish(MQTT_ERR_OP_PREFIX "IU-FANSPEED", strtmp, true);
+              }
+            }
+            else { // 34 OU-FANSPEED
+              if ((rx_SPIframe[DB10] != op_ou_fanspeed_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_ou_fanspeed_old = rx_SPIframe[DB10];
+                itoa(op_ou_fanspeed_old &0x0f, strtmp, 10);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "OU-FANSPEED", strtmp, true))
+                  op_ou_fanspeed_old = 0xff;
               }
             }
             break;
           case 0x1e: // 12 TOTAL-IU-RUN or 37 TOTAL-COMP-RUN
             if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) != 0)){ // 12 TOTAL-IU-RUN
-              if ((rx_SPIframe[DB11] != total_iu_run_old) | (updateMQTTStatus_opdata > 0)){
+              if ((rx_SPIframe[DB11] != op_total_iu_run_old) | (updateMQTTStatus_opdata > 0)){
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
-                total_iu_run_old = rx_SPIframe[DB11];
-                itoa(total_iu_run_old*100, strtmp, 10);
+                op_total_iu_run_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11]*100, strtmp, 10);
                 if(!MQTTclient.publish(MQTT_OP_PREFIX "TOTAL-IU-RUN", strtmp, true))
-                  total_iu_run_old = 0xff;
+                  op_total_iu_run_old = 0xff;
               }
             }
+            else if ((rx_SPIframe[DB10] == 0x30) & ((rx_SPIframe[DB6] & 0x80) != 0)){ // 12 TOTAL-IU-RUN last error data
+                itoa(rx_SPIframe[DB11]*100, strtmp, 10);
+                MQTTclient.publish(MQTT_ERR_OP_PREFIX "TOTAL-IU-RUN", strtmp, true);
+            }
             else if ((rx_SPIframe[DB10] == 0x11) & ((rx_SPIframe[DB6] & 0x80) == 0)){ // 37 TOTAL-COMP-RUN
-              if ((rx_SPIframe[DB11] != total_comp_run_old) | (updateMQTTStatus_opdata > 0)){
+              if ((rx_SPIframe[DB11] != op_total_comp_run_old) | (updateMQTTStatus_opdata > 0)){
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
-                total_comp_run_old = rx_SPIframe[DB11];
-                itoa(total_comp_run_old*100, strtmp, 10);
+                op_total_comp_run_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11]*100, strtmp, 10);
                 if(!MQTTclient.publish(MQTT_OP_PREFIX "TOTAL-COMP-RUN", strtmp, true))
-                  total_comp_run_old = 0xff;
+                  op_total_comp_run_old = 0xff;
+              }
+            }
+            break;
+          case 0x11: // 24 COMP
+            if ((rx_SPIframe[DB6] & 0x80) == 0){
+              if (((rx_SPIframe[DB11] << 8 | rx_SPIframe[DB10]) != op_comp_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_comp_old = rx_SPIframe[DB11] << 8 | rx_SPIframe[DB10]; 
+                dtostrf((rx_SPIframe[DB10] - 0x10) * 25.6f + 0.1f * rx_SPIframe[DB11], 0, 2, strtmp);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "COMP", strtmp, true))
+                  op_comp_old = 0xffff;
+              }
+            }
+            break;
+          case 0x90: // 29 CT
+            if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){
+              if ((rx_SPIframe[DB11] != op_protection_no_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_protection_no_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11], strtmp, 10);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "CT", strtmp, true))
+                  op_protection_no_old = 0xff;
+              }
+            }
+            break;
+          case 0xb1: // 32 TDSH
+            if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){
+              if ((rx_SPIframe[DB11] != op_tdsh_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_tdsh_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11]/2, strtmp, 10);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "TDSH", strtmp, true))
+                  op_tdsh_old = 0xff;
               }
             }
             break;
           case 0x7c: // 33 PROTECTION-No
             if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){
-              if ((rx_SPIframe[DB11] != protection_no_old) | (updateMQTTStatus_opdata > 0)){
+              if ((rx_SPIframe[DB11] != op_ct_old) | (updateMQTTStatus_opdata > 0)){
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
-                protection_no_old = rx_SPIframe[DB11];
-                itoa(protection_no_old, strtmp, 10);
+                op_ct_old = rx_SPIframe[DB11];
+                itoa(rx_SPIframe[DB11], strtmp, 10);
                 if(!MQTTclient.publish(MQTT_OP_PREFIX "PROTECTION-No", strtmp, true))
-                  total_iu_run_old = 0xff;
+                  op_ct_old = 0xff;
               }
             }
-        }
+            break;
+          case 0x0c: // 36 DEFROST
+            if ((rx_SPIframe[DB6] & 0x80) == 0){
+              if ((rx_SPIframe[DB10] != op_defrost_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_defrost_old = rx_SPIframe[DB10];
+                if(rx_SPIframe[DB10] = 0x10)
+                  strcpy(strtmp, "Off");
+                else  //0x11
+                  strcpy(strtmp, "On");
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "DEFROST", strtmp, true))
+                  op_defrost_old = 0x00;
+              }
+            }
+            break;
+           case 0x13: // 38 OU-EEV
+            if ((rx_SPIframe[DB10] == 0x10) & ((rx_SPIframe[DB6] & 0x80) == 0)){ // 38 OU-EEV
+              if (((rx_SPIframe[DB12] << 8 | rx_SPIframe[DB11]) != op_ou_eev_old) | (updateMQTTStatus_opdata > 0)){
+                if (updateMQTTStatus_opdata > 0)
+                  updateMQTTStatus_opdata--;
+                op_ou_eev_old = rx_SPIframe[DB12] << 8 | rx_SPIframe[DB11];
+                itoa(op_ou_eev_old, strtmp, 10);
+                if(!MQTTclient.publish(MQTT_OP_PREFIX "OU-EEV", strtmp, true))
+                  op_ou_eev_old = 0xffff;
+              }
+            }
+            break;
+           // related to last error operating data 
+           case 0x45: // last error number or count of following error operating data
+            if ((rx_SPIframe[DB10] == 0x11) & ((rx_SPIframe[DB6] & 0x80) != 0)){ // last error number
+              itoa(rx_SPIframe[DB11], strtmp, 10);
+              MQTTclient.publish(MQTT_ERR_OP_PREFIX "Errorcode", strtmp, true);
+            }
+            else if ((rx_SPIframe[DB10] == 0x12) & ((rx_SPIframe[DB6] & 0x80) != 0)){ // count of following error operating data
+              erropdataCnt = rx_SPIframe[DB11] + 4;
+            }
+            break;
+       }
 
         updateMQTTStatus = false;
       } // if(new_datapacket_received)
     } // if(valid_datapacket_received)
 
+#if TEMP_MEASURE_PERIOD > 0
+    if(millis() - DS1820Millis > TEMP_MEASURE_PERIOD*1000) {
+      int16_t tempR = sensors.getTemp(insideThermometer);
+      int16_t tempR_diff = tempR - tempR_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/  
+      if(abs(tempR_diff) > 2) {
+        tempR_old = tempR;
+        dtostrf(sensors.rawToCelsius(tempR), 0, 2, strtmp);
+        MQTTclient.publish(MQTT_PREFIX "Tds1820", strtmp, true); 
+      }   
+      DS1820Millis = millis();
+      sensors.requestTemperatures(); // Send the command to get temperatures
+    }
+#endif
+   
     if (!MQTTclient.connected())
       MQTTreconnect();
     MQTTclient.loop();

@@ -6,7 +6,7 @@
 ## PCB
 ![PCB](/images/PCB.png)
 
-You find the eagle schematic and the PCB in the [eagle folder](/eagle).
+You find the eagle schematic and the PCB in the [eagle folder](/eagle). Alternatively to the PCB you could use a breadboard.
 
 ## Assembled PCB
 ![Assembled PCB](/images/Assembled-PCB.jpg)
@@ -41,3 +41,7 @@ The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tr
 ## Signal Connection
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
 In a previous version I used a resistor voltage divider, but since the SPI of the AC has high impedance outputs, a voltage level shifter seems to be better. The voltage level shifters are bi-directional. That means the according ESP8266 pins (SCL, MOSI, MISO) could be inputs or outputs. You can use it for different [configurations](/Configurations.md).
+
+## External Temperature Sensor
+With version v1.4 of the software an external temperature sensor DS18x20 is (optional) supported. The layout of the MHI-AC-Ctrl PCB doesn't support the connection, but since there is some free space provided, it should be no problem. The DS18x20 is connected to GND, +3V3 and GPIO 4 (D2). Addtionally you need a 4k7 resistor between DQ and +3V3.
+You find on the Internet many descriptions how to connect the sensor to your ESP, therefore I don't want to repeat it here.

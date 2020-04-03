@@ -21,15 +21,22 @@ The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Ma
 More details are described [here](/Hardware.md).
 
 ## Software:
-The program uses the [MQTT client library](https://github.com/knolleary/pubsubclient) from Nick O'Leary (knolleary). Thank you Nick - great job!
-Please check his GitHub page to see how to install it.
+The program uses the following libraries
+ - [MQTT client library](https://github.com/knolleary/pubsubclient)
+ - [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) (might be removed in future)
+ 
+and optionally you need for the use of an external temperature sensor DS18x20 the libraries
+ - [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html)
+ - [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library)
+
+Please check the GitHub pages to see how to install them (usually via tools -> libraries).
+
 Create a sub-directory "MHI-AC-Ctrl" and copy the files from the [src directory](https://github.com/absalom-muc/MHI-AC-Ctrl/tree/master/src) in your MHI-AC-Ctrl sub-directory.
 Adapt ssid, password in [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/src/MHI-AC-Ctrl.h). Further configuration options are described in [MQTT.md](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md).
-Currently [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) is used for remote upload.
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
 This Software based SPI is reliable and the performance of the ESP8266 is sufficient for this use case.
-If you have problems with the SW please check the serial debug output.
+In case of problems please check the serial debug output first.
 
 ## MQTT
 The control via MQTT is described [here](/MQTT.md)
@@ -39,3 +46,4 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 # Acknowledgments
 The coding of the [SPI protocol](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
+Also thank you very much on the authors and contributors of [MQTT client](https://github.com/knolleary/pubsubclient), [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA), [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) libraries.
