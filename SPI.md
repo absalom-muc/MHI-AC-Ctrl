@@ -12,8 +12,23 @@ MISO | Master In, Slave Out | Input for MHI, output for ESP8266
 Clock polarity: CPOL=1 => clock idles at 1, and each cycle consists of a pulse of 0
 Clock timing: CPHA=1 => data is captured with the rising clock edge, data changes with the falling edge
 ## Timing
-A byte consists of 8 bits. SCK has a frequency of 32kHz. One bit takes 31.25µs, so one byte takes 8x31.25µs=250µs. There is a pause of 250µs between two bytes.
-A frame consists of 20 bytes. A frame consumes 20x2x250µs=10ms. Between 2 frames is a pause of 40ms. So 20 frames per second will be transmitted. The following oscilloscope screenshot shows 3 bytes:
+T<sub>Frame</sub> Time for one frame   
+T<sub>FramePause</sub> Time between two frames   
+T<sub>Byte</sub> Time for one byte   
+T<sub>BytePause</sub> Time between two bytes   
+T<sub>Bit</sub> Time for one bit   
+
+![timing](/images/timing_frame-byte.png)
+
+The following timing is used by SRK xx ZS-S
+
+T<sub>Frame</sub>|T<sub>FramePause</sub>|T<sub>Byte</sub>|T<sub>BytePause</sub>|T<sub>Bit</sub>
+---|---|---|---|---|
+10ms|40ms|250µs|250µs|31.25µs
+
+Other models could have different timing
+
+A frame consists of 20 bytes. A frame consumes 20x2x250µs=10ms. Between 2 frames is a pause of 40ms. 20 frames per second will be transmitted. The following oscilloscope screenshot shows 3 bytes:
 ![SPI timing](/images/ScreenImg-11-cut.png)
 
 Yellow: SCK; Purple: MOSI
