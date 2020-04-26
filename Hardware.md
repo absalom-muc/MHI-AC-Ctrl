@@ -9,7 +9,9 @@
 You find the eagle schematic and the PCB in the [eagle folder](/eagle). Alternatively to the PCB you could use a breadboard.
 
 ## Assembled PCB
-![Assembled PCB](/images/Assembled-PCB.jpg)
+
+<img src="/images/Assembled-PCB.jpg" width=400 align="center"/>
+
 
 ## Bill of Material
 Part |Value           |Package
@@ -31,7 +33,10 @@ The AC provides the signals via the CNS connector. It has 5 pins with a pitch of
 The PCB of the remote control uses also a 5 pin CNS connector but with a pitch of 2 mm. It is out of the [PH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=199).
 Please consider that there is no 1:1 connection between AC and the remote control. The Pins SCL and MOSI are (unfortunately) swapped. Your cable connection of the AC with the remote control PCB should consider that.
 ![Indoor PCSchematicB](/images/SRK-PCB-RC.jpg)
+<img src="/images/AC_to_MHI-AC-Ctrl.png" width="600" align="center">
+
 Please consider using an oscilloscope to confirm the layout of the pins before you connect the remote control PCB to your AC.
+
 
 :warning: **Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!** :warning:
 
