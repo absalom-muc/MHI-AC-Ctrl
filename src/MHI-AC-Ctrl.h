@@ -17,14 +17,14 @@
 #define TEMP_MEASURE_PERIOD 30 // period in seconds for temperature measurement, enter 0 if you don't use the DS1820 
 
 //Values which will be published/read on MQTT
-#define POWER_ON = "On";
-#define POWER_OFF = "Off";
-#define MODE_AUTO = "Auto";
-#define MODE_DRY = "Dry";
-#define MODE_COOL = "Cool";
-#define MODE_FAN = "Fan";
-#define MODE_HEAT = "Heat";
-#define MODE_ERROR = "Stop";
+#define POWER_ON "On"
+#define POWER_OFF "Off"
+#define MODE_AUTO "Auto"
+#define MODE_DRY "Dry"
+#define MODE_COOL "Cool"
+#define MODE_FAN "Fan"
+#define MODE_HEAT "Heat"
+#define MODE_ERROR "Stop"
 
 // comment out the data you are not interested, but at least one row must be used.
 const byte opdata[][5] {
