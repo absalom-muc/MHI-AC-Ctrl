@@ -3,12 +3,13 @@
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
 #define HOSTNAME "MHI-AC-Ctrl"
+#define OTA_NAME "MHI-AC-Ctrl-Living-Room"          // name to display when shown in a list of devices available for OTA updates
+#define MQTT_PREFIX HOSTNAME "/Living-Room/"        // basic prefix used for publishing AC data, good for a room name
 
 #define MQTT_SERVER "ds218p"                        // broker name or IP address of the broker
 #define MQTT_PORT 1883                              // port number used by the broker
 #define MQTT_USER ""                                // if authentication is not used, leave it empty
 #define MQTT_PASSWORD ""                            // if authentication is not used, leave it empty
-#define MQTT_PREFIX HOSTNAME "/"                    // basic prefix used for publishing AC data
 #define MQTT_SET_PREFIX MQTT_PREFIX "set/"          // prefix for subscribing set commands
 #define MQTT_OP_PREFIX MQTT_PREFIX "OpData/"        // prefix for publishing operating data
 #define MQTT_ERR_OP_PREFIX MQTT_PREFIX "ErrOpData/" // prefix for publishing operating data from last error
@@ -124,7 +125,7 @@ void eval_op_mode(char mqtt_msg[], byte db10) {
 
 
 void setupOTA() {
-  ArduinoOTA.setHostname(HOSTNAME);
+  ArduinoOTA.setHostname(OTA_NAME);
   ArduinoOTA.onStart([]() {
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
