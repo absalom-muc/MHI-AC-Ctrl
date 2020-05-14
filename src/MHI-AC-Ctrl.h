@@ -23,6 +23,7 @@
 #define MODE_COOL = "Cool";
 #define MODE_FAN = "Fan";
 #define MODE_HEAT = "Heat";
+#define MODE_ERROR = "Stop";
 
 // comment out the data you are not interested, but at least one row must be used.
 const byte opdata[][5] {
@@ -102,21 +103,21 @@ void eval_op_mode(char mqtt_msg[], byte db10) {
   switch (db10 & 0x1f) {  // 0x10=Auto, 0x11=Dry, 0x12=Cold, 0x13=Fan, 0x14=heat
     case 0x10:
       if ((db10 & 0x30) == 0x30)
-        strcpy(mqtt_msg, "Stop"); // for error operating data
+        strcpy(mqtt_msg, MODE_ERROR); // for error operating data
       else
-        strcpy(mqtt_msg, "Auto"); // for operating data
+        strcpy(mqtt_msg, MODE_AUTO); // for operating data
       break;
     case 0x11:
-      strcpy(mqtt_msg, "Dry");
+      strcpy(mqtt_msg, MODE_DRY);
       break;
     case 0x12:
-      strcpy(mqtt_msg, "Cool");
+      strcpy(mqtt_msg, MODE_COOL);
       break;
     case 0x13:
-      strcpy(mqtt_msg, "Fan");
+      strcpy(mqtt_msg, MODE_FAN);
       break;
     case 0x14:
-      strcpy(mqtt_msg, "Heat");
+      strcpy(mqtt_msg, MODE_HEAT);
       break;
   }
 }
