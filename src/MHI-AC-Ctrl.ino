@@ -2,6 +2,8 @@
 // read + write data via SPI controlled by MQTT
 #include "MHI-AC-Ctrl.h"
 
+
+
 bool sync = 0;
 byte rx_SPIframe[20];
 bool updateMQTTStatus=true;
@@ -81,12 +83,12 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
 
   if (strcmp(topic, MQTT_SET_PREFIX "Power") == 0) {
     new_Power = rx_SPIframe[DB0] | 0b11;
-    if (strcmp(payload_str, "On") == 0) {
+    if (strcmp(payload_str, POWER_ON) == 0) {
       set_Power = true;
       new_Power = 0b11;
       publish_cmd_ok();
     }
-    else if (strcmp(payload_str, "Off") == 0) {
+    else if (strcmp(payload_str, POWER_OFF) == 0) {
       set_Power = true;
       new_Power = 0b10;
       publish_cmd_ok();
@@ -95,27 +97,27 @@ void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length) {
       publish_cmd_invalidparameter();
   }
   else if (strcmp(topic, MQTT_SET_PREFIX "Mode") == 0) {
-    if (strcmp(payload_str, "Auto") == 0) {
+    if (strcmp(payload_str, MODE_AUTO) == 0) {
       set_Mode = true;
       new_Mode = 0b00100000;
       publish_cmd_ok();
     }
-    else if (strcmp(payload_str, "Dry") == 0) {
+    else if (strcmp(payload_str, MODE_DRY) == 0) {
       set_Mode = true;
       new_Mode = 0b00100100;
       publish_cmd_ok();
     }
-    else if (strcmp(payload_str, "Cool") == 0) {
+    else if (strcmp(payload_str, MODE_COOL) == 0) {
       set_Mode = true;
       new_Mode = 0b00101000;
       publish_cmd_ok();
     }
-    else if (strcmp(payload_str, "Fan") == 0) {
+    else if (strcmp(payload_str, MODE_FAN) == 0) {
       set_Mode = true;
       new_Mode = 0b00101100;
       publish_cmd_ok();
     }
-    else if (strcmp(payload_str, "Heat") == 0) {
+    else if (strcmp(payload_str, MODE_HEAT) == 0) {
       set_Mode = true;
       new_Mode = 0b00110000;
       publish_cmd_ok();
@@ -405,28 +407,28 @@ void loop() {
         if (updateMQTTStatus | ((rx_SPIframe[DB0] & 0x01) != power_old)) { // Power
           power_old = rx_SPIframe[DB0] & 0x01;
           if (power_old == 0)
-            MQTTclient.publish(MQTT_PREFIX "Power", "Off", true);
+            MQTTclient.publish(MQTT_PREFIX "Power", POWER_OFF, true);
           else
-            MQTTclient.publish(MQTT_PREFIX "Power", "On", true);
+            MQTTclient.publish(MQTT_PREFIX "Power", POWER_ON, true);
         }
 
         if (updateMQTTStatus | ((rx_SPIframe[DB0] & 0x1c) != mode_old)) { // Mode
           mode_old = rx_SPIframe[DB0] & 0x1c;
           switch (mode_old) {
             case 0x00:
-              MQTTclient.publish(MQTT_PREFIX "Mode", "Auto", true);
+              MQTTclient.publish(MQTT_PREFIX "Mode", MODE_AUTO, true);
               break;
             case 0x04:
-              MQTTclient.publish(MQTT_PREFIX "Mode", "Dry", true);
+              MQTTclient.publish(MQTT_PREFIX "Mode", MODE_DRY, true);
               break;
             case 0x08:
-              MQTTclient.publish(MQTT_PREFIX "Mode", "Cool", true);
+              MQTTclient.publish(MQTT_PREFIX "Mode", MODE_COOL, true);
               break;
             case 0x0c:
-              MQTTclient.publish(MQTT_PREFIX "Mode", "Fan", true);
+              MQTTclient.publish(MQTT_PREFIX "Mode", MODE_FAN, true);
               break;
             case 0x10:
-              MQTTclient.publish(MQTT_PREFIX "Mode", "Heat", true);
+              MQTTclient.publish(MQTT_PREFIX "Mode", MODE_HEAT, true);
               break;
             default:
               MQTTclient.publish(MQTT_PREFIX "Mode", "invalid", true);
