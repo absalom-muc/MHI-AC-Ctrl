@@ -35,8 +35,8 @@ When writing data, the retain flag shall be 'false'!
 
 topic|r/w|value|comment
 -----|---|-----|------
-Power|r/w|"On", "Off"|
-Mode|r/w|"Auto", "Dry", "Cool", "Fan" or "Heat"
+Power|r/w|"On", "Off"|Override these if needed with POWER_ON and POWER_OFF 
+Mode|r/w|"Auto", "Dry", "Cool", "Fan" or "Heat"|Override these if needed with MODE_AUTO, MODE_DRY etc
 Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
 Fan|r/w|1 ... 4|Fan level
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
