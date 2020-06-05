@@ -18,7 +18,7 @@ User reported that also [SRK20ZSA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/
 ## Hardware:
 The ESP8266 is powered from the AC via DC-DC (12V -> 5V) converter. 
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
-More details are described [here](/Hardware.md).
+More details are described in [Hardware.md](Hardware.md).
 
 ## Software:
 The program uses the following libraries
@@ -31,19 +31,16 @@ and optionally you need for the use of an external temperature sensor DS18x20 th
 
 Please check the GitHub pages to see how to install them (usually via tools -> libraries).
 
-Create a sub-directory "MHI-AC-Ctrl" and copy the files from the [src directory](https://github.com/absalom-muc/MHI-AC-Ctrl/tree/master/src) in your MHI-AC-Ctrl sub-directory.
-Adapt ssid, password in [MHI-AC-Ctrl.h](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/src/MHI-AC-Ctrl.h). Further configuration options are described in [MQTT.md](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/MQTT.md).
+Create a sub-directory "MHI-AC-Ctrl" and copy the files from the [src directory](src) in your MHI-AC-Ctrl sub-directory.
+The configuration options are described in [SW-Configuration.md](SW-Configuration.md).
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
 This Software based SPI is reliable and the performance of the ESP8266 is sufficient for this use case.
 In case of problems please check the serial debug output first.
 
-## MQTT
-The control via MQTT is described [here](/MQTT.md)
-
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Acknowledgments
-The coding of the [SPI protocol](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
+The coding of the [SPI protocol](SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
 Also thank you very much on the authors and contributors of [MQTT client](https://github.com/knolleary/pubsubclient), [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA), [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) libraries.

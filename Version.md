@@ -1,5 +1,15 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.0** (June 2020)
+- code refactored to allow simplified adaption for other frameworks (e.g. Tasmota, Home Assistant), main changes
+	- MHI-AC-Ctrl-core separated according to [Issue #13](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/13)
+	- Changeable defs for all topics and payload according to this [Pull request](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/15)
+- Option added to switch on the AC when the mode is changed according to [Issue #14](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/14)
+- Added operating data THO-R1, THO-R2, THO-R3, THO-R1 and TD added
+- Handling for operating data "PROTECTION-No" and "CT" corrected
+- Output of the frame raw data is no longer supported
+- MQTT.md replaced by [SW-Configuration.md](SW-Configuration.md)
+
 **v1.4** (April 2020)
 - Vanes MQTT status corrected
 - Frequency measurement limits adapted, ESP is halted only when there is a toggle on MISO detected, results of the measurement will be published via MQTT
