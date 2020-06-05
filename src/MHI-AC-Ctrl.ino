@@ -659,7 +659,7 @@ void loop() {
                 if (updateMQTTStatus_opdata > 0)
                   updateMQTTStatus_opdata--;
                 op_defrost_old = rx_SPIframe[DB10];
-                if(rx_SPIframe[DB10] = 0x10)
+                if(rx_SPIframe[DB10] == 0x10)
                   strcpy(strtmp, "Off");
                 else  //0x11
                   strcpy(strtmp, "On");
