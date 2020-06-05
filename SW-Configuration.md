@@ -218,8 +218,8 @@ The input parameter is the maximum time which should be consumed by the loop fun
 This is a blocking function which takes - dependent on the AC model - about 10 ... 50ms. Inside the loop function no delay() or yield() call is used.
 The following return values are supported:
 
-return value    |meaning
----------|
+return value|meaning
+------------|-------------
 err_msg_valid_frame     |a valid frame was received in the given time
 err_msg_invalid_signature | a frame with invalid signature bytes was received
 err_msg_invalid_checksum | a frame with an invalid checksum was received
