@@ -86,15 +86,13 @@ DeviceAddress insideThermometer;     // arrays to hold device address
 void getDs18x20Temperature(int temp_hysterese) {
   static unsigned long DS1820Millis = millis();
   static int16_t tempR_old = 0xffff;
-  int16_t tempR;
-  int16_t tempR_diff;
-  char strtmp[10];
 
   if (millis() - DS1820Millis > TEMP_MEASURE_PERIOD * 1000) {
-    tempR = sensors.getTemp(insideThermometer);
-    tempR_diff = tempR - tempR_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
+    const int16_t tempR = sensors.getTemp(insideThermometer);
+    const int16_t tempR_diff = tempR - tempR_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
     if (abs(tempR_diff) > temp_hysterese) {
       tempR_old = tempR;
+      char strtmp[10];
       dtostrf(sensors.rawToCelsius(tempR), 0, 2, strtmp);
       Serial.printf("new DS18x20 temperature=%s\n", strtmp);
       MQTTclient.publish(MQTT_PREFIX "Tds1820", strtmp, true);
@@ -189,7 +187,7 @@ void MeasureFrequency() {  // measure the frequency on the pins
   Serial.println("Measure frequency for SCK, MOSI and MISO pin");
   attachInterrupt(digitalPinToInterrupt(SCK), handleInterrupt_SCK, RISING);
   attachInterrupt(digitalPinToInterrupt(MOSI), handleInterrupt_MOSI, RISING);
-  attachInterrupt(digitalPinToInterrupt(MISO), handleInterrupt_SCK, RISING);
+  attachInterrupt(digitalPinToInterrupt(MISO), handleInterrupt_MISO, RISING);
   unsigned long starttimeMillis = millis();
   while (millis() - starttimeMillis < 1000);
   detachInterrupt(SCK);
@@ -210,13 +208,13 @@ void MeasureFrequency() {  // measure the frequency on the pins
     Serial.println("out of range!");
 
   Serial.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt_MOSI);
-  if (rising_edge_cnt_MOSI > 300 & rising_edge_cnt_MOSI < rising_edge_cnt_SCK)
+  if ((rising_edge_cnt_MOSI > 30) & (rising_edge_cnt_MOSI < rising_edge_cnt_SCK))
     Serial.println("o.k.");
   else
     Serial.println("out of range!");
 
   Serial.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt_MISO);
-  if (rising_edge_cnt_MISO >= 0 & rising_edge_cnt_MISO <= 10) {
+  if (rising_edge_cnt_MISO <= 10) {
     Serial.println("o.k.");
   }
   else {
