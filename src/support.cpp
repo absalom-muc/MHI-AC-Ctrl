@@ -43,7 +43,7 @@ void MQTTreconnect() {
 int MQTTloop() {
   if (!MQTTclient.connected()) {
     MQTTreconnect();
-    return 1;
+    return 1;         // 1 means that it just reconnected
   }
   MQTTclient.loop();
   return 0;
