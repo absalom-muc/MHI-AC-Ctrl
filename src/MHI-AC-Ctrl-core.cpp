@@ -17,7 +17,7 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_fan_old = 0xff;
   status_vanes_old = 0xff;
   status_troom_old = 0xff;
-  status_tsetpoint_old = 0xff;
+  status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
 
   // old operating data
@@ -50,28 +50,34 @@ void MHI_AC_Ctrl_Core::init() {
 }
 
 void MHI_AC_Ctrl_Core::set_power(boolean power) {
-  set_Power = true;
-  new_Power = power;
+  new_Power = 0b10 | power;
 }
 
 void MHI_AC_Ctrl_Core::set_mode(ACMode mode) {
-  set_Mode = true;
-  new_Mode = mode;
+  new_Mode = 0b00100000 | mode;
 }
 
 void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
-  set_Tsetpoint = true;
-  new_Tsetpoint = tsetpoint;
+  new_Tsetpoint = 0b10000000 | (2 * tsetpoint);
 }
 
 void MHI_AC_Ctrl_Core::set_fan(uint fan) {
-  set_Fan = true;
-  new_Fan = fan;
+  if (fan == 4) {
+    new_Fan1 = 0b00001010;
+    new_Fan6 = 0b00010000;
+  }
+  else
+    new_Fan1 = 0b00001000 | (fan - 1);
 }
 
 void MHI_AC_Ctrl_Core::set_vanes(uint vanes) {
-  set_Vanes = true;
-  new_Vanes = vanes;
+  if (vanes == vanes_swing) {
+    new_Vanes0 = 0b11000000; // ensable swing
+  }
+  else {
+    new_Vanes0 = 0b10000000; // disable swing
+    new_Vanes1 = 0b10000000 | ((vanes - 1) << 4);
+  }
 }
 
 void MHI_AC_Ctrl_Core::request_ErrOpData() {
@@ -84,17 +90,16 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   int startMillis = millis();             // start time of this loop run
   byte MOSI_byte;                         // received MOSI byte
   bool new_datapacket_received = false;   // indicated that a new frame was received
-  static uint call_counter = 0;           // counts how often this loop was called
-  int SCKMillis = millis();               // time of last SCK low level
   static byte erropdataCnt = 0;           // number of expected error operating data
   static bool doubleframe = false;
   static byte frame = 0;
-  uint16_t checksum;                      // checksum of MISO or MOSI frame
   static byte MOSI_frame[20];
   //                              sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
   static byte MISO_frame[20] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
 
+  static uint call_counter = 0;           // counts how often this loop was called
   call_counter++;
+  int SCKMillis = millis();               // time of last SCK low level
   while (millis() - SCKMillis < 5) { // wait for 5ms stable high signal to detect a frame start
     if (!digitalRead(SCK))
       SCKMillis = millis();
@@ -121,45 +126,30 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
         MISO_frame[DB9] = 0xff;
         erropdataCnt--;
       }
-      
-      if (set_Power) {
-        MISO_frame[DB0] = 0b10 | new_Power;
-        set_Power = false;
-      }
 
-      if (set_Mode) {
-        MISO_frame[DB0] = 0b00100000 | new_Mode;
+      // set Power, Mode, Tsetpoint, Fan, Vanes
+      MISO_frame[DB0] = new_Power;
+      new_Power = 0;
+
+      MISO_frame[DB0] |= new_Mode;
 #ifdef POWERON_WHEN_CHANGING_MODE
+      if (new_Mode != 0)
         MISO_frame[DB0] |= 0x11;
 #endif
-        set_Mode = false;
-      }
+      new_Mode = 0;
 
-      if (set_Tsetpoint) {
-        MISO_frame[DB2] = 0b10000000 | (2 * new_Tsetpoint);
-        set_Tsetpoint = false;
-      }
+      MISO_frame[DB2] = new_Tsetpoint;
+      new_Tsetpoint = 0;
 
-      if (set_Fan) {
-        if (new_Fan == 4) {
-          MISO_frame[DB1] = 0b1010;
-          MISO_frame[DB6] |= 0b00010000;
-        }
-        else
-          MISO_frame[DB1] = 0b1000 | (new_Fan - 1);
-        set_Fan = false;
-      }
+      MISO_frame[DB1] = new_Fan1;
+      MISO_frame[DB6] |= new_Fan6;
+      new_Fan1 = 0;
+      new_Fan6 = 0;
 
-      if (set_Vanes) {
-        if (new_Vanes == vanes_swing) {
-          MISO_frame[DB0] = 0b11000000;
-        }
-        else {
-          MISO_frame[DB0] = 0b10000000; // disable swing
-          MISO_frame[DB1] = 0b10000000 | ((new_Vanes - 1) << 4);
-        }
-        set_Vanes = false;
-      }
+      MISO_frame[DB0] |= new_Vanes0;
+      MISO_frame[DB1] |= new_Vanes1;
+      new_Vanes0 = 0;
+      new_Vanes1 = 0;
 
       if (request_erropData) {
         MISO_frame[DB6] = 0x80;
@@ -169,7 +159,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     }
   }
 
-  checksum = calc_checksum(MISO_frame);
+  uint16_t checksum = calc_checksum(MISO_frame);
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
@@ -207,7 +197,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     // evaluate status
     if ((MOSI_frame[DB0] & 0x01) != status_power_old) { // Power
       status_power_old = MOSI_frame[DB0] & 0x01;
-      m_cbiStatus->cbiStatusFunction(status_power, status_power_old != 0);
+      m_cbiStatus->cbiStatusFunction(status_power, status_power_old);
     }
 
     if ((MOSI_frame[DB0] & 0x1c) != status_mode_old) { // Mode
@@ -244,9 +234,9 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
     }
 
-    if ((MOSI_frame[DB2] & 0x7f) >> 1 != status_tsetpoint_old) { // Temperature setpoint
-      status_tsetpoint_old = (MOSI_frame[DB2] & 0x7f) >> 1;
-      m_cbiStatus->cbiStatusFunction(status_tsetpoint, status_tsetpoint_old);
+    if (MOSI_frame[DB2] != status_tsetpoint_old) { // Temperature setpoint
+      status_tsetpoint_old = MOSI_frame[DB2];
+      m_cbiStatus->cbiStatusFunction(status_tsetpoint, (status_tsetpoint_old & 0x7f) >> 1);
     }
 
     if (MOSI_frame[DB4] != status_errorcode_old) { // error code
@@ -294,7 +284,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             m_cbiStatus->cbiStatusFunction(erropdata_thi_r1, MOSI_frame[DB11]);
         }
         else {                                // 6 THI-R2
-          if ((MOSI_frame[DB10] & 0x30) == 0x10) {
+          if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != op_thi_r2_old) {
               op_thi_r2_old = MOSI_frame[DB11];
               m_cbiStatus->cbiStatusFunction(opdata_thi_r2, op_thi_r2_old);
@@ -363,7 +353,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       case 0x1e:                              // 12 TOTAL-IU-RUN or 37 TOTAL-COMP-RUN
         if ((MOSI_frame[DB6] & 0x80) != 0) {  // 12 TOTAL-IU-RUN
           if (MOSI_type_opdata) {
-            if (MOSI_frame[DB11] != op_total_iu_run_old) {    
+            if (MOSI_frame[DB11] != op_total_iu_run_old) {
               op_total_iu_run_old = MOSI_frame[DB11];
               m_cbiStatus->cbiStatusFunction(opdata_total_iu_run, op_total_iu_run_old);
             }
@@ -394,20 +384,20 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             m_cbiStatus->cbiStatusFunction(erropdata_tho_r1, MOSI_frame[DB11]);
         }
         break;
-      case 0x11:                              
+      case 0x11:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 24 COMP
           if (MOSI_type_opdata) {
             if ((MOSI_frame[DB10] << 8 | MOSI_frame[DB11]) != op_comp_old) {
               op_comp_old = MOSI_frame[DB10] << 8 | MOSI_frame[DB11];
-              m_cbiStatus->cbiStatusFunction(opdata_comp, op_comp_old & 0x0f);
+              m_cbiStatus->cbiStatusFunction(opdata_comp, op_comp_old & 0x0fff);
             }
           }
           else
-            m_cbiStatus->cbiStatusFunction(erropdata_comp, (MOSI_frame[DB10] << 8 | MOSI_frame[DB11]) & 0x0f);
+            m_cbiStatus->cbiStatusFunction(erropdata_comp, (MOSI_frame[DB10] << 8 | MOSI_frame[DB11]) & 0x0fff);
         }
         break;
-      case 0x85:                              
-        if ((MOSI_frame[DB6] & 0x80) == 0) {  // 27 Td 
+      case 0x85:
+        if ((MOSI_frame[DB6] & 0x80) == 0) {  // 27 Td
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != op_td_old) {
               op_td_old = MOSI_frame[DB11];
@@ -418,7 +408,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             m_cbiStatus->cbiStatusFunction(erropdata_td, MOSI_frame[DB11]);
         }
         break;
-      case 0x90: 
+      case 0x90:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 29 CT
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != op_ct_old) {
@@ -430,7 +420,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             m_cbiStatus->cbiStatusFunction(erropdata_ct, MOSI_frame[DB11]);
         }
         break;
-      case 0xb1: 
+      case 0xb1:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 32 TDSH
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != op_tdsh_old) {
@@ -440,7 +430,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           }
         }
         break;
-      case 0x7c: 
+      case 0x7c:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 33 PROTECTION-No
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != op_protection_no_old) {
@@ -450,7 +440,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           }
         }
         break;
-      case 0x0c: 
+      case 0x0c:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 36 DEFROST
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB10] != op_defrost_old) {
@@ -460,7 +450,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           }
         }
         break;
-      case 0x13: 
+      case 0x13:
         if ((MOSI_frame[DB6] & 0x80) == 0) {  // 38 OU-EEV
           if (MOSI_type_opdata) {
             if ((MOSI_frame[DB12] << 8 | MOSI_frame[DB11]) != op_ou_eev1_old) {
@@ -469,7 +459,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             }
           }
           else
-            m_cbiStatus->cbiStatusFunction(erropdata_ou_eev1, MOSI_frame[DB11]);
+            m_cbiStatus->cbiStatusFunction(erropdata_ou_eev1, MOSI_frame[DB12] << 8 | MOSI_frame[DB11]);
         }
         break;
       case 0x45: // last error number or count of following error operating data
@@ -484,7 +474,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
         break;
       case 0xff:  // default
         break;
-      default:
+      default:    // unknown operating data
         m_cbiStatus->cbiStatusFunction(opdata_unknwon, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
 
     }
