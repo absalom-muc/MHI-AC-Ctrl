@@ -53,15 +53,15 @@ const byte opdata[][2] {
 #define CBH DB14 + 1
 #define CBL DB14 + 2
 
-typedef enum ErrMsg {   // Error message enum
+enum ErrMsg {   // Error message enum
   err_msg_valid_frame = 0, err_msg_invalid_signature = -1, err_msg_invalid_checksum = -2, err_msg_timeout = -3
 };
 
-typedef enum ACType {   // Type enum
+enum ACType {   // Type enum
   type_status = 0x40, type_opdata = 0x80, type_erropdata = 0xc0
 };
 
-typedef enum ACStatus { // Status enum
+enum ACStatus { // Status enum
   status_rssi = type_status, status_connected, status_power, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
   opdata_mode = type_opdata, opdata_tsetpoint, opdata_return_air, opdata_outdoor, opdata_tho_r1, opdata_iu_fanspeed, opdata_thi_r1, opdata_thi_r2, opdata_thi_r3,
   opdata_ou_fanspeed, opdata_total_iu_run, opdata_total_comp_run, opdata_comp, opdata_ct, opdata_td,
@@ -71,15 +71,15 @@ typedef enum ACStatus { // Status enum
   erropdata_total_comp_run, erropdata_ou_eev1, erropdata_errorcode
 };
 
-typedef enum ACPower {  // Power enum
+enum ACPower {  // Power enum
   power_off = 0, power_on = 1
 };
 
-typedef enum ACMode {   // Mode enum
+enum ACMode {   // Mode enum
   mode_auto = 0b00000000, mode_dry = 0b00000100, mode_cool = 0b00001000, mode_fan = 0b00001100, mode_heat = 0b00010000
 };
 
-typedef enum ACVanes {  // Vanes enum
+enum ACVanes {  // Vanes enum
   vanes_1 = 1, vanes_2 = 2, vanes_3 = 3, vanes_4 = 4, vanes_unknown = 0, vanes_swing = 5
 };
 
@@ -122,16 +122,13 @@ class MHI_AC_Ctrl_Core {
     uint16_t op_ou_eev1_old;
 
     // for writing to AC
-    bool set_Power = false;
     byte new_Power;
-    bool set_Mode = false;
     byte new_Mode;
-    bool set_Tsetpoint = false;
     byte new_Tsetpoint;
-    bool set_Fan = false;
-    byte new_Fan;
-    bool set_Vanes = false;
-    byte new_Vanes;
+    byte new_Fan1 = 0;
+    byte new_Fan6 = 0;
+    byte new_Vanes0 = 0;
+    byte new_Vanes1 = 0;
     bool request_erropData = false;
 
     CallbackInterface_Status *m_cbiStatus;
