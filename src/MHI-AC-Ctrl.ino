@@ -276,9 +276,6 @@ void setup() {
 }
 
 void loop() {
-  static unsigned long DS1820Millis = millis();
-  char strtmp[10];
-
   if (MQTTloop())
     mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
   ArduinoOTA.handle();
