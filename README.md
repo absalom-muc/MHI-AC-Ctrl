@@ -12,7 +12,15 @@ a qualified professional because faulty handling may cause leakage of water, ele
 For use of the program you have to connect your ESP8266 (I use a LOLIN(WEMOS) D1 R2 & mini with 80 MHz) via a
 cable connector to your air conditioner. This has to be a split device (separated indoor and outdoor unit).
 I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are supported. I use the indoor unit SRK 35 ZS-S and the outdoor unit SRC 35 ZS-S.
-User reported that also [SRK20ZSA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/7#issuecomment-583957375) and [SRK xx ZSX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issue-558530669) are supported.
+Users reported that additionally the following models are supported
+ - SRK xx ZSX-S
+ - SRK xx ZSA-W
+ - SRK xx ZM-S
+ - SRK xx ZJ-S
+ - SRK xx ZJX-S1
+
+If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list.
+
 # Installing:
 
 ## Hardware:
