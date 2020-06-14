@@ -34,7 +34,7 @@
 #include <DallasTemperature.h>  // https://github.com/milesburton/Arduino-Temperature-Control-Library
 #endif
 
-#if HAVE_ESP01 > 0
+#if BOARD_ESP01 > 0
 #define SCK_PIN  3
 #define MOSI_PIN 0
 #define MISO_PIN 2
