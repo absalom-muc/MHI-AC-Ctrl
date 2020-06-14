@@ -23,6 +23,8 @@
 #define TEMP_MEASURE_PERIOD 30                      // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
 
+#define BOARD_ESP01 0                               // the board is ESP-01 that 4 pins only
+
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient
 #include <ArduinoOTA.h>         // https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA
@@ -30,6 +32,16 @@
 #if TEMP_MEASURE_PERIOD > 0
 #include <OneWire.h>            // https://www.pjrc.com/teensy/td_libs_OneWire.html
 #include <DallasTemperature.h>  // https://github.com/milesburton/Arduino-Temperature-Control-Library
+#endif
+
+#if HAVE_ESP01 > 0
+#define SCK_PIN  3
+#define MOSI_PIN 0
+#define MISO_PIN 2
+#else
+#define SCK_PIN  14
+#define MOSI_PIN 13
+#define MISO_PIN 12
 #endif
 
 extern PubSubClient MQTTclient;

@@ -42,10 +42,13 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   op_ou_eev1_old = 0xffff;
 }
 
-void MHI_AC_Ctrl_Core::init() {
-  pinMode(SCK_PIN, INPUT);
-  pinMode(MOSI_PIN, INPUT);
-  pinMode(MISO_PIN, OUTPUT);
+void MHI_AC_Ctrl_Core::init(byte sck, byte mosi, byte miso) {
+  sck_pin = sck;
+  mosi_pin = mosi;
+  miso_pin = miso;
+  pinMode(sck_pin, INPUT);
+  pinMode(mosi_pin, INPUT);
+  pinMode(miso_pin, OUTPUT);
   MHI_AC_Ctrl_Core::reset_old_values();
 }
 
@@ -101,7 +104,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   call_counter++;
   int SCKMillis = millis();               // time of last SCK low level
   while (millis() - SCKMillis < 5) { // wait for 5ms stable high signal to detect a frame start
-    if (!digitalRead(SCK))
+    if (!digitalRead(sck_pin))
       SCKMillis = millis();
     if (millis() - startMillis > max_time_ms)
       return err_msg_timeout;
@@ -171,13 +174,13 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     MOSI_byte = 0;
     byte bit_mask = 1;
     for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read and write 1 byte
-      while (digitalRead(SCK)) {} // wait for falling edge
+      while (digitalRead(sck_pin)) {} // wait for falling edge
       if ((MISO_frame[byte_cnt] & bit_mask) > 0)
-        digitalWrite(MISO, 1);
+        digitalWrite(miso_pin, 1);
       else
-        digitalWrite(MISO, 0);
-      while (!digitalRead(SCK)) {} // wait for rising edge
-      if (digitalRead(MOSI))
+        digitalWrite(miso_pin, 0);
+      while (!digitalRead(sck_pin)) {} // wait for rising edge
+      if (digitalRead(mosi_pin))
         MOSI_byte += bit_mask;
       bit_mask = bit_mask << 1;
     }

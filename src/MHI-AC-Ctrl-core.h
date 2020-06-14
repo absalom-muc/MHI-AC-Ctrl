@@ -30,11 +30,6 @@ const byte opdata[][2] {
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
 
 
-// pin defintions
-#define SCK_PIN  14
-#define MOSI_PIN 13
-#define MISO_PIN 12
-
 // constants for the frame
 #define SB0 0
 #define SB1 SB0 + 1
@@ -131,6 +126,11 @@ class MHI_AC_Ctrl_Core {
     byte new_Vanes1 = 0;
     bool request_erropData = false;
 
+    // pin definitions
+    byte sck_pin = SCK;
+    byte mosi_pin = MOSI;
+    byte miso_pin = MISO;
+
     CallbackInterface_Status *m_cbiStatus;
 
   public:
@@ -138,15 +138,15 @@ class MHI_AC_Ctrl_Core {
       m_cbiStatus = cb;
     };
 
-    void init();                          // initialization called once after boot
-    void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
-    int loop(uint max_time_ms);           // receive / transmit a frame of 20 bytes
-    void set_power(boolean power);        // power on/off the AC
-    void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
-    void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
-    void set_fan(uint fan);               // set the requested fan speed
-    void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
-    void request_ErrOpData();             // request that the AC provides the error data
+    void init(byte sck, byte mosi, byte miso);  // initialization called once after boot
+    void reset_old_values();                    // resets the 'old' variables ensuring that all status information are resend
+    int loop(uint max_time_ms);                 // receive / transmit a frame of 20 bytes
+    void set_power(boolean power);              // power on/off the AC
+    void set_mode(ACMode mode);                 // change AC mode (e.g. heat, dry, cool etc.)
+    void set_tsetpoint(uint tsetpoint);         // set the target temperature of the AC)
+    void set_fan(uint fan);                     // set the requested fan speed
+    void set_vanes(uint vanes);                 // set the vanes horizontal position (or swing)
+    void request_ErrOpData();                   // request that the AC provides the error data
 };
 
 #endif

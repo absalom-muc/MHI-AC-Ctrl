@@ -181,18 +181,18 @@ ICACHE_RAM_ATTR void handleInterrupt_MISO() {
 
 void MeasureFrequency() {  // measure the frequency on the pins
   char strtmp[10];
-  pinMode(SCK, INPUT);
-  pinMode(MOSI, INPUT);
-  pinMode(MISO, INPUT);
+  pinMode(SCK_PIN, INPUT);
+  pinMode(MOSI_PIN, INPUT);
+  pinMode(MISO_PIN, INPUT);
   Serial.println("Measure frequency for SCK, MOSI and MISO pin");
-  attachInterrupt(digitalPinToInterrupt(SCK), handleInterrupt_SCK, RISING);
-  attachInterrupt(digitalPinToInterrupt(MOSI), handleInterrupt_MOSI, RISING);
-  attachInterrupt(digitalPinToInterrupt(MISO), handleInterrupt_MISO, RISING);
+  attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, RISING);
+  attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, RISING);
+  attachInterrupt(digitalPinToInterrupt(MISO_PIN), handleInterrupt_MISO, RISING);
   unsigned long starttimeMillis = millis();
   while (millis() - starttimeMillis < 1000);
-  detachInterrupt(SCK);
-  detachInterrupt(MOSI);
-  detachInterrupt(MISO);
+  detachInterrupt(SCK_PIN);
+  detachInterrupt(MOSI_PIN);
+  detachInterrupt(MISO_PIN);
 
   itoa(rising_edge_cnt_SCK, strtmp, 10);
   MQTTclient.publish(MQTT_PREFIX "fSCK", strtmp, true);

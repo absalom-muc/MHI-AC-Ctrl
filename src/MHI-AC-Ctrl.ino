@@ -256,7 +256,7 @@ class StatusHandler : public CallbackInterface_Status {
 StatusHandler mhiStatusHandler;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
   Serial.println();
   Serial.println("MHI-AC-Ctrl starting");
   Serial.print("CPU frequency[Hz]=");
@@ -272,7 +272,7 @@ void setup() {
   MQTTreconnect();
   MeasureFrequency();
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
-  mhi_ac_ctrl_core.init();
+  mhi_ac_ctrl_core.init(SCK_PIN, MOSI_PIN, MISO_PIN);
 }
 
 void loop() {
