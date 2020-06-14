@@ -46,7 +46,7 @@ void MHI_AC_Ctrl_Core::init(byte sck, byte mosi, byte miso) {
   sck_pin = sck;
   mosi_pin = mosi;
   miso_pin = miso;
-  pinMode(sck_pin, INPUT);
+  pinMode(sck_pin, INPUT_PULLUP);
   pinMode(mosi_pin, INPUT);
   pinMode(miso_pin, OUTPUT);
   MHI_AC_Ctrl_Core::reset_old_values();

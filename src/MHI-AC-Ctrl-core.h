@@ -117,9 +117,9 @@ class MHI_AC_Ctrl_Core {
     uint16_t op_ou_eev1_old;
 
     // for writing to AC
-    byte new_Power;
-    byte new_Mode;
-    byte new_Tsetpoint;
+    byte new_Power = 0;
+    byte new_Mode = 0;
+    byte new_Tsetpoint = 0;
     byte new_Fan1 = 0;
     byte new_Fan6 = 0;
     byte new_Vanes0 = 0;
