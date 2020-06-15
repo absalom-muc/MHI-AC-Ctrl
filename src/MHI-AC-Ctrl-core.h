@@ -24,7 +24,7 @@ const byte opdata[][2] {
   { 0x40, 0x0c},  // 36 "DEFROST"
   { 0x40, 0x1e},  // 37 "TOTAL-COMP-RUN" [h]
   { 0x40, 0x13},  // 38 "OU-EEV" [Puls]
-  { 0xff, 0xff},  // dummy
+  { 0x00, 0x00},  // dummy
 };
 
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
