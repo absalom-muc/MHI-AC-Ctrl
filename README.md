@@ -13,11 +13,20 @@ For use of the program you have to connect your ESP8266 (I use a LOLIN(WEMOS) D1
 cable connector to your air conditioner. This has to be a split device (separated indoor and outdoor unit).
 I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are supported. I use the indoor unit SRK 35 ZS-S and the outdoor unit SRC 35 ZS-S.
 Users reported that additionally the following models are supported
- - SRK xx ZSX-S
- - SRK xx ZSA-W
- - SRK xx ZM-S
- - SRK xx ZJ-S
- - SRK xx ZJX-S1
+- SRK xx ZJ-S
+
+- SRK xx ZM-S
+
+- SRK xx ZS-S
+
+- SRK xx ZJX-S1
+
+- SRK xx ZSA-W
+
+- SRK xx ZSX-S
+
+- SRK xx ZSX-W
+
 
 If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list.
 
@@ -30,7 +39,7 @@ More details are described in [Hardware.md](Hardware.md).
 
 ## Software:
 The program uses the following libraries
- - [MQTT client library](https://github.com/knolleary/pubsubclient)
+ - [MQTT client library](https://github.com/knolleary/pubsubclient) - please don't use v2.8.0! (because of this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/18)):warning:
  - [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) (might be removed in future)
  
 and optionally you need for the use of an external temperature sensor DS18x20 the libraries
@@ -39,7 +48,7 @@ and optionally you need for the use of an external temperature sensor DS18x20 th
 
 Please check the GitHub pages to see how to install them (usually via tools -> libraries).
 
-Create a sub-directory "MHI-AC-Ctrl" and copy the files from the [src directory](src) in your MHI-AC-Ctrl sub-directory.
+Create a sub-directory "MHI-AC-Ctrl" and copy the files from the latest [release](https://github.com/absalom-muc/MHI-AC-Ctrl/releases)  src directory in your MHI-AC-Ctrl sub-directory. You could also use the recently updated version in the [src folder](src) but with the risk that it is more unstable.
 The configuration options are described in [SW-Configuration.md](SW-Configuration.md).
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
