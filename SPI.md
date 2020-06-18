@@ -268,7 +268,7 @@ The same coding is used for setting the temperature. The set bit in the MISO fra
 
 ### Error code (read only)
 The Error code is a number 0 ... 255 in MOSI DB4[7:0]. 0 means no error. 
-According my understanding the error codes listed [here](https://www.hrponline.co.uk/files/images/HRP/Catalogues/HRP_NEW_ServiceSupportHandbook.pdf#page=14) are supported, but I haven't really checked it.
+According my understanding the error codes listed [here](https://www.hrponline.co.uk/media/pdf/5f/54/33/HRP_NEW_ServiceSupportHandbook.pdf#page=14) are supported, but I haven't really checked it.
 
 ## Checksum (read only)
 The two byte checksum is calculated by the sum of the signature bytes plus the databytes. The high byte of the checksum CBH is stored at byte position 18 and the low byte of the checksum CBL is stored at byte position 19.
