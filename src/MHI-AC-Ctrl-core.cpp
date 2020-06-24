@@ -134,7 +134,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       MISO_frame[DB0] |= new_Mode;
 #ifdef POWERON_WHEN_CHANGING_MODE
       if (new_Mode != 0)
-        MISO_frame[DB0] |= 0x11;
+        MISO_frame[DB0] |= 0b11;
 #endif
       new_Mode = 0;
 
