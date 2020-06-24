@@ -2,6 +2,14 @@
 #define MHI_AC_CTRL_h
 
 // MQTT topic names
+#define TOPIC_CONNECTED "connected"
+#define TOPIC_RSSI "RSSI"
+#define TOPIC_CMD_RECEIVED "cmd_received"
+#define TOPIC_TDS1820 "Tds1820"
+#define TOPIC_FSCK "fSCK"
+#define TOPIC_FMOSI "fMOSI"
+#define TOPIC_FMISO "fMISO"
+
 #define TOPIC_POWER "Power"
 #define TOPIC_MODE "Mode"
 #define TOPIC_FAN "Fan"
@@ -32,6 +40,11 @@
 #define TOPIC_REQUEST_RESET "reset"
 
 // MQTT payload text
+#define PAYLOAD_CONNECTED_TRUE "1"
+#define PAYLOAD_CONNECTED_FALSE "0"
+#define PAYLOAD_CMD_OK "o.k."
+#define PAYLOAD_CMD_UNKNOWN "unknown command"
+#define PAYLOAD_CMD_INVALID_PARAMETER "invalid parameter"
 #define PAYLOAD_POWER_ON "On"
 #define PAYLOAD_POWER_OFF "Off"
 #define PAYLOAD_MODE_AUTO "Auto"

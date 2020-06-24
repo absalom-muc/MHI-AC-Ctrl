@@ -1,5 +1,13 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.01** (June 2020)
+- No functional changes
+- Further reduction of memory usage
+- Compiler warnings removed
+- set-mechanism reworked
+- SCK by SCK_PIN replaced according to [pull request 19](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/19)
+- Shift void MeasureFrequency() from support.cpp to MHI-AC-Ctrl-core.cpp
+
 **v2.0** (June 2020)
 - code refactored to allow simplified adaption for other frameworks (e.g. Tasmota, Home Assistant), main changes
 	- MHI-AC-Ctrl-core separated according to [Issue #13](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/13)

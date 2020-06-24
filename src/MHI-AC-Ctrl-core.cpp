@@ -42,7 +42,64 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   op_ou_eev1_old = 0xffff;
 }
 
+volatile uint rising_edge_cnt_SCK = 0;
+ICACHE_RAM_ATTR void handleInterrupt_SCK() {
+  rising_edge_cnt_SCK++;
+}
+
+volatile uint rising_edge_cnt_MOSI = 0;
+ICACHE_RAM_ATTR void handleInterrupt_MOSI() {
+  rising_edge_cnt_MOSI++;
+}
+
+volatile uint rising_edge_cnt_MISO = 0;
+ICACHE_RAM_ATTR void handleInterrupt_MISO() {
+  rising_edge_cnt_MISO++;
+}
+
+void MeasureFrequency(CallbackInterface_Status *m_cbiStatus) {  // measure the frequency on the pins
+  char strtmp[10];
+  pinMode(SCK_PIN, INPUT);
+  pinMode(MOSI_PIN, INPUT);
+  pinMode(MISO_PIN, INPUT);
+  Serial.println(F("Measure frequency for SCK, MOSI and MISO pin"));
+  attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, RISING);
+  attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, RISING);
+  attachInterrupt(digitalPinToInterrupt(MISO_PIN), handleInterrupt_MISO, RISING);
+  unsigned long starttimeMicros = micros();
+  while (micros() - starttimeMicros < 1000000);
+  detachInterrupt(SCK_PIN);
+  detachInterrupt(MOSI_PIN);
+  detachInterrupt(MISO_PIN);
+
+  m_cbiStatus->cbiStatusFunction(status_fsck, rising_edge_cnt_SCK);
+  m_cbiStatus->cbiStatusFunction(status_fmosi, rising_edge_cnt_MOSI);
+  m_cbiStatus->cbiStatusFunction(status_fmiso, rising_edge_cnt_MISO);
+
+  Serial.printf_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt_SCK);
+  if (rising_edge_cnt_SCK > 3000)
+    Serial.println(F("o.k."));
+  else
+    Serial.println(F("out of range!"));
+
+  Serial.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt_MOSI);
+  if ((rising_edge_cnt_MOSI > 30) & (rising_edge_cnt_MOSI < rising_edge_cnt_SCK))
+    Serial.println(F("o.k."));
+  else
+    Serial.println(F("out of range!"));
+
+  Serial.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt_MISO);
+  if (rising_edge_cnt_MISO <= 10) {
+    Serial.println(F("o.k."));
+  }
+  else {
+    Serial.println(F("out of range!"));
+    while (1);
+  }
+}
+
 void MHI_AC_Ctrl_Core::init() {
+  MeasureFrequency(m_cbiStatus);
   pinMode(SCK_PIN, INPUT);
   pinMode(MOSI_PIN, INPUT);
   pinMode(MISO_PIN, OUTPUT);
@@ -72,7 +129,7 @@ void MHI_AC_Ctrl_Core::set_fan(uint fan) {
 
 void MHI_AC_Ctrl_Core::set_vanes(uint vanes) {
   if (vanes == vanes_swing) {
-    new_Vanes0 = 0b11000000; // ensable swing
+    new_Vanes0 = 0b11000000; // enable swing
   }
   else {
     new_Vanes0 = 0b10000000; // disable swing
@@ -94,14 +151,14 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   static bool doubleframe = false;
   static byte frame = 0;
   static byte MOSI_frame[20];
-  //                              sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
-  static byte MISO_frame[20] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
+  //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
+  static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
 
   static uint call_counter = 0;           // counts how often this loop was called
   call_counter++;
   int SCKMillis = millis();               // time of last SCK low level
   while (millis() - SCKMillis < 5) { // wait for 5ms stable high signal to detect a frame start
-    if (!digitalRead(SCK))
+    if (!digitalRead(SCK_PIN))
       SCKMillis = millis();
     if (millis() - startMillis > max_time_ms)
       return err_msg_timeout;
@@ -117,8 +174,8 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       MISO_frame[DB1] = 0x00;
       MISO_frame[DB2] = 0x00;
       if (erropdataCnt == 0) {
-        MISO_frame[DB6] = opdata[opdataNo][0];
-        MISO_frame[DB9] = opdata[opdataNo][1];
+        MISO_frame[DB6] = pgm_read_word(opdata + opdataNo);
+        MISO_frame[DB9] = pgm_read_word(opdata + opdataNo) >> 8;
         opdataNo = (opdataNo + 1) % opdataCnt;
       }
       else { // error operating data available
@@ -164,20 +221,20 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   MISO_frame[CBL] = lowByte(checksum);
 
   //Serial.println();
-  //Serial.print("MISO:");
+  //Serial.print(F("MISO:"));
   // read/write MOSI/MISO frame
   for (uint8_t byte_cnt = 0; byte_cnt < sizeof(MOSI_frame); byte_cnt++) { // read and write a data packet of 20 bytes
     //Serial.printf("x%02x ", MISO_frame[byte_cnt]);
     MOSI_byte = 0;
     byte bit_mask = 1;
     for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read and write 1 byte
-      while (digitalRead(SCK)) {} // wait for falling edge
+      while (digitalRead(SCK_PIN)) {} // wait for falling edge
       if ((MISO_frame[byte_cnt] & bit_mask) > 0)
-        digitalWrite(MISO, 1);
+        digitalWrite(MISO_PIN, 1);
       else
-        digitalWrite(MISO, 0);
-      while (!digitalRead(SCK)) {} // wait for rising edge
-      if (digitalRead(MOSI))
+        digitalWrite(MISO_PIN, 0);
+      while (!digitalRead(SCK_PIN)) {} // wait for rising edge
+      if (digitalRead(MOSI_PIN))
         MOSI_byte += bit_mask;
       bit_mask = bit_mask << 1;
     }
@@ -476,7 +533,6 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
         break;
       default:    // unknown operating data
         m_cbiStatus->cbiStatusFunction(opdata_unknwon, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
-
     }
   }
   return call_counter;

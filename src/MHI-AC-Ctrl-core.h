@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // comment out the data you are not interested, but at least leave the last dummy row
-const byte opdata[][2] {
+const byte opdata[][2] PROGMEM = {
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
@@ -27,7 +27,8 @@ const byte opdata[][2] {
   { 0x00, 0x00},  // dummy
 };
 
-//#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+//#define POWERON_WHEN_CHANGING_MODE true    // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+#define NoFramesPerPacket 20                 // number of frames/packet, must be an even number
 
 
 // pin defintions
@@ -62,7 +63,7 @@ enum ACType {   // Type enum
 };
 
 enum ACStatus { // Status enum
-  status_rssi = type_status, status_connected, status_power, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
+  status_rssi = type_status, status_connected, status_cmd, status_tds1820, status_fsck, status_fmosi, status_fmiso, status_power, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
   opdata_mode = type_opdata, opdata_tsetpoint, opdata_return_air, opdata_outdoor, opdata_tho_r1, opdata_iu_fanspeed, opdata_thi_r1, opdata_thi_r2, opdata_thi_r3,
   opdata_ou_fanspeed, opdata_total_iu_run, opdata_total_comp_run, opdata_comp, opdata_ct, opdata_td,
   opdata_tdsh, opdata_protection_no, opdata_defrost, opdata_ou_eev1, opdata_unknwon,
@@ -82,8 +83,6 @@ enum ACMode {   // Mode enum
 enum ACVanes {  // Vanes enum
   vanes_1 = 1, vanes_2 = 2, vanes_3 = 3, vanes_4 = 4, vanes_unknown = 0, vanes_swing = 5
 };
-
-#define NoFramesPerPacket 20  // number of frames/packet, must be an even number
 
 class CallbackInterface_Status {
   public: virtual void cbiStatusFunction(ACStatus status, int value) = 0;
@@ -122,9 +121,9 @@ class MHI_AC_Ctrl_Core {
     uint16_t op_ou_eev1_old;
 
     // for writing to AC
-    byte new_Power;
-    byte new_Mode;
-    byte new_Tsetpoint;
+    byte new_Power = 0;
+    byte new_Mode = 0;
+    byte new_Tsetpoint = 0;
     byte new_Fan1 = 0;
     byte new_Fan6 = 0;
     byte new_Vanes0 = 0;

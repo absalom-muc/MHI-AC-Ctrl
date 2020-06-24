@@ -1,6 +1,7 @@
 #ifndef SUPPORT_h
 #define SUPPORT_h
 #include "MHI-AC-Ctrl-core.h"
+#include "MHI-AC-Ctrl.h"
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
@@ -40,11 +41,10 @@ void MQTTreconnect();
 void publish_cmd_ok();
 void publish_cmd_unknown();
 void publish_cmd_invalidparameter();
-void output(ACStatus status, const char* topic, const char* payload);
+void output_P(ACStatus status, PGM_P topic, PGM_P payload);
 
 void setupOTA();
 void setup_ds18x20();
 void getDs18x20Temperature(int temp_hysterese);
-void MeasureFrequency();
 
 #endif
