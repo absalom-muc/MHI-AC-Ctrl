@@ -189,10 +189,6 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       new_Power = 0;
 
       MISO_frame[DB0] |= new_Mode;
-#ifdef POWERON_WHEN_CHANGING_MODE
-      if (new_Mode != 0)
-        MISO_frame[DB0] |= 0b11;
-#endif
       new_Mode = 0;
 
       MISO_frame[DB2] = new_Tsetpoint;
@@ -252,14 +248,14 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
 
   if (new_datapacket_received) {
     // evaluate status
-    if ((MOSI_frame[DB0] & 0x01) != status_power_old) { // Power
-      status_power_old = MOSI_frame[DB0] & 0x01;
-      m_cbiStatus->cbiStatusFunction(status_power, status_power_old);
-    }
-
     if ((MOSI_frame[DB0] & 0x1c) != status_mode_old) { // Mode
       status_mode_old = MOSI_frame[DB0] & 0x1c;
       m_cbiStatus->cbiStatusFunction(status_mode, status_mode_old);
+    }
+
+    if ((MOSI_frame[DB0] & 0x01) != status_power_old) { // Power
+      status_power_old = MOSI_frame[DB0] & 0x01;
+      m_cbiStatus->cbiStatusFunction(status_power, status_power_old);
     }
 
     uint fantmp;
@@ -528,6 +524,8 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
             erropdataCnt = MOSI_frame[DB11] + 4;
           }
         }
+        break;
+      case 0x00:  // dummy
         break;
       case 0xff:  // default
         break;

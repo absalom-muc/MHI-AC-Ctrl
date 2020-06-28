@@ -1,5 +1,8 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.02** (June 2020)
+- Functionality for POWERON_WHEN_CHANGING_MODE enhanced, the according #define shifted to support.h
+
 **v2.01** (June 2020)
 - No functional changes
 - Further reduction of memory usage

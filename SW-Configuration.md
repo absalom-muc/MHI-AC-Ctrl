@@ -4,9 +4,9 @@ The following descriptions address two use cases:
 2. Advanced settings for other frameworks (e.g. Tasmota, Home Assistant, Homie)
 
 # Basic settings
-The basic settings will be adapted in two files:   
- - [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h) for general input / output settings (i.e. topic / payload text)
- - [support.h](src/support.h) for settings related to WiFi, MQTT, OTA and the external temperature sensor DS18x20
+The basic settings will be adapted in three files:   
+ - [support.h](src/support.h) for general settings related to WiFi, MQTT, OTA and the external temperature sensor DS18x20
+ - [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h) for input / output settings (i.e. topic / payload text)
  - [MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h) for settings related to the behaviour of MHI-AC-Ctrl (e.g. selection of operating data)
 
 ## WiFi ([support.h](src/support.h))
@@ -52,14 +52,14 @@ You can change MQTT_PREFIX and MQTT_SET_PREFIX, default is
 ```
 Please pay attention to the case sensitivity.
 
-The following status data are available (prefix is not listed)
+The following status data is available (prefix is not listed)
 They are only published when there is a change of the message. The retained flag is 'true'.
 When writing data, the retain flag shall be 'false'!
 
 topic|r/w|value|comment
 -----|---|-----|------
 Power|r/w|"On", "Off"|
-Mode|r/w|"Auto", "Dry", "Cool", "Fan" or "Heat"
+Mode|r/w|"Auto", "Dry", "Cool", "Fan", "Heat" and "Off"|"Off" is only supported when option [POWERON_WHEN_CHANGING_MODE](#behaviour-when-changing-ac-mode-supporth) is selected
 Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
 Fan|r/w|1 ... 4|Fan level
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
@@ -68,10 +68,8 @@ Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C 
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
 
-<sup>1</sup> When the last Vanes related command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
-<sup>2</sup> Only available when a DS18x20 is connected (please see the description in [Hardware.md](Hardware.md) and in the following line a value > 0 is used.
-
-note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+<sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
+<sup>2</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
 
 Additionally, the following program status topics are available:
 
@@ -85,16 +83,69 @@ connected|r  |0, 1|ESP8266 connection status to broker
 cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feedback for last set command
 reset|w|"reset"|resets the ESP8266
 
+note: The topic and the payload text of the status data is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+
 ### MQTT operating data
-MHI-AC-Ctrl can also provide operating data of the indoor and outdoor unit. This data is not needed for daily use, but might be interesting in specific use cases. Operating data is only published when there is a change of the content. The retained flag is 'true'.
+MHI-AC-Ctrl can provide operating data of the indoor and outdoor unit. This data is not needed for daily use, but might be interesting in specific use cases. Operating data is only published when there is a change of the content. The retained flag is 'true'.
 The path to the operating data topic can be adapted.
 
 ```
 #define MQTT_OP_PREFIX "OpData/"    // prefix for publishing operating data
 ```
 
-Without changes of the path, subscribe to *MHI-AC-Ctrl/OpData/#* for receiving all operating data.   
-Currently the following operating data topics in double quotes are supported
+Without changes of the path, subscribe to *MHI-AC-Ctrl/OpData/#* for receiving all operating data. Please see section [Operating data](#operating-data-mhi-ac-ctrl-coreh) to find all supported operating data.
+
+note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+
+
+### MQTT last error operating data
+When an error in the AC occurs, some operating data of this error are stored in the AC and can be read out.
+The path to the operating data topic is defined in   
+```
+#define MQTT_OP_PREFIX "ErrOpData/"    // prefix for publishing operating data from last error
+```
+The readout of last error operating data is triggered by publishing *ErrOpData* to topic ErrOpData. Not all of the operating data from section [Operating data](#operating-data-mhi-ac-ctrl-coreh) might be available as last error operating data.
+
+note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+
+## OTA Settings ([support.h](src/support.h))
+OTA (Over the Air) update is the process of loading the firmware to ESP module using Wi-Fi connection rather than a serial port.
+The OTA hostname can be adapted, per default it is the hostname used by WiFi.
+```
+#define OTA_HOSTNAME HOSTNAME     // default for the OTA_HOSTNAME is the HOSTNAME
+#define OTA_PASSWORD ""           // Enter an OTA password if required
+```
+## External Temperature Sensor Settings ([support.h](src/support.h))
+When an external temperature sensor is connected, you can configure the pin where DQ of the the DS18x20 is connected, default is Pin 4 (D2)
+and how often the sensor should be read.
+If no external sensor is connected, set TEMP_MEASURE_PERIOD to 0.
+```
+#define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
+#define TEMP_MEASURE_PERIOD 30  // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+                                // enter 0 if you don't use the DS18x20 
+```
+## Behaviour when changing AC mode ([support.h](src/support.h))
+Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
+But when you uncomment the following line, then the AC is switched on, once you change the AC mode and switched off if you publish "Off" to Mode (instead of Power). This beahviour is requested for use with [Home Assistant](https://www.home-assistant.io/).
+```
+//#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+```
+
+# Advanced settings
+
+## Topic and payload text ([MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h))
+All topic and payload text is included in defines, e.g. change
+```
+#define PAYLOAD_POWER_ON "On"
+```
+to
+```
+#define PAYLOAD_POWER_ON "on"
+```
+if your framework prefers lower case. These topics and payloads are used for MQTT topics and payloads.
+
+## Operating data ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h))
+Currently the following operating data in double quotes are supported
 ```
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
@@ -115,64 +166,17 @@ Currently the following operating data topics in double quotes are supported
   { 0x40, 0x0c},  // 36 "DEFROST"
   { 0x40, 0x1e},  // 37 "TOTAL-COMP-RUN" [h]
   { 0x40, 0x13},  // 38 "OU-EEV" [Puls]
+  { 0x00, 0x00},  // dummy
 ```
 
-note: For THI-R2, THO-R1 and TDSH the formula for calculation is not known.
-To reduce the MQTT load, you can comment out the lines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h) you are not interested. But at least the dummy line must be available.
+note: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
+For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
 You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/files/images/HRP/Catalogues/HRP_NEW_ServiceSupportHandbook.pdf#page=7).    
-1 "MODE" seems to be identical to Mode in the first table    
-2 "SET-TEMP" seems to be identical to Tsetpoint in the first table    
-etc.
 
-note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+hint: The error operating data are usually a sub-set of the operating data above. If user requets error operating data, all available error operating data are provide independent from the list above.
 
 
-### MQTT last error operating data
-When an error in the AC occurs, some operating data of this error are stored in the AC and can be read out.
-The path to the operating data topic is defined in   
-```
-#define MQTT_OP_PREFIX "ErrOpData/"    // prefix for publishing operating data from last error
-```
-The readout of last error operating data is triggered by publishing *ErrOpData* to topic ErrOpData. 
-
-note: Not all of the operating data from the previous section are available as last error operating data.
-
-## OTA Settings ([support.h](src/support.h))
-OTA (Over the Air) update is the process of loading the firmware to ESP module using Wi-Fi connection rather than a serial port.
-The OTA hostname can be adapted, per default it is the hostname used by WiFi.
-```
-#define OTA_HOSTNAME HOSTNAME     // default for the OTA_HOSTNAME is the HOSTNAME
-#define OTA_PASSWORD ""           // Enter an OTA password if required
-```
-## External Temperature Sensor Settings ([support.h](src/support.h))
-When an external temperature sensor is connected, you can configure the pin where DQ of the the DS18x20 is connected, default is Pin 4 (D2)
-and how often the sensor should be read.
-If no external sensor is connected, set TEMP_MEASURE_PERIOD to 0.
-```
-#define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
-#define TEMP_MEASURE_PERIOD 30  // period in seconds for temperature measurement with the external DS18x20 temperature sensor
-                                // enter 0 if you don't use the DS18x20 
-```
-## Behaviour when changing AC mode ([MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h))
-Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
-But when you uncomment the following line, then the AC is switched on, once you change the AC mode.
-```
-//#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
-```
-
-# Advanced settings
-## Topic and payload text
-All topic and payload text is included in defines, e.g. change
-```
-#define PAYLOAD_POWER_ON "On"
-```
-to
-```
-#define PAYLOAD_POWER_ON "on"
-```
-if your framework prefers lower case. These topics and payloads are used for MQTT topics and payloads.
-
-## Access Speed
+## Access Speed ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h ))
 With the following parameter you can determine the number of frames used for writing to the AC. It is used
 for writing status values and for reading (error) operating data.
 ```
@@ -183,13 +187,12 @@ but it reduces the access speed and the frequency of operating data reads.
 Since this parameter also influences the time available for the processing of AC commands, the parameter should not be chosen too small.
 
 ## MHI-AC-Ctrl partitioning
-MHI-AC-Ctrl-core implements only the core functions (SPI read/write, communication with the wrapper).
-Wifi, MQTT, OTA and DS18x20 stuff is located support.h and support.cpp.
+MHI-AC-Ctrl-core implements the core functions (SPI read/write, communication with the wrapper).
+Wifi, MQTT, OTA and DS18x20 stuff is located in support.h and support.cpp.
 MHI-AC-Ctrl.ino and MHI-AC-Ctrl.h contain the wrapper for MHI-AC-Ctrl-core.cpp and support.cpp.
 
 ### MHI-AC-Ctrl-core.h and MHI-AC-Ctrl-core.cpp
-Implements only the core functions (SPI read/write, communication with the wrapper). 
-Usually it should be not touched, only configured via [MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h) as described above.
+Usually it should be not touched, only configured via [MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h).
 AC status information change will trigger the callback function cbiStatusFunction located in [MHI-AC-Ctrl.ino](src/MHI-AC-Ctrl.ino)
 It is controlled via the functions:
 ```
@@ -213,7 +216,7 @@ This should be called if you want to ensure that the receiver of the status data
 
 ### int loop(uint max_time_ms)
 For receiving / transmitting a frame of 20 bytes.
-The input parameter is the maximum time which should be consumed by the loop function. Use a value > T<sub>Frame</sub> + T<sub>FramePause</sub> to ensure there is succient time to receive a frame.
+The input parameter is the maximum time which should be consumed by the loop function. Use a value > T<sub>Frame</sub> + T<sub>FramePause</sub> to ensure there is sufficient time to receive a frame.
 
 This is a blocking function which takes - dependent on the AC model - about 10 ... 50ms. Inside the loop function no delay() or yield() call is used.
 The following return values are supported:

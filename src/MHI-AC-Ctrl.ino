@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl v2.01 by absalom-muc
+// MHI-AC-Ctrl v2.02 by absalom-muc
 // read + write data via SPI controlled by MQTT
 
 #include "MHI-AC-Ctrl-core.h"
@@ -10,6 +10,7 @@ MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
   Serial.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
+#ifndef POWERON_WHEN_CHANGING_MODE
   if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_POWER)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_ON)) == 0) {
       mhi_ac_ctrl_core.set_power(power_on);
@@ -22,29 +23,52 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_MODE)) == 0) {
-    if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_AUTO)) == 0) {
-      mhi_ac_ctrl_core.set_mode(mode_auto);
+  else 
+#endif
+  if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_MODE)) == 0) {
+#ifdef POWERON_WHEN_CHANGING_MODE
+    if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_OFF)) == 0) {
+      mhi_ac_ctrl_core.set_power(power_off);
       publish_cmd_ok();
-    }
-    else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_DRY)) == 0) {
-      mhi_ac_ctrl_core.set_mode(mode_dry);
-      publish_cmd_ok();
-    }
-    else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_COOL)) == 0) {
-      mhi_ac_ctrl_core.set_mode(mode_cool);
-      publish_cmd_ok();
-    }
-    else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_FAN)) == 0) {
-      mhi_ac_ctrl_core.set_mode(mode_fan);
-      publish_cmd_ok();
-    }
-    else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_HEAT)) == 0) {
-      mhi_ac_ctrl_core.set_mode(mode_heat);
-      publish_cmd_ok();
-    }
-    else
-      publish_cmd_invalidparameter();
+    } else
+#endif
+      if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_AUTO)) == 0) {
+        mhi_ac_ctrl_core.set_mode(mode_auto);
+#ifdef POWERON_WHEN_CHANGING_MODE
+        mhi_ac_ctrl_core.set_power(power_on);
+#endif
+        publish_cmd_ok();
+      }
+      else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_DRY)) == 0) {
+        mhi_ac_ctrl_core.set_mode(mode_dry);
+#ifdef POWERON_WHEN_CHANGING_MODE
+        mhi_ac_ctrl_core.set_power(power_on);
+#endif
+        publish_cmd_ok();
+      }
+      else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_COOL)) == 0) {
+        mhi_ac_ctrl_core.set_mode(mode_cool);
+#ifdef POWERON_WHEN_CHANGING_MODE
+        mhi_ac_ctrl_core.set_power(power_on);
+#endif
+        publish_cmd_ok();
+      }
+      else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_FAN)) == 0) {
+        mhi_ac_ctrl_core.set_mode(mode_fan);
+#ifdef POWERON_WHEN_CHANGING_MODE
+        mhi_ac_ctrl_core.set_power(power_on);
+#endif
+        publish_cmd_ok();
+      }
+      else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_HEAT)) == 0) {
+        mhi_ac_ctrl_core.set_mode(mode_heat);
+#ifdef POWERON_WHEN_CHANGING_MODE
+        mhi_ac_ctrl_core.set_power(power_on);
+#endif
+        publish_cmd_ok();
+      }
+      else
+        publish_cmd_invalidparameter();
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TSETPOINT)) == 0) {
     if ((atoi((char*)payload) >= 18) & (atoi((char*)payload) <= 30)) {
@@ -114,8 +138,12 @@ class StatusHandler : public CallbackInterface_Status {
         case status_power:
           if (value == power_on)
             output_P(status, (TOPIC_POWER), PSTR(PAYLOAD_POWER_ON));
-          else
+          else {
             output_P(status, (TOPIC_POWER), (PAYLOAD_POWER_OFF));
+#ifdef POWERON_WHEN_CHANGING_MODE
+            output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_OFF));
+#endif
+          }
           break;
         case status_mode:
         case opdata_mode:
@@ -220,7 +248,7 @@ class StatusHandler : public CallbackInterface_Status {
           break;
         case erropdata_td:
         case opdata_td:
-          if(value < 0x12)
+          if (value < 0x12)
             strcpy(strtmp, "<=30");
           else
             itoa(value / 2 + 32, strtmp, 10);

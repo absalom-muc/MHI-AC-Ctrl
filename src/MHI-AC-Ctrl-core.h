@@ -27,7 +27,6 @@ const byte opdata[][2] PROGMEM = {
   { 0x00, 0x00},  // dummy
 };
 
-//#define POWERON_WHEN_CHANGING_MODE true    // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
 #define NoFramesPerPacket 20                 // number of frames/packet, must be an even number
 
 

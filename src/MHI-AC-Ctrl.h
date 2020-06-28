@@ -47,6 +47,7 @@
 #define PAYLOAD_CMD_INVALID_PARAMETER "invalid parameter"
 #define PAYLOAD_POWER_ON "On"
 #define PAYLOAD_POWER_OFF "Off"
+#define PAYLOAD_MODE_OFF PAYLOAD_POWER_OFF
 #define PAYLOAD_MODE_AUTO "Auto"
 #define PAYLOAD_MODE_STOP "Stop"
 #define PAYLOAD_MODE_DRY "Dry"

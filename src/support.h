@@ -5,7 +5,7 @@
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
-#define HOSTNAME "MHI-AC-Ctrl"
+#define HOSTNAME "MHI-AC-Ctrl2"
 
 #define MQTT_SERVER "ds218p"                        // broker name or IP address of the broker
 #define MQTT_PORT 1883                              // port number used by the broker
@@ -23,6 +23,9 @@
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 #define TEMP_MEASURE_PERIOD 30                      // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
+
+//#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+                                                    // used e.g. for home assistant support
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient
