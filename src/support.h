@@ -5,7 +5,7 @@
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
-#define HOSTNAME "MHI-AC-Ctrl2"
+#define HOSTNAME "MHI-AC-Ctrl"
 
 #define MQTT_SERVER "ds218p"                        // broker name or IP address of the broker
 #define MQTT_PORT 1883                              // port number used by the broker
