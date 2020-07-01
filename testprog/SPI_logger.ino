@@ -1,83 +1,91 @@
 // SPI logger
-// logs the timing of the SCK and MOSI SPI signal edges
+// logs the timing of the SCK, MOSI and MISO signal edges
+// and creates a .vcd (Value change dump) format. 
+// This vcd format is supported by many waveform viewers, e.g. PulseView
 
-// Please use the serial terminal to create a log file
+// Please use the serial terminal to generate a log file
 // baud rate should be 115200, timestamp disabled!
-// run the program with 160MHz (tools -> CPU frequency -> 160MHz)
 // Please copy the log content to a file and use the file name format "AC-model.txt" (e.g. SRK35ZS-S.txt)
-// and upload it
-// Thank you!
+// and upload it as an attachement to your item.
 
-// Background:
-// You can easily read the log file by Excel and create a graphical view (diagram) similar to a logic analyzer/oscilloscope
-// This helps to understand the SPI protocol
-
-#define version "v1.0"
+#define version "v2.0"
 #define SCK_PIN  14
 #define MOSI_PIN 13
-#define edge_cnt_MAX 2000
+#define MISO_PIN 12
 
-volatile unsigned long sck_time[edge_cnt_MAX];
-volatile byte sck_value[edge_cnt_MAX];
-volatile unsigned long mosi_time[edge_cnt_MAX];
-volatile byte mosi_value[edge_cnt_MAX];
-volatile uint sck_edge_cnt = 0;;
-volatile uint mosi_edge_cnt = 0;;
+const char SCK_CHAR =  '!';
+const char MOSI_CHAR =  '#';
+const char MISO_CHAR =  '$';
 
-void setup()  {  // measure the frequency on the pins
+static const int N_SAMPLES = 1400;
+
+static constexpr uint32_t MASK = (1 << SCK_PIN) | (1 << MOSI_PIN) | (1 << MISO_PIN);
+
+void setup()  {
   Serial.begin(115200);
   Serial.println();
   Serial.println();
   pinMode(SCK_PIN, INPUT);
   pinMode(MOSI_PIN, INPUT);
+  pinMode(MISO_PIN, INPUT);
   Serial.println("SPI logger " version);
   Serial.print("CPU frequency [Hz] : ");
   Serial.println(F_CPU);
+  Serial.print(N_SAMPLES);
+  Serial.println(" samples");
+  Serial.println();
 }
 
-ICACHE_RAM_ATTR void handleInterrupt_SCK() {
-  sck_time[sck_edge_cnt] = micros();
-  sck_value[sck_edge_cnt] = digitalRead(SCK_PIN);
-  sck_edge_cnt++;
-}
+unsigned long times[N_SAMPLES]; // when did change happen
+uint32_t values[N_SAMPLES];     // GPI value at time
 
-ICACHE_RAM_ATTR void handleInterrupt_MOSI() {
-  mosi_time[mosi_edge_cnt] = micros();
-  mosi_value[mosi_edge_cnt] = digitalRead(MOSI_PIN);
-  mosi_edge_cnt++;
+extern void ICACHE_RAM_ATTR collect() {
+  // based on https://github.com/aster94/logic-analyzer
+  times[0] = micros();
+  values[0] = GPI & MASK;
+  for (int i = 1; i < N_SAMPLES; ++i) {
+    uint32_t value;
+    do {
+      value = GPI & MASK;
+    } while (value == values[i - 1]);
+    times[i] = micros();
+    values[i] = value;
+  }
 }
 
 void loop() {
-  Serial.println();
-  Serial.print("acquisition - please wait, ");
-  for (int edge_cnt = 0; edge_cnt < edge_cnt_MAX; edge_cnt++) {
-    sck_time[edge_cnt] = 0;
-    mosi_time[edge_cnt] = 0;
-  }
-
-  attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, CHANGE);
-  while (sck_edge_cnt < edge_cnt_MAX);
-  detachInterrupt(SCK_PIN);
-  detachInterrupt(MOSI_PIN);
-
-  Serial.println("ready, output data:");
-  Serial.println("time;SCK;MOSI");
-  for (int edge_cnt = 1; edge_cnt < edge_cnt_MAX; edge_cnt++) {
-    Serial.printf("%lu;%i;\n", sck_time[edge_cnt] - sck_time[0], sck_value[edge_cnt] ^ 1);
-    Serial.printf("%lu;%i;\n", sck_time[edge_cnt] - sck_time[0], sck_value[edge_cnt]);
-    delay(0);
-  }
-  Serial.println();
-  for (int edge_cnt = 1; edge_cnt < edge_cnt_MAX; edge_cnt++) {
-    if ((mosi_time[edge_cnt] == 0) | (mosi_time[edge_cnt] > sck_time[edge_cnt_MAX - 1]))
+  Serial.println("$timescale 1 us $end");
+  Serial.printf("$var wire 1 %c sck $end\n", SCK_CHAR);
+  Serial.printf("$var wire 1 %c mosi $end\n", MOSI_CHAR);
+  Serial.printf("$var wire 1 %c miso $end\n", MISO_CHAR);
+  Serial.println("$enddefinitions $end");
+  collect();
+  char sig_char;
+  byte sig_val;
+  for (int i = 1; i < N_SAMPLES; ++i) {
+    if ((values[i] & (1 << SCK_PIN)) != (values[i - 1] & (1 << SCK_PIN))) {
+      sig_char = SCK_CHAR;
+      sig_val = ((values[i] & (1 << SCK_PIN)) > 0);
+    }
+    else if ((values[i] & (1 << MOSI_PIN)) != (values[i - 1] & (1 << MOSI_PIN))) {
+      sig_char = MOSI_CHAR;
+      sig_val = ((values[i] & (1 << MOSI_PIN)) > 0);
+    }
+    else if ((values[i] & (1 << MISO_PIN)) != (values[i - 1] & (1 << MISO_PIN))) {
+      sig_char = MISO_CHAR;
+      sig_val = ((values[i] & (1 << MISO_PIN)) > 0);
+    }
+    else {
+      Serial.printf("ERROR\n");
       break;
-    Serial.printf("%lu; ;%i\n", mosi_time[edge_cnt] - sck_time[0], 2 + mosi_value[edge_cnt] ^ 1);
-    Serial.printf("%lu; ;%i\n", mosi_time[edge_cnt] - sck_time[0], 2 + mosi_value[edge_cnt]);
-    delay(0);
+    }
+    Serial.printf("#%u %i%c\n", ((uint32_t)(times[i] - times[0])), sig_val, sig_char);
   }
+
   Serial.println();
   Serial.println("finished");
+
+  //Serial.printf("MISO cnt=%i\n", tmp);
   while (1)
     delay(0);
 }
