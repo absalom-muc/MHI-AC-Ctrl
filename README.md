@@ -48,7 +48,7 @@ The configuration options are described in [SW-Configuration.md](SW-Configuratio
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
 This Software based SPI is reliable and the performance of the ESP8266 is sufficient for this use case.
-In case of problems please check the serial debug output first.
+In case of problems please check the [Troubleshooting guide](Troubleshooting.md).
 
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
