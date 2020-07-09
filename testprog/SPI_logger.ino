@@ -1,14 +1,14 @@
 // SPI logger
 // logs the timing of the SCK, MOSI and MISO signal edges
-// and creates a .vcd (Value change dump) format. 
+// and creates a .vcd (Value change dump) format.
 // This vcd format is supported by many waveform viewers, e.g. PulseView
 
 // Please use the serial terminal to generate a log file
 // baud rate should be 115200, timestamp disabled!
 // Please copy the log content to a file and use the file name format "AC-model.txt" (e.g. SRK35ZS-S.txt)
-// and upload it as an attachement to your item.
+// and upload it as an attachement to your issue.
 
-#define version "v2.0"
+#define version "v2.1"
 #define SCK_PIN  14
 #define MOSI_PIN 13
 #define MISO_PIN 12
@@ -17,7 +17,8 @@ const char SCK_CHAR =  '!';
 const char MOSI_CHAR =  '#';
 const char MISO_CHAR =  '$';
 
-static const int N_SAMPLES = 1400;
+const int N_SAMPLES = 1400;
+const uint32_t STARTTIME = 1000;
 
 static constexpr uint32_t MASK = (1 << SCK_PIN) | (1 << MOSI_PIN) | (1 << MISO_PIN);
 
@@ -54,38 +55,44 @@ extern void ICACHE_RAM_ATTR collect() {
 }
 
 void loop() {
+  do {
+    collect();
+    delay(0);
+  } while ((uint32_t)(times[1] - times[0]) < 5000);  // wait for 5ms stable signal
+
+  uint32_t time_offset = times[1] - STARTTIME;
   Serial.println("$timescale 1 us $end");
   Serial.printf("$var wire 1 %c sck $end\n", SCK_CHAR);
   Serial.printf("$var wire 1 %c mosi $end\n", MOSI_CHAR);
   Serial.printf("$var wire 1 %c miso $end\n", MISO_CHAR);
   Serial.println("$enddefinitions $end");
-  collect();
-  char sig_char;
-  byte sig_val;
+  Serial.printf("#0 %i%c %i%c %i%c\n", ((values[0] & (1 << SCK_PIN)) > 0), SCK_CHAR, ((values[0] & (1 << MOSI_PIN)) > 0), MOSI_CHAR, ((values[0] & (1 << MISO_PIN)) > 0), MISO_CHAR);
   for (int i = 1; i < N_SAMPLES; ++i) {
+    char val_and_char[10];
+    val_and_char[0] = 0;
+    int strcnt = 0;
     if ((values[i] & (1 << SCK_PIN)) != (values[i - 1] & (1 << SCK_PIN))) {
-      sig_char = SCK_CHAR;
-      sig_val = ((values[i] & (1 << SCK_PIN)) > 0);
+      val_and_char[strcnt++] = ' ';
+      val_and_char[strcnt++] = 48 + ((values[i] & (1 << SCK_PIN)) > 0);
+      val_and_char[strcnt++] = SCK_CHAR;
     }
-    else if ((values[i] & (1 << MOSI_PIN)) != (values[i - 1] & (1 << MOSI_PIN))) {
-      sig_char = MOSI_CHAR;
-      sig_val = ((values[i] & (1 << MOSI_PIN)) > 0);
+    if ((values[i] & (1 << MOSI_PIN)) != (values[i - 1] & (1 << MOSI_PIN))) {
+      val_and_char[strcnt++] = ' ';
+      val_and_char[strcnt++] = 48 + ((values[i] & (1 << MOSI_PIN)) > 0);
+      val_and_char[strcnt++] = MOSI_CHAR;
     }
-    else if ((values[i] & (1 << MISO_PIN)) != (values[i - 1] & (1 << MISO_PIN))) {
-      sig_char = MISO_CHAR;
-      sig_val = ((values[i] & (1 << MISO_PIN)) > 0);
+    if ((values[i] & (1 << MISO_PIN)) != (values[i - 1] & (1 << MISO_PIN))) {
+      val_and_char[strcnt++] = ' ';
+      val_and_char[strcnt++] = 48 + ((values[i] & (1 << MISO_PIN)) > 0);
+      val_and_char[strcnt++] = MISO_CHAR;
     }
-    else {
-      Serial.printf("ERROR\n");
-      break;
-    }
-    Serial.printf("#%u %i%c\n", ((uint32_t)(times[i] - times[0])), sig_val, sig_char);
+    val_and_char[strcnt] = 0;
+    Serial.printf("#%u%s\n", ((uint32_t)(times[i] - time_offset)), val_and_char);
   }
 
   Serial.println();
   Serial.println("finished");
 
-  //Serial.printf("MISO cnt=%i\n", tmp);
   while (1)
     delay(0);
 }
