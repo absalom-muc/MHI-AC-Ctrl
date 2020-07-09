@@ -61,15 +61,16 @@ topic|r/w|value|comment
 Power|r/w|"On", "Off"|
 Mode|r/w|"Auto", "Dry", "Cool", "Fan", "Heat" and "Off"|"Off" is only supported when option [POWERON_WHEN_CHANGING_MODE](#behaviour-when-changing-ac-mode-supporth) is selected
 Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
-Fan|r/w|1 ... 4|Fan level
-Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
+Fan|r/w|1 ... 4|Fan level <sup>1</sup>
+Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>2</sup>
 Troom|r|0 ... 35|Room temperature (float) in °C.
-Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C  <sup>2</sup>
+Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C  <sup>3</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
 
-<sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
-<sup>2</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
+<sup>1</sup> Fan auto is not supported via the SPI.   
+<sup>2</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
+<sup>3</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
 
 Additionally, the following program status topics are available:
 
@@ -173,7 +174,7 @@ note: If you are not interested in these operating modes (e.g. to reduce the MQT
 For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
 You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/files/images/HRP/Catalogues/HRP_NEW_ServiceSupportHandbook.pdf#page=7).    
 
-hint: The error operating data are usually a sub-set of the operating data above. If user requets error operating data, all available error operating data are provide independent from the list above.
+hint: The error operating data is usually a sub-set of the operating data above. If user requests error operating data, all available error operating data is provided independent from the list above.
 
 
 ## Access Speed ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h ))
