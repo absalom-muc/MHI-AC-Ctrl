@@ -19,13 +19,15 @@ Part |Value           |Package
 C1   |22µ/50V          |E5-10,5
 C2   |100n             |C025-024X044
 C3   |22p              |C025-024X044
-JP1  |                 |JP1
+JP1  |                 |JP1  <sup>1</sup>
 LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH
 U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI
 U$4  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
 U$5  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
 U1   |TSR_1-2450       |TSR-1
 
+<sup>1</sup> Originally jumper JP1 was planned for the case if there is a problem when the ESP8266 is supplied simultaneously via the DC/DC converter and during test / debug via USB. But I have never seen a problem with it. So the jumper pins can be directly bridged by a piece of wire.
+ 
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the indoor unit PCB.
 ![Indoor PCSchematicB](/images/SRK-PCB.jpg)
