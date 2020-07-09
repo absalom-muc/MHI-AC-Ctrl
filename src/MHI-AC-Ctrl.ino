@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl v2.02 by absalom-muc
+// MHI-AC-Ctrl v2.03 by absalom-muc
 // read + write data via SPI controlled by MQTT
 
 #include "MHI-AC-Ctrl-core.h"
@@ -121,6 +121,7 @@ class StatusHandler : public CallbackInterface_Status {
   public:
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
+      static int mode_tmp = 0xff;
       Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
         case status_fsck:
@@ -136,8 +137,12 @@ class StatusHandler : public CallbackInterface_Status {
           output_P(status, PSTR(TOPIC_FMISO), strtmp);
           break;
         case status_power:
-          if (value == power_on)
+          if (value == power_on){
             output_P(status, (TOPIC_POWER), PSTR(PAYLOAD_POWER_ON));
+#ifdef POWERON_WHEN_CHANGING_MODE
+            cbiStatusFunction(status_mode, mode_tmp);
+#endif
+          }
           else {
             output_P(status, (TOPIC_POWER), (PAYLOAD_POWER_OFF));
 #ifdef POWERON_WHEN_CHANGING_MODE
@@ -146,6 +151,7 @@ class StatusHandler : public CallbackInterface_Status {
           }
           break;
         case status_mode:
+          mode_tmp = value;
         case opdata_mode:
         case erropdata_mode:
           switch (value) {

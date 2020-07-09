@@ -5,6 +5,8 @@ WiFiClient espClient;
 PubSubClient MQTTclient(espClient);
 
 void setupWiFi() {
+  WiFi.persistent(false);
+  WiFi.mode(WIFI_STA);
   WiFi.hostname(HOSTNAME);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print(F("Attempting WiFi connection ..."));

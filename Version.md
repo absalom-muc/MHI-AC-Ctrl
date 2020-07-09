@@ -1,5 +1,9 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.03** (July 2020)
+- Functionality for POWERON_WHEN_CHANGING_MODE improved in MHI-AC-Ctrl.ino
+- WiFi mode restricted to STA (no more AP) in support.cpp
+
 **v2.02** (June 2020)
 - Functionality for POWERON_WHEN_CHANGING_MODE enhanced, the according #define shifted to support.h
 
