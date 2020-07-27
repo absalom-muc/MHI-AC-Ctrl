@@ -172,7 +172,7 @@ Currently the following operating data in double quotes are supported
 
 note: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
 For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
-You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/files/images/HRP/Catalogues/HRP_NEW_ServiceSupportHandbook.pdf#page=7).    
+You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/5f/54/33/HRP_NEW_ServiceSupportHandbook.pdf#page7).    
 
 hint: The error operating data is usually a sub-set of the operating data above. If user requests error operating data, all available error operating data is provided independent from the list above.
 
