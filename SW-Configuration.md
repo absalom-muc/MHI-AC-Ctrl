@@ -118,13 +118,15 @@ The OTA hostname can be adapted, per default it is the hostname used by WiFi.
 ```
 ## External Temperature Sensor Settings ([support.h](src/support.h))
 When an external temperature sensor is connected, you can configure the pin where DQ of the the DS18x20 is connected, default is Pin 4 (D2)
-and how often the sensor should be read.
-If no external sensor is connected, set TEMP_MEASURE_PERIOD to 0.
+and how often the sensor should be read. To use reading of the external sensor you must adapt the TEMP_MEASURE_PERIOD.
+
 ```
 #define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
-#define TEMP_MEASURE_PERIOD 30  // period in seconds for temperature measurement with the external DS18x20 temperature sensor
-                                // enter 0 if you don't use the DS18x20 
+#define TEMP_MEASURE_PERIOD 0   // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+                                // set to e.g. 30 to read the sensor every 30 seconds. 
 ```
+note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) are only used if TEMP_MEASURE_PERIOD > 0. 
+
 ## Behaviour when changing AC mode ([support.h](src/support.h))
 Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
 But when you uncomment the following line, then the AC is switched on, once you change the AC mode and switched off if you publish "Off" to Mode (instead of Power). This beahviour is requested for use with [Home Assistant](https://www.home-assistant.io/).

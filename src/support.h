@@ -21,8 +21,8 @@
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
-#define TEMP_MEASURE_PERIOD 30                      // period in seconds for temperature measurement with the external DS18x20 temperature sensor
-                                                    // enter 0 if you don't use the DS18x20 
+#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+													// set to e.g. 30 to read the sensor every 30 seconds.
 
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
                                                     // used e.g. for home assistant support
