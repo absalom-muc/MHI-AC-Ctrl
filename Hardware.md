@@ -6,7 +6,7 @@
 ## PCB
 ![PCB](/images/PCB.png)
 
-You find the eagle schematic and the PCB in the [eagle folder](/eagle). Alternatively to the PCB you could use a breadboard.
+You find the eagle schematic and the PCB in the [eagle folder](/eagle). For the Gerber files please check this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/2). Alternatively to the PCB you could use a breadboard.
 
 ## Assembled PCB
 
