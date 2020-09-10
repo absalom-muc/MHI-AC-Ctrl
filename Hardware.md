@@ -6,7 +6,7 @@
 ## PCB
 ![PCB](/images/PCB.png)
 
-You find the eagle schematic and the PCB in the [eagle folder](/eagle). For the Gerber files please check this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/2). Alternatively to the PCB you could use a breadboard.
+You find the eagle schematic, the gerber files and the PCB in the [eagle folder](/eagle). Alternatively to the PCB you could use a breadboard.
 
 ## Assembled PCB
 
@@ -23,6 +23,12 @@ LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH
 U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI
 U$4  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
 U1   |TSR_1-2450       |TSR-1
+
+#### Optional parts for temp sensor
+Part |Value           |Package
+---- | ----            |----
+R1   | 4.7k Ohm        | 
+DS   | DS18B20         | 
 
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the indoor unit PCB.
@@ -46,8 +52,7 @@ The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Ma
 In a previous version I used a resistor voltage divider, but since the SPI of the AC has high impedance outputs, a voltage level shifter seems to be better. The voltage level shifters are bi-directional. That means the according ESP8266 pins (SCL, MOSI, MISO) could be inputs or outputs. You can use it for different [configurations](/Configurations.md).
 
 ## External Temperature Sensor
-With version v1.4 of the software an external temperature sensor DS18x20 is (optional) supported. The layout of the MHI-AC-Ctrl PCB doesn't support the connection, but since there is some free space provided, it should be no problem. The DS18x20 is connected to GND, +3V3 and GPIO 4 (D2). Addtionally you need a 4k7 resistor between DQ and +3V3.
-You find on the Internet many descriptions how to connect the sensor to your ESP, therefore I don't want to repeat it here.
+With version v1.4 of the software an external temperature sensor DS18x20 is (optional) supported. The layout of the MHI-AC-Ctrl PCB does support that connection. The DS18x20 is connected to GND, +3V3 and GPIO 4 (D2). Addtionally you need a 4k7 resistor between DQ and +3V3.
 
 ## Hints for Assembly
 The photo of the assembled PCB shows a 2-pin-connector int the right top corner not mentioned in the bill of material. 
