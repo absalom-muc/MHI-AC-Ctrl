@@ -6,7 +6,7 @@ You should enable
 
     #define POWERON_WHEN_CHANGING_MODE true
     
-in support.h when working with home automation software.
+in [support.h](src/support.h) when working with home automation software. See also [here](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SW-Configuration.md#behaviour-when-changing-ac-mode-supporth)
 
 ## Configs
 
