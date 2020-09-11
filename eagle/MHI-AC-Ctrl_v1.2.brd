@@ -3,7 +3,7 @@
 <eagle version="9.6.2">
 <drawing>
 <settings>
-<setting alwaysvectorfont="yes"/>
+<setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="25" unitdist="mil" unit="mil" style="dots" multiple="1" display="no" altdistance="50" altunitdist="mil" altunit="mil"/>
@@ -1936,17 +1936,17 @@ design rules under a new name.</description>
 <attribute name="TP_SIGNAL_NAME" value="" x="14.605" y="6.985" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="14.605" y="6.985" size="0.0254" layer="27"/>
 </element>
-<element name="TP11" library="testpad" library_urn="urn:adsk.eagle:library:385" package="P1-13" package3d_urn="urn:adsk.eagle:package:27946/1" value="TPPAD1-13" x="12.065" y="8.89" smashed="yes">
+<element name="TP11" library="testpad" library_urn="urn:adsk.eagle:library:385" package="P1-13" package3d_urn="urn:adsk.eagle:package:27946/1" value="TPPAD1-13" x="14.605" y="10.922" smashed="yes">
+<attribute name="NAME" x="13.589" y="12.192" size="1.27" layer="25" ratio="10"/>
+<attribute name="POPULARITY" value="12" x="14.605" y="10.922" size="1.778" layer="27" display="off"/>
+<attribute name="TP_SIGNAL_NAME" value="" x="14.605" y="10.922" size="1.778" layer="27" display="off"/>
+<attribute name="VALUE" x="14.605" y="10.922" size="0.0254" layer="27"/>
+</element>
+<element name="TP12" library="testpad" library_urn="urn:adsk.eagle:library:385" package="P1-13" package3d_urn="urn:adsk.eagle:package:27946/1" value="TPPAD1-13" x="12.065" y="8.89" smashed="yes">
 <attribute name="NAME" x="11.049" y="10.16" size="1.27" layer="25" ratio="10"/>
 <attribute name="POPULARITY" value="12" x="12.065" y="8.89" size="1.778" layer="27" display="off"/>
 <attribute name="TP_SIGNAL_NAME" value="" x="12.065" y="8.89" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="12.065" y="8.89" size="0.0254" layer="27"/>
-</element>
-<element name="TP12" library="testpad" library_urn="urn:adsk.eagle:library:385" package="P1-13" package3d_urn="urn:adsk.eagle:package:27946/1" value="TPPAD1-13" x="14.605" y="10.795" smashed="yes">
-<attribute name="NAME" x="13.589" y="12.065" size="1.27" layer="25" ratio="10"/>
-<attribute name="POPULARITY" value="12" x="14.605" y="10.795" size="1.778" layer="27" display="off"/>
-<attribute name="TP_SIGNAL_NAME" value="" x="14.605" y="10.795" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="14.605" y="10.795" size="0.0254" layer="27"/>
 </element>
 <element name="TP13" library="testpad" library_urn="urn:adsk.eagle:library:385" package="P1-13" package3d_urn="urn:adsk.eagle:package:27946/1" value="TPPAD1-13" x="12.065" y="12.954" smashed="yes">
 <attribute name="NAME" x="11.049" y="14.224" size="1.27" layer="25" ratio="10"/>
@@ -1999,7 +1999,6 @@ design rules under a new name.</description>
 <wire x1="17.145" y1="25.4" x2="17.145" y2="22.86" width="1.016" layer="16"/>
 <contactref element="U2" pad="1"/>
 <wire x1="17.145" y1="17.78" x2="17.0356" y2="17.6706" width="1.016" layer="16"/>
-<wire x1="17.145" y1="27.04998125" x2="17.0356" y2="27.15938125" width="0.8128" layer="16"/>
 <wire x1="17.145" y1="29.08475" x2="17.145" y2="25.4" width="0.8128" layer="16"/>
 <contactref element="LS1" pad="J1.4"/>
 <wire x1="39.37" y1="19.685" x2="39.37" y2="9.525" width="1.016" layer="16"/>
@@ -2007,7 +2006,6 @@ design rules under a new name.</description>
 <wire x1="24.70219375" y1="5.08" x2="12.065" y2="5.08" width="1.143" layer="1"/>
 <wire x1="39.37" y1="9.525" x2="35.5725" y2="5.7275" width="1.143" layer="1"/>
 <wire x1="35.5725" y1="5.7275" x2="25.34969375" y2="5.7275" width="1.143" layer="1"/>
-<wire x1="17.145" y1="25.4" x2="17.145" y2="27.04998125" width="0" layer="19" extent="16-16"/>
 </signal>
 <signal name="+12V">
 <contactref element="U$4" pad="P1"/>
@@ -2033,7 +2031,6 @@ design rules under a new name.</description>
 <wire x1="48.895" y1="21.59" x2="49.53" y2="22.225" width="1.016" layer="1"/>
 <wire x1="49.53" y1="22.225" x2="49.53" y2="23.495" width="1.016" layer="1"/>
 <contactref element="U1" pad="3"/>
-<wire x1="19.685" y1="25.4" x2="19.736" y2="25.451" width="1.016" layer="1"/>
 <wire x1="19.685" y1="25.4" x2="19.685" y2="21.59" width="1.016" layer="16"/>
 <wire x1="19.685" y1="21.59" x2="19.685" y2="17.78" width="1.016" layer="16"/>
 <wire x1="19.685" y1="25.4" x2="19.7944" y2="25.4" width="1.016" layer="16"/>
@@ -2043,33 +2040,21 @@ design rules under a new name.</description>
 <wire x1="19.685" y1="29.08475" x2="19.685" y2="25.4" width="0.8128" layer="16"/>
 <wire x1="36.83" y1="23.495" x2="36.83" y2="21.59" width="1.016" layer="16"/>
 </signal>
-<signal name="MOSI">
-<contactref element="LS1" pad="J2.6"/>
-<contactref element="TP12" pad="TP"/>
-<contactref element="U$4" pad="P2"/>
-<wire x1="14.51" y1="10.89" x2="14.605" y2="10.795" width="0.8128" layer="1"/>
-<wire x1="3.7625" y1="10.89" x2="14.51" y2="10.89" width="1.016" layer="16"/>
-<wire x1="14.51" y1="10.89" x2="14.605" y2="10.795" width="0.8128" layer="16"/>
-<wire x1="44.45" y1="19.685" x2="38.7604" y2="13.9954" width="1.016" layer="1"/>
-<wire x1="14.605" y1="10.795" x2="29.845" y2="10.795" width="1.016" layer="1"/>
-<wire x1="33.0454" y1="13.9954" x2="29.845" y2="10.795" width="1.016" layer="1"/>
-<wire x1="33.0454" y1="13.9954" x2="38.7604" y2="13.9954" width="1.016" layer="1"/>
-</signal>
 <signal name="MISO">
 <contactref element="U$4" pad="P4"/>
 <contactref element="LS1" pad="J2.5"/>
-<wire x1="26.035" y1="6.985" x2="35.56" y2="16.51" width="1.016" layer="16"/>
+<wire x1="35.56" y1="16.51" x2="26.035" y2="6.985" width="1.016" layer="16"/>
 <wire x1="35.56" y1="16.51" x2="36.83" y2="16.51" width="1.016" layer="16"/>
 <via x="36.83" y="16.51" extent="1-16" drill="0.6"/>
 <contactref element="TP10" pad="TP"/>
 <wire x1="14.51" y1="6.89" x2="14.605" y2="6.985" width="1.016" layer="1"/>
-<wire x1="3.7625" y1="6.89" x2="14.51" y2="6.89" width="1.016" layer="16"/>
-<wire x1="14.51" y1="6.89" x2="14.605" y2="6.985" width="1.016" layer="16"/>
-<wire x1="14.605" y1="6.985" x2="26.035" y2="6.985" width="1.016" layer="16"/>
 <wire x1="38.735" y1="16.3656" x2="36.9744" y2="16.3656" width="1.016" layer="1"/>
 <wire x1="36.83" y1="16.51" x2="36.9744" y2="16.3656" width="1.016" layer="1"/>
 <wire x1="41.91" y1="19.685" x2="38.735" y2="16.51" width="1.016" layer="1"/>
 <wire x1="38.735" y1="16.51" x2="38.735" y2="16.3656" width="1.016" layer="1"/>
+<wire x1="26.035" y1="6.985" x2="14.605" y2="6.985" width="1.016" layer="16"/>
+<wire x1="14.605" y1="6.985" x2="14.51" y2="6.89" width="1.016" layer="16"/>
+<wire x1="14.51" y1="6.89" x2="3.7625" y2="6.89" width="1.016" layer="16"/>
 </signal>
 <signal name="+3V3">
 <contactref element="U$1" pad="JP1.8"/>
@@ -2088,15 +2073,6 @@ design rules under a new name.</description>
 <wire x1="38.1" y1="6.35" x2="39.37" y2="5.08" width="0.8128" layer="16"/>
 <wire x1="39.37" y1="5.08" x2="39.37" y2="3.175" width="0.8128" layer="16"/>
 <wire x1="35.56" y1="6.35" x2="38.1" y2="6.35" width="0.8128" layer="16"/>
-</signal>
-<signal name="SCL">
-<contactref element="U$4" pad="P3"/>
-<contactref element="LS1" pad="J2.2"/>
-<wire x1="34.29" y1="17.78" x2="25.4" y2="8.89" width="1.016" layer="16"/>
-<wire x1="34.29" y1="17.78" x2="34.29" y2="19.685" width="1.016" layer="16"/>
-<contactref element="TP11" pad="TP"/>
-<wire x1="3.7625" y1="8.89" x2="12.065" y2="8.89" width="1.016" layer="16"/>
-<wire x1="25.4" y1="8.89" x2="12.065" y2="8.89" width="1.016" layer="16"/>
 </signal>
 <signal name="N$14">
 <contactref element="U$1" pad="JP2.6"/>
@@ -2118,6 +2094,25 @@ design rules under a new name.</description>
 <contactref element="LS1" pad="J1.6"/>
 <contactref element="U$1" pad="JP1.6"/>
 <wire x1="44.45" y1="9.525" x2="44.45" y2="3.175" width="1.016" layer="16"/>
+</signal>
+<signal name="N$3">
+<contactref element="LS1" pad="J2.2"/>
+<contactref element="TP11" pad="TP"/>
+<wire x1="34.29" y1="19.685" x2="25.527" y2="10.922" width="1.016" layer="16"/>
+<wire x1="25.527" y1="10.922" x2="14.605" y2="10.922" width="1.016" layer="16"/>
+<contactref element="U$4" pad="P2"/>
+<wire x1="3.7625" y1="10.89" x2="14.573" y2="10.89" width="1.016" layer="16"/>
+<wire x1="14.573" y1="10.89" x2="14.605" y2="10.922" width="1.016" layer="16"/>
+</signal>
+<signal name="N$4">
+<contactref element="U$4" pad="P3"/>
+<contactref element="LS1" pad="J2.6"/>
+<contactref element="TP12" pad="TP"/>
+<wire x1="12.065" y1="8.89" x2="3.7625" y2="8.89" width="1.016" layer="16"/>
+<wire x1="44.45" y1="19.685" x2="38.7604" y2="13.9954" width="1.016" layer="1"/>
+<wire x1="28.03805625" y1="8.89" x2="12.065" y2="8.89" width="1.016" layer="1"/>
+<wire x1="38.7604" y1="13.9954" x2="33.14345625" y2="13.9954" width="1.016" layer="1"/>
+<wire x1="33.14345625" y1="13.9954" x2="28.03805625" y2="8.89" width="1.016" layer="1"/>
 </signal>
 </signals>
 <mfgpreviewcolors>
