@@ -14,6 +14,7 @@ cable connector to your air conditioner. This has to be a split device (separate
 I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are supported. I use the indoor unit SRK 35 ZS-S and the outdoor unit SRC 35 ZS-S. Users reported that additionally the following models are supported:
 
 - SRF xx ZJX-S1
+- SRF xx ZMX-S
 - SRK xx ZJ-S
 - SRK xx ZM-S
 - SRK xx ZS-S
