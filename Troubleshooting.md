@@ -5,9 +5,9 @@ If you can't find the solution for your problem here and not in the existing  [I
 - You should have a basic understanding how to use an ESP8266. That includes the usage of an IDE for programming, compile, flash, OTA and log output via the serial terminal.
 - You should have a basic understanding of the MQTT protocol and how to setup a MQTT broker
 
-There are great descriptions in the WWW related to the topics  above. Please use your preferred search engine.
+There are great descriptions in the WWW related to the topics above. Please use your preferred search engine.
 
-If you open a new issue please consider the following topics:
+If you open a new issue, please consider the following topics:
 - Use a use a meaningful title, so that the next user with a similar problem can recognize it
 - Which program version do you use?
 - Add the exact name of your AC indoor unit, e.g. SRK 35 ZS-S 
@@ -45,6 +45,9 @@ If MISO frequency>10Hz the program will stop and reboot. This prevents damage of
 
 ### :fire: You use PubSubClient v2.8.0
 There was a [bug](https://github.com/knolleary/pubsubclient/issues/747) introduced in PubSubClient version 2.8.0, please use v2.7.0.
+
+## :fire: MQTT connects / disconnects periodically
+The HOSTNAME specified in support.h is used as WiFi hostname, MQTT hostname and OTA hostname. In case that you use more than one MHI-AC-Ctrl, e.g. in a multi-split configuration, you have to use unique HOSTNAME to every PCB.
 
 ## :fire: Receiving the AC status works, but can't change values
 Different root causes are possible:
