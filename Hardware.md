@@ -4,21 +4,21 @@
 ![schematic](images/MHI-AC-Ctrl_Schematic.png)
 
 ## PCB
-![PCB](images/PCB.jpg)
+![PCB](images/PCB.png)
 
-You find the eagle schematic and the layout in the [eagle folder](eagle). The Gerber data is in [MHI-AC-Ctrl_v2.2_2021-01-22.zip](eagle/MHI-AC-Ctrl_v2.2_2021-01-22.zip). I used this Gerber data for the PCB order at [JLCPCB](https://jlcpcb.com).
+You find the eagle schematic and the layout in the [eagle folder](eagle). The Gerber data is in [MHI-AC-Ctrl_v2.2_2021-01-22.zip](eagle/Gerber/MHI-AC-Ctrl_v2.2_2021-01-22.zip). I used this Gerber data for the PCB order at [JLCPCB](https://jlcpcb.com).
 
 
 ## Bill of Material
 Part |Value            |Package                    |comment
 ---- | ----            |----                       |-----
 C1   |22µ/25V          |E15-5                      |consider the polarity
-C2   |100n             |C025-024X044
-C3   |100n             |C025-024X044
+C2, C3   |100n             |C025-024X044
 LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH          |consider the polarity
 U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI              |consider the polarity
 U1   |TSR_1-2450       |TSR-1                      |consider the polarity
 X1   |JST 05JQ-BT      |JST-XH-05-PACKAGE-LONG-PAD                     |consider the polarity
+
 and the following parts are only needed when externally a DS18x20 should be connected:
 Part |Value            |Package                    |comment
 ---- | ----            |----                       |-----
@@ -27,9 +27,9 @@ X3   |JST-XH-03        |JST-XH-03-PACKAGE-LONG-PAD |consider the polarity
 
 ## Assembled PCB
 The following photos show the assembled PCB (without R1 and X1, which are used in context of DS18x20 only).
-<img src="images/Assembled-Board-top1.jpg"/>
-<img src="images/Assembled-Board-top2.jpg">
-<img src="images/Assembled-Board-bottom.jpg">
+<img src="images/Assembled-Board-top1.jpg" width=300/>
+<img src="images/Assembled-Board-top2.jpg" width=300/>
+<img src="images/Assembled-Board-bottom.jpg" width=300/>
 
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the AC indoor unit PCB.
@@ -57,4 +57,5 @@ An external temperature sensor DS18x20 (e.g. DS18S20, DS18B20) is supported. If 
 
 ## Hints for Assembly
 If you prefer to assemble X1 on the top of the PCB because e.g. you want to place the MHI-AC-Ctrl outside of the AC, you have to consider the direction of X1 as shown on the following photo.
-![Board-HQ-top](images/Assembled-Board-HQ-top.jpg)
+
+<img src="images/Assembled-Board-HQ-top.jpg" width=400 align="center"/>
