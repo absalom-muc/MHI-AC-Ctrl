@@ -1,6 +1,5 @@
 # MHI-AC-Ctrl
 Reads and writes data (e.g. power, mode, fan status etc.) from/to a Mitsubishi Heavy Industries (MHI) air conditioner (AC) via SPI controlled by MQTT. The AC is the SPI master and the ESP8266 is the SPI slave.
-The program has a draft status and your input is welcome.
 
 <img src="/images/IoT-MQTT-Panel.jpg" width=200 align="right" />
 
