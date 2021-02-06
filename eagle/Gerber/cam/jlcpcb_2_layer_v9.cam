@@ -1,0 +1,210 @@
+{
+    "author": {
+        "email": "support@jlcpcb.com",
+        "name": "JLCPCB"
+    },
+    "description": {
+        "EN": "<b>JLCPCB 2-Layer CAM job</b><p>\n\nFor Eagle 8.6.0 to 9.6.2<p>\n\nTop Copper:      pcbname.GTL<br>\nTop Solder Mask: pcbname.GTS<br>\nTop Silkscreen:  pcbname.GTO<br>\nTop Paste:       pcbname.GTP<p>\n\nBottom Copper:      pcbname.GBL<br>\nBottom Solder Mask: pcbname.GBS<br>\nBottom Silkscreen:  pcbname.GBO<br>\nBottom Paste:       pcbname.GBP<p>\n\nProfile: pcbname.GKO (Dimension (20) and Milling (46) layers are used)<p>\nDrill Layer: pcbname.XLN (Both plated and non-plated holes are merged in this file)<p>\n\nPlease refer to <a href=\"https://support.jlcpcb.com/article/43-how-to-export-eagle-pcb-to-gerber-files\">How to Generate Gerber and Drill Files from Eagle</a> for more information.<p>\n\nEmail: support@jlcpcb.com<p>\nLast updated: 2020/11/18"
+    },
+    "output_type": "zip",
+    "outputs": [
+        {
+            "filename_prefix": "GerberJob",
+            "format_specifier": {
+                "decimal": 4,
+                "integer": 3
+            },
+            "generate_job_file": true,
+            "output_type": "gerber",
+            "outputs": [
+                {
+                    "board_outline": true,
+                    "config": {
+                        "file_function": "Profile",
+                        "plating": "non-plated"
+                    },
+                    "filename_format": "%N.GKO",
+                    "layers": [
+                        46,
+                        20
+                    ],
+                    "milling": true,
+                    "name": "Board Outline",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Copper",
+                        "layer": 1,
+                        "layer_details": "mixed",
+                        "layer_type": "top"
+                    },
+                    "filename_format": "%N.GTL",
+                    "layers": [
+                        1,
+                        18,
+                        17
+                    ],
+                    "name": "Top Copper",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Copper",
+                        "layer": 2,
+                        "layer_details": "mixed",
+                        "layer_type": "bottom"
+                    },
+                    "filename_format": "%N.GBL",
+                    "layers": [
+                        16,
+                        17,
+                        18
+                    ],
+                    "name": "Bottom Copper",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Soldermask",
+                        "index": 1,
+                        "layer_type": "top"
+                    },
+                    "filename_format": "%N.GTS",
+                    "layers": [
+                        29
+                    ],
+                    "name": "Soldermask Top",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Soldermask",
+                        "index": 1,
+                        "layer_type": "bottom"
+                    },
+                    "filename_format": "%N.GBS",
+                    "layers": [
+                        30
+                    ],
+                    "name": "Soldermask Bottom",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Paste",
+                        "layer_type": "top"
+                    },
+                    "filename_format": "%N.GTP",
+                    "layers": [
+                        31
+                    ],
+                    "milling": false,
+                    "name": "Solderpaste Top",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Paste",
+                        "layer_type": "bottom"
+                    },
+                    "filename_format": "%N.GBP",
+                    "layers": [
+                        32
+                    ],
+                    "milling": false,
+                    "name": "Solderpaste Bottom",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Legend",
+                        "index": 1,
+                        "layer_type": "top"
+                    },
+                    "filename_format": "%N.GTO",
+                    "layers": [
+                        21,
+                        25
+                    ],
+                    "milling": false,
+                    "name": "Silkscreen Top",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                },
+                {
+                    "board_outline": false,
+                    "config": {
+                        "file_function": "Legend",
+                        "index": 1,
+                        "layer_type": "bottom"
+                    },
+                    "filename_format": "%N.GBO",
+                    "layers": [
+                        22,
+                        26
+                    ],
+                    "milling": false,
+                    "name": "Silkscreen Bottom",
+                    "polarity": "positive",
+                    "type": "gerber_layer"
+                }
+            ],
+            "version": "RS274X"
+        },
+        {
+            "filename_prefix": "",
+            "format_specifier": {
+                "decimal": 3,
+                "integer": 3
+            },
+            "output_type": "drill",
+            "outputs": [
+                {
+                    "drills": {
+                        "NPTH": true,
+                        "PTH": true,
+                        "VIA": true
+                    },
+                    "filename_format": "%N.XLN",
+                    "layers": {
+                        "from": 1,
+                        "to": 16
+                    },
+                    "name": "Excellon",
+                    "type": "excellon"
+                }
+            ]
+        },
+        {
+            "filename_prefix": "CAMOutputs/Assembly",
+            "output_type": "assembly",
+            "outputs": [
+            ]
+        },
+        {
+            "filename_prefix": "CAMOutputs/DrawingFiles",
+            "output_type": "drawing",
+            "outputs": [
+            ]
+        }
+    ],
+    "timestamp": "2020-11-12T14:32:05",
+    "type": "EAGLE CAM job",
+    "units": "metric",
+    "version": "9.2.0"
+}

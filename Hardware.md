@@ -1,60 +1,60 @@
 # Hardware
 
 ## Schematic
-![schematic](/images/MHI-AC-Ctrl_Schematic.png)
+![schematic](images/MHI-AC-Ctrl_Schematic.png)
 
 ## PCB
-![PCB](/images/PCB.png)
+![PCB](images/PCB.jpg)
 
-You find the eagle schematic and the PCB in the [eagle folder](/eagle). For the Gerber files please check this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/2). Alternatively to the PCB you could use a breadboard.
-
-## Assembled PCB
-
-<img src="/images/Assembled-PCB.jpg" width=400 align="center"/>
+You find the eagle schematic and the layout in the [eagle folder](eagle). The Gerber data is in [MHI-AC-Ctrl_v2.2_2021-01-22.zip](eagle/MHI-AC-Ctrl_v2.2_2021-01-22.zip). I used this Gerber data for the PCB order at [JLCPCB](https://jlcpcb.com).
 
 
 ## Bill of Material
-Part |Value           |Package
----- | ----            |----
-C1   |22µ/50V          |E5-10,5
+Part |Value            |Package                    |comment
+---- | ----            |----                       |-----
+C1   |22µ/25V          |E15-5                      |consider the polarity
 C2   |100n             |C025-024X044
-C3   |22p              |C025-024X044
-JP1  |                 |JP1  <sup>1</sup>
-LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH
-U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI
-U$4  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
-U$5  |JST-PH_5-PIN_HEADER|JST_B5B-PH_HEADER
-U1   |TSR_1-2450       |TSR-1
+C3   |100n             |C025-024X044
+LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH          |consider the polarity
+U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI              |consider the polarity
+U1   |TSR_1-2450       |TSR-1                      |consider the polarity
+X1   |JST 05JQ-BT      |JST-XH-05-PACKAGE-LONG-PAD                     |consider the polarity
+and the following parts are only needed when externally a DS18x20 should be connected:
+Part |Value            |Package                    |comment
+---- | ----            |----                       |-----
+R1   |4k7              |R-EU_0207/10       
+X3   |JST-XH-03        |JST-XH-03-PACKAGE-LONG-PAD |consider the polarity
 
-<sup>1</sup> Originally jumper JP1 was planned for the case if there is a problem when the ESP8266 is supplied simultaneously via the DC/DC converter and during test / debug via USB. But I have never seen a problem with it. So the jumper pins can be directly bridged by a piece of wire.
- 
+## Assembled PCB
+The following photos show the assembled PCB (without R1 and X1, which are used in context of DS18x20 only).
+<img src="images/Assembled-Board-top1.jpg"/>
+<img src="images/Assembled-Board-top2.jpg">
+<img src="images/Assembled-Board-bottom.jpg">
+
 ## Connector
-The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the indoor unit PCB.
-![Indoor PCSchematicB](/images/SRK-PCB.jpg)
+The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the AC indoor unit PCB.
+![Indoor PCB](images/SRK-PCB.jpg)
 
-The PCB of the remote control uses also a 5 pin CNS connector but with a pitch of 2 mm. It is out of the [PH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=199).
-Please consider that there is no 1:1 connection between AC and the remote control. The Pins SCL and MOSI are (unfortunately) swapped. Your cable connection of the AC with the remote control PCB should consider that.
-![Indoor PCSchematicB](/images/SRK-PCB-RC.jpg)
-<img src="/images/AC_to_MHI-AC-Ctrl.png" width="600" align="center">
+The PCB of the remote control uses a pin connector out of [JST JQ series](https://jst.de/file/download/124/pitch-2-5-mm-btb-jq-pdf) also with a pitch of 2.5 mm. So the board can be directly plugged into the board of the AC.
+![Board plugged](images/Board-plugged.jpg)
+ 
 
-Please consider using an oscilloscope to confirm the layout of the pins before you connect the remote control PCB to your AC.
+*hint: For previous MHI-AC-Ctrl PCB layouts a different connector was used. Additionally, it was required to swap pins because there was no 1:1 connection. This is no longer valid for the latest PCB layout. With the latest PCB layout you can directly plug the MHI-AC-Ctrl PCB to the AC PCB - **:warning: of course only when the AC is de-energized :warning:**.*
 
+The possibility to directly plug the MHI-AC-Ctrl PCB to the AC PCB makes it simpler, but the operation of MHI-AC-Ctrl inside the AC case could reduce slightly the WiFi signal strength. If you see that the signal strength is not sufficient (e.g. many WiFi disconnects) then you should use a cable (called "4S balancer JST-XH extension cable" with one male and one female connector) and locate MHI-AC-Ctrl outside of the AC case. 
 
 :warning: **Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!** :warning:
 
 ## Power Supply
-The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) is used to convert the +12V to +5V.
+The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) converts the +12V to +5V.
 
 ## Signal Connection
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
-In a previous version I used a resistor voltage divider, but since the SPI of the AC has high impedance outputs, a voltage level shifter seems to be better. The voltage level shifters are bi-directional. That means the according ESP8266 pins (SCL, MOSI, MISO) could be inputs or outputs. You can use it for different [configurations](/Configurations.md).
+In an early version I used a resistor voltage divider, but since the SPI of the AC has high impedance outputs, a voltage level shifter seems to be better. The voltage level shifters are bi-directional. That means the according ESP8266 pins (SCL, MOSI, MISO) could be inputs or outputs.
 
 ## External Temperature Sensor
-With version v1.4 of the software an external temperature sensor DS18x20 is (optional) supported. The layout of the MHI-AC-Ctrl PCB doesn't support the connection, but since there is some free space provided, it should be no problem. The DS18x20 is connected to GND, +3V3 and GPIO 4 (D2). Addtionally you need a 4k7 resistor between DQ and +3V3.
-You find on the Internet many descriptions how to connect the sensor to your ESP, therefore I don't want to repeat it here.
+An external temperature sensor DS18x20 (e.g. DS18S20, DS18B20) is supported. If you want to connect a DS18x20 you assemble R1 (4k7) on the PCB. The signals for the DS18x20 are available at X2.
 
 ## Hints for Assembly
-The photo of the assembled PCB shows a 2-pin-connector int the right top corner not mentioned in the bill of material. 
-<img src="/images/Assembled-PCB-mark.jpg" width=400 align="center"/>
-
-I use this connector for test purposes. You should **not** solder this connector because if you short-circuit these pins e.g. by a jumper, then the AC power supply is short-circuited and could damage the AC. :warning:
+If you prefer to assemble X1 on the top of the PCB because e.g. you want to place the MHI-AC-Ctrl outside of the AC, you have to consider the direction of X1 as shown on the following photo.
+![Board-HQ-top](images/Assembled-Board-HQ-top.jpg)

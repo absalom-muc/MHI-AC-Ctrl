@@ -24,6 +24,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - SRK xx ZSX-S
 - SRK xx ZSX-W
 - SRK xx ZS-W
+- SRR xx ZM-S
 
 If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list.
 

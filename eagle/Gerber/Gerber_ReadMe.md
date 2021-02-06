@@ -1,0 +1,3 @@
+The [Gerber files](MHI-AC-Ctrl_v2.1_2021-01-10.zip) in this folder were generated with Eagle v9.6.2. 
+The predefined [CAM file](./cam/jlcpcb_2_layer_v9.cam) was downloaded from [JLCPCB](https://support.jlcpcb.com/article/137-how-to-generate-gerber-and-drill-files-in-autodesk-eagle) and generated according to the description there. 
+The price for 5 PCBs with a delivery time of 10 days was approx. 10€ incl. shipment from China to Germany.
