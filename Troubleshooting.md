@@ -40,7 +40,7 @@ If MISO frequency>10Hz the program will stop and reboot. This prevents damage of
 
  Typical faults seen in the past:
 - SCK frequency = 0Hz => SCK pin not connected
-- SCK frequency < MOSI frequency => SCK and MOSI pins swapped, maybe you haven't considered [this](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/Hardware.md#connector)
+- SCK frequency < MOSI frequency => SCK and MOSI pins swapped
 - MISO frequency = SCK frequency => MISO and SCK pins shorted
 
 ### :fire: You use PubSubClient v2.8.0
