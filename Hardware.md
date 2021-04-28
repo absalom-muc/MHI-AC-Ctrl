@@ -45,6 +45,8 @@ The possibility to directly plug the MHI-AC-Ctrl PCB to the AC PCB makes it simp
 
 :warning: **Opening of the indoor unit should be done by a qualified professional because faulty handling may cause leakage of water, electric shock or fire!** :warning:
 
+Before you assemble the PCB, please check this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/56). For some ACs (e.g. SRK-ZSX serie) it's getting tight and there might be not enough space to plug-in the MHI-AC-Ctrl PCB to your AC board.
+
 ## Power Supply
 The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tracopower.com/products/browse-by-category/find/tsr-1/3/) converts the +12V to +5V.
 
