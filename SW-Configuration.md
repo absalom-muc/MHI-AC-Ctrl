@@ -1,7 +1,8 @@
 # Introduction
-The following descriptions address two use cases:
+The following descriptions address:
 1. Basic settings for your configuration
 2. Advanced settings for other frameworks (e.g. Tasmota, Home Assistant, Homie)
+3. Integration examples
 
 # Basic settings
 The basic settings will be adapted in three files:   
@@ -253,3 +254,13 @@ This is a member of the class StatusHandler : public CallbackInterface_Status. I
 #### void MQTT_subscribe_callback(char* topic, byte* payload, unsigned int length)
 This function is called for incoming MQTT messages, the message is analyzed and translated to function calls.
 From systematic point of view this function should actually be located in [support.h](src/support.h) but in order to keep it simple it resides in [MHI-AC-Ctrl.ino](src/MHI-AC-Ctrl.ino). 
+
+# Integration examples
+You find here some examples for integration of MHI-AC-Ctrl
+- [Node-Red / Google Assistant](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/60)
+- [openHAB](https://community.openhab.org/t/control-mhi-aircon-by-mqtt/104972)
+- [IoT MQTT Panel](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/59)
+- [Home Assistant](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/58)
+- [Tasmota](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/13#issuecomment-630425714)
+- [ioBroker](https://forum.iobroker.net/topic/17041/anfrage-airconwithme-intesishome-klimasteuerung-adapter/14)
+- [FHEM](https://forum.fhem.de/index.php/topic,88841.0/all.html)
