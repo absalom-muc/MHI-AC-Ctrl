@@ -8,10 +8,20 @@
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
+  char filteredTopic[80];
+  char *index;
   payload[length] = 0;  // we need a string
-  Serial.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
+
+  strcpy(filteredTopic, topic);
+  index = strstr(filteredTopic, MQTT_SET_PREFIX);
+  if (index)
+  {
+    strcpy(filteredTopic, &index[strlen(MQTT_SET_PREFIX)]);
+  }
+  
+  Serial.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), filteredTopic, (char*)payload, length);
 #ifndef POWERON_WHEN_CHANGING_MODE
-  if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_POWER)) == 0) {
+  if (strcmp_P(filteredTopic, PSTR(TOPIC_POWER)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_ON)) == 0) {
       mhi_ac_ctrl_core.set_power(power_on);
       publish_cmd_ok();
@@ -25,7 +35,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   }
   else 
 #endif
-  if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_MODE)) == 0) {
+  if (strcmp_P(filteredTopic, PSTR(TOPIC_MODE)) == 0) {
 #ifdef POWERON_WHEN_CHANGING_MODE
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_OFF)) == 0) {
       mhi_ac_ctrl_core.set_power(power_off);
@@ -70,7 +80,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
       else
         publish_cmd_invalidparameter();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TSETPOINT)) == 0) {
+  else if (strcmp_P(filteredTopic, PSTR(TOPIC_TSETPOINT)) == 0) {
     if ((atoi((char*)payload) >= 18) & (atoi((char*)payload) <= 30)) {
       mhi_ac_ctrl_core.set_tsetpoint(atoi((char*)payload));
       publish_cmd_ok();
@@ -78,7 +88,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN)) == 0) {
+  else if (strcmp_P(filteredTopic, PSTR(TOPIC_FAN)) == 0) {
     if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 4)) {
       mhi_ac_ctrl_core.set_fan(atoi((char*)payload));
       publish_cmd_ok();
@@ -86,7 +96,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_VANES)) == 0) {
+  else if (strcmp_P(filteredTopic, PSTR(TOPIC_VANES)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_VANES_SWING)) == 0) {
       mhi_ac_ctrl_core.set_vanes(vanes_swing);
       publish_cmd_ok();
@@ -100,11 +110,11 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
         publish_cmd_invalidparameter();
     }
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_ERROPDATA)) == 0) {
+  else if (strcmp_P(filteredTopic, PSTR(TOPIC_REQUEST_ERROPDATA)) == 0) {
     mhi_ac_ctrl_core.request_ErrOpData();
     publish_cmd_ok();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_RESET)) == 0) {
+  else if (strcmp_P(filteredTopic, PSTR(TOPIC_REQUEST_RESET)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_REQUEST_RESET)) == 0) {
       publish_cmd_ok();
       delay(500);
@@ -308,9 +318,10 @@ void setup() {
 #if TEMP_MEASURE_PERIOD > 0
   setup_ds18x20();
 #endif
+  readConfig();
   setupWiFi();
   setupOTA();
-  MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
+  setupMQTT();
   MQTTclient.setCallback(MQTT_subscribe_callback);
   MQTTreconnect();
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
