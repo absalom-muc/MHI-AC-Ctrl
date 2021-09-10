@@ -261,6 +261,8 @@ You find here some examples for integration of MHI-AC-Ctrl
 - [openHAB](https://community.openhab.org/t/control-mhi-aircon-by-mqtt/104972)
 - [IoT MQTT Panel](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/59)
 - [Home Assistant](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/58)
+- [ESPHome](https://github.com/absalom-muc/MHI-AC-Ctrl/commit/4531327ff2b474eb047317975211df0430bdf199#commitcomment-51302883)
 - [Tasmota](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/13#issuecomment-630425714)
 - [ioBroker](https://forum.iobroker.net/topic/17041/anfrage-airconwithme-intesishome-klimasteuerung-adapter/14)
 - [FHEM](https://forum.fhem.de/index.php/topic,88841.0/all.html)
+- [WiFi SSID, hostname and MQTT server dynamic](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/69)
