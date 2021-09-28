@@ -54,7 +54,7 @@ const byte opdata[][2] PROGMEM = {
 #define CBL DB14 + 2
 
 enum ErrMsg {   // Error message enum
-  err_msg_valid_frame = 0, err_msg_invalid_signature = -1, err_msg_invalid_checksum = -2, err_msg_timeout = -3
+  err_msg_valid_frame = 0, err_msg_invalid_signature = -1, err_msg_invalid_checksum = -2, err_msg_timeout_SCK_low = -3, err_msg_timeout_SCK_high = -4
 };
 
 enum ACType {   // Type enum
@@ -62,7 +62,7 @@ enum ACType {   // Type enum
 };
 
 enum ACStatus { // Status enum
-  status_rssi = type_status, status_connected, status_cmd, status_tds1820, status_fsck, status_fmosi, status_fmiso, status_power, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
+  status_rssi = type_status, status_mqtt_lost, status_wifi_lost, status_connected, status_cmd, status_tds1820, status_fsck, status_fmosi, status_fmiso, status_power, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
   opdata_mode = type_opdata, opdata_tsetpoint, opdata_return_air, opdata_outdoor, opdata_tho_r1, opdata_iu_fanspeed, opdata_thi_r1, opdata_thi_r2, opdata_thi_r3,
   opdata_ou_fanspeed, opdata_total_iu_run, opdata_total_comp_run, opdata_comp, opdata_ct, opdata_td,
   opdata_tdsh, opdata_protection_no, opdata_defrost, opdata_ou_eev1, opdata_unknwon,
@@ -128,6 +128,7 @@ class MHI_AC_Ctrl_Core {
     byte new_Vanes0 = 0;
     byte new_Vanes1 = 0;
     bool request_erropData = false;
+    byte new_Troom = 0xff;
 
     CallbackInterface_Status *m_cbiStatus;
 
@@ -138,13 +139,14 @@ class MHI_AC_Ctrl_Core {
 
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
-    int loop(uint max_time_ms);           // receive / transmit a frame of 20 bytes
+    int loop(int max_time_ms);            // receive / transmit a frame of 20 bytes
     void set_power(boolean power);        // power on/off the AC
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
     void request_ErrOpData();             // request that the AC provides the error data
+    void set_troom(byte temperature);     // set the room temperature used by AC
 };
 
 #endif

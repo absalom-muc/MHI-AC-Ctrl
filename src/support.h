@@ -5,9 +5,13 @@
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
-#define HOSTNAME "MHI-AC-Ctrl"
+#define HOSTNAME "MHI-AC-Ctrl2"
 
-#define MQTT_SERVER "ds218p"                        // broker name or IP address of the broker
+#define UseStrongestAP true                         // when false then the first WiFi access point with matching SSID found is used.
+                                                    // when true then the strongest WiFi access point with matching SSID found is used,
+                                                    // So far not implemented: addtionally the network is rescanned every 12 minutes for the strongest AP.
+
+#define MQTT_SERVER "MQTT broker name"              // broker name or IP address of the broker
 #define MQTT_PORT 1883                              // port number used by the broker
 #define MQTT_USER ""                                // if authentication is not used, leave it empty
 #define MQTT_PASSWORD ""                            // if authentication is not used, leave it empty
@@ -20,13 +24,21 @@
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
+#define TEMP_MEASURE_PERIOD 20                      // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+                                                    // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
-#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
-													// set to e.g. 30 to read the sensor every 30 seconds.
+
+//Use only one of the follwoing options for the room temperature
+#define ROOM_TEMP_IU                                // use room temperature from indoor unit (default)
+//#define ROOM_TEMP_DS18X20                         // use room temperature from DS18x20
+//#define ROOM_TEMP_MQTT                            // use room temperature from received MQTT topic
+#define ROOM_TEMP_MQTT_TIMEOUT  20                  // only considered if ROOM_TEMP_MQTT is defined
+                                                    // time in seconds, after this time w/o receiving a valid room temperature
+                                                    // via MQTT fallback to IU temperature sensor value
 
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
                                                     // used e.g. for home assistant support
-
+                                                    
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient
 #include <ArduinoOTA.h>         // https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA
@@ -36,8 +48,15 @@
 #include <DallasTemperature.h>  // https://github.com/milesburton/Arduino-Temperature-Control-Library
 #endif
 
+#ifdef ROOM_TEMP_DS18X20
+#if (TEMP_MEASURE_PERIOD == 0)
+#error "You have to use a value>0 for TEMP_MEASURE_PERIOD when you want to use DS18x20 as an external temperature sensor"
+#endif
+#endif
+
 extern PubSubClient MQTTclient;
 
+void initWiFi();
 void setupWiFi();
 int MQTTloop();
 void MQTTreconnect();
@@ -48,6 +67,6 @@ void output_P(ACStatus status, PGM_P topic, PGM_P payload);
 
 void setupOTA();
 void setup_ds18x20();
-void getDs18x20Temperature(int temp_hysterese);
+byte getDs18x20Temperature(int temp_hysterese);
 
 #endif

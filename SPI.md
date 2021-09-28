@@ -257,9 +257,9 @@ The same coding is used for setting vanes.
 The set bit for enabling vanes up/down swing in the MISO frame is DB0[7].
 The set bit for vanes up/down position in the MISO frame is DB1[7].
 
-### Room temperature (read only)
+### Room temperature
 The room temperature is coded in MOSI DB3[7:0] according to the formula T[°C]=(DB3[7:0]-61)/4
-The resolution is 0.25°C.
+The resolution is 0.25°C. When writing a value <255, this temperature value is used instead of the build in room temperature sensor.
 
 ### Temperature setpoint
 The temperature setpoint is coded in MOSI DB2[6:0] according to the formula T[°C]=DB2[6:0]/2

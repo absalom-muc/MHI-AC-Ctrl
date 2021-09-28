@@ -4,6 +4,9 @@
 // MQTT topic names
 #define TOPIC_CONNECTED "connected"
 #define TOPIC_RSSI "RSSI"
+#define TOPIC_WIFI_LOST "WIFI_LOST"
+#define TOPIC_MQTT_LOST "MQTT_LOST"
+#define TOPIC_WIFI_BSSID "WIFI_BSSID"
 #define TOPIC_CMD_RECEIVED "cmd_received"
 #define TOPIC_TDS1820 "Tds1820"
 #define TOPIC_FSCK "fSCK"

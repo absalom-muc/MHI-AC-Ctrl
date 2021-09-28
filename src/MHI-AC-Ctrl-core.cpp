@@ -16,7 +16,7 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_mode_old = 0xff;
   status_fan_old = 0xff;
   status_vanes_old = 0xff;
-  status_troom_old = 0xff;
+  status_troom_old = 0xfe;
   status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
 
@@ -58,7 +58,6 @@ ICACHE_RAM_ATTR void handleInterrupt_MISO() {
 }
 
 void MeasureFrequency(CallbackInterface_Status *m_cbiStatus) {  // measure the frequency on the pins
-  char strtmp[10];
   pinMode(SCK_PIN, INPUT);
   pinMode(MOSI_PIN, INPUT);
   pinMode(MISO_PIN, INPUT);
@@ -141,10 +140,17 @@ void MHI_AC_Ctrl_Core::request_ErrOpData() {
   request_erropData = true;
 }
 
-int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
+#ifndef ROOM_TEMP_IU
+void MHI_AC_Ctrl_Core::set_troom(byte temperature) {
+  Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", temperature);
+  new_Troom = temperature;
+}
+#endif
+
+int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
   static byte opdataNo = 0;               //
-  int startMillis = millis();             // start time of this loop run
+  long startMillis = millis();             // start time of this loop run
   byte MOSI_byte;                         // received MOSI byte
   bool new_datapacket_received = false;   // indicated that a new frame was received
   static byte erropdataCnt = 0;           // number of expected error operating data
@@ -155,15 +161,15 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
 
   static uint call_counter = 0;           // counts how often this loop was called
+
   call_counter++;
   int SCKMillis = millis();               // time of last SCK low level
-  while (millis() - SCKMillis < 5) { // wait for 5ms stable high signal to detect a frame start
+  while (millis() - SCKMillis < 5) {      // wait for 5ms stable high signal to detect a frame start
     if (!digitalRead(SCK_PIN))
       SCKMillis = millis();
     if (millis() - startMillis > max_time_ms)
-      return err_msg_timeout;
+      return err_msg_timeout_SCK_low;       // SCK stuck@ low error detection
   }
-
   // build the next MISO frame
   if (frame++ >= NoFramesPerPacket) {       // setup MISO frame with each frame packet
     doubleframe = !doubleframe;             // toggle
@@ -212,6 +218,9 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     }
   }
 
+#ifndef ROOM_TEMP_IU
+  MISO_frame[DB3] = new_Troom;
+#endif
   uint16_t checksum = calc_checksum(MISO_frame);
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
@@ -224,7 +233,11 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     MOSI_byte = 0;
     byte bit_mask = 1;
     for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) { // read and write 1 byte
-      while (digitalRead(SCK_PIN)) {} // wait for falling edge
+      SCKMillis = millis();
+      while (digitalRead(SCK_PIN)) { // wait for falling edge
+        if (millis() - startMillis > max_time_ms)
+          return err_msg_timeout_SCK_high;       // SCK stuck@ high error detection
+      } 
       if ((MISO_frame[byte_cnt] & bit_mask) > 0)
         digitalWrite(MISO_PIN, 1);
       else

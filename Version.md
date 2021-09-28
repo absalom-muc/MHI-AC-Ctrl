@@ -1,5 +1,12 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.3** (September 2021, draft version)
+- for MHI_AC_Ctrl_Core::loop return value err_msg_timeout replaced by the more detailed return values err_msg_timeout_SCK_low and err_msg_timeout_SCK_high added
+- output of the number of WiFi and MQTT lost since last reset
+- output of the BSSID used for the WiFi connection
+- use of the strongest WiFi access point (testing incomplete)
+- option added to use the room temperature from DS18x20 sensor or from MQTT topic instead of AC IU sensor
+
 **v2.2** (February 2021)
 - PCB layout update to v2.2 allows to plug-in MHI-AC-Ctrl directly into the AC without using a cable
 

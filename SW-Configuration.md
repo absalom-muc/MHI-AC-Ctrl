@@ -11,7 +11,7 @@ The basic settings will be adapted in three files:
  - [MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h) for settings related to the behaviour of MHI-AC-Ctrl (e.g. selection of operating data)
 
 ## WiFi ([support.h](src/support.h))
-STA mode of WiFi is supported.
+WiFi STA mode is supported.
 
 ### WiFi Settings (SSID, Password, hostname)
 Adapt the SSID and the password. Changing the hostname is usually not required.
@@ -21,6 +21,13 @@ Adapt the SSID and the password. Changing the hostname is usually not required.
 #define HOSTNAME "MHI-AC-Ctrl"
 ```
  Changing the hostname is required when multiple ACs should be supported. E.g. replace "MHI-AC-Ctrl" by "Living-Room-MHI-AC-Ctrl"
+
+Per default ESP8266 uses the first WiFi access point with matching SSID. This behaviour can be changed.
+```
+#define UseStrongestAP true             // when false then the first WiFi access point with matching SSID found is used.
+                                        // when true then the strongest WiFi access point with matching SSID found is used,
+                                        // Implemented, but not completely tested: The network is rescanned every 12 minutes for the strongest AP.
+```
  
 ## MQTT ([support.h](src/support.h))
 The program uses the [MQTT client library](https://github.com/knolleary/pubsubclient) from Nick O'Leary (knolleary).
@@ -31,8 +38,8 @@ I recommend [MQTT Explorer](http://mqtt-explorer.com/) a great all-round MQTT cl
 Adapt the server (broker) name and the port if needed:
 
 ```
-#define MQTT_SERVER "ds218p"  // broker name or IP address of the broker
-#define MQTT_PORT 1883        // port number used by the broker
+#define MQTT_SERVER "MQTT broker name"  // broker name or IP address of the broker
+#define MQTT_PORT 1883                  // port number used by the broker
 ```
 
 If you want to use MQTT authentication enter user name and password:
@@ -64,14 +71,15 @@ Mode|r/w|"Auto", "Dry", "Cool", "Fan", "Heat" and "Off"|"Off" is only supported 
 Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
 Fan|r/w|1 ... 4|Fan level <sup>1</sup>
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>2</sup>
-Troom|r|0 ... 35|Room temperature (float) in °C.
-Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C  <sup>3</sup>
+Troom|r/w|0 ... 35|Room temperature (float) in °C.  <sup>3</sup>
+Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C  <sup>4</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
 
 <sup>1</sup> Fan auto is not supported via the SPI.   
 <sup>2</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
-<sup>3</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
+<sup>3</sup> Please compare with section [Room temperature](#room-temperature) for writing.   
+<sup>4</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
 
 Additionally, the following program status topics are available:
 
@@ -81,8 +89,10 @@ fSCK     |r  |unsigned integer|frequency of the SCK pin in Hz during boot
 fMOSI    |r  |unsigned integer|frequency of the MOSI pin in Hz during boot
 fMISO    |r  |unsigned integer|frequency of the MISO pin in Hz during boot
 RSSI     |r  |integer         |WiFI RSSI /Received Signal Strength in dBm during boot
-connected|r  |0, 1|ESP8266 connection status to broker
+connected|r  |0, 1|MQTT connection status to broker
 cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feedback for last set command
+WIFI_LOST|r  |number of lost WiFi connections since last reset
+MQTT_LOST|r  |number of lost MQTT connections since last reset
 reset|w|"reset"|resets the ESP8266
 
 note: The topic and the payload text of the status data is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
@@ -122,11 +132,25 @@ When an external temperature sensor is connected, you can configure the pin wher
 and how often the sensor should be read. To use reading of the external sensor you must adapt the TEMP_MEASURE_PERIOD.
 
 ```
-#define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 #define TEMP_MEASURE_PERIOD 0   // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                 // set to e.g. 30 to read the sensor every 30 seconds. 
+#define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 ```
-note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) are only used if TEMP_MEASURE_PERIOD > 0. 
+note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) are only used if TEMP_MEASURE_PERIOD > 0.
+
+If the DS18x20 should replace the room temperature sensor of the AC, you have to confiure it as described in the next clause.
+
+## Room temperature
+Instead of using the room temperature sensor of the AC, the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom can be used.
+```
+//Use only one of the follwoing options for the room temperature
+#define ROOM_TEMP_IU                  // use room temperature from indoor unit (default)
+//#define ROOM_TEMP_DS18X20           // use room temperature from DS18x20
+//#define ROOM_TEMP_MQTT              // use room temperature from received MQTT topic
+#define ROOM_TEMP_MQTT_TIMEOUT  20    // only considered if ROOM_TEMP_MQTT is defined
+                                      // time in seconds, after this time w/o receiving a valid room temperature
+                                      // via MQTT fallback to IU temperature sensor value
+```
 
 ## Behaviour when changing AC mode ([support.h](src/support.h))
 Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
@@ -230,7 +254,8 @@ return value|meaning
 err_msg_valid_frame     |a valid frame was received in the given time
 err_msg_invalid_signature | a frame with invalid signature bytes was received
 err_msg_invalid_checksum | a frame with an invalid checksum was received
-err_msg_timeout | the specified time max_time_ms has been exceeded
+err_msg_timeout_SCK_low | the specified time max_time_ms has been exceeded because SCK is const low and not toggling
+err_msg_timeout_SCK_high | the specified time max_time_ms has been exceeded because SCK is const high and not toggling
 
 note: The input parameters and return values could be changed in future.
 

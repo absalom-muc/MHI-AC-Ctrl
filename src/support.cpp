@@ -3,23 +3,62 @@
 
 WiFiClient espClient;
 PubSubClient MQTTclient(espClient);
+int WIFI_lost = 0;
+int MQTT_lost = 0;
 
-void setupWiFi() {
+void initWiFi(){
   WiFi.persistent(false);
+  WiFi.disconnect(true);    // Delete SDK wifi config
+  delay(200);
   WiFi.mode(WIFI_STA);
-  WiFi.hostname(HOSTNAME);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.hostname(HOSTNAME); 
+#if UseStrongestAP==true
+  WiFi.setAutoReconnect(false);
+#else
+  WiFi.setAutoReconnect(true);
+#endif
+}
+
+int networksFound;
+void setupWiFi() {
+#if UseStrongestAP==true
+  int max_rssi = -999;
+  int strongest_AP = -1;
+  WiFi.scanDelete();
+  networksFound = WiFi.scanNetworks();
+  for (int i = 0; i < networksFound; i++)
+  {
+    Serial.printf("%d: %s, Ch:%d (%ddBm) BSSID:%s %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
+    if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
+        max_rssi = WiFi.RSSI(i);
+        strongest_AP = i;
+    }
+  }
+
+  if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
+    Serial.printf("Connecting from bssid:%s to bssid:%s, ", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
+    Serial.printf("channel:%i.\n", WiFi.channel(strongest_AP));
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
+  }
+#else
   Serial.print(F("Attempting WiFi connection ..."));
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+#endif
+
+  unsigned long previousMillis = millis();
+  while ((WiFi.status() != WL_CONNECTED) || (millis() - previousMillis >= 10*1000)) {
+    delay(300);
     Serial.print(F("."));
   }
-  Serial.printf_P(PSTR(" connected to %s, IP address: %s\n"), WIFI_SSID, WiFi.localIP().toString().c_str());
+  if(WiFi.status() == WL_CONNECTED)
+    Serial.printf_P(PSTR(" connected to %s, IP address: %s\n"), WIFI_SSID, WiFi.localIP().toString().c_str());
+  else
+    Serial.printf_P(PSTR(" not connected, timeout!\n"));
 }
 
 void MQTTreconnect() {
   unsigned long runtimeMillisMQTT;
-  char strtmp[10];
+  char strtmp[50];
   while (!MQTTclient.connected()) { // Loop until we're reconnected
     Serial.print(F("Attempting MQTT connection..."));
     if (MQTTclient.connect(HOSTNAME, MQTT_USER, MQTT_PASSWORD, MQTT_PREFIX TOPIC_CONNECTED, 0, true, PAYLOAD_CONNECTED_FALSE)) {
@@ -27,6 +66,25 @@ void MQTTreconnect() {
       output_P(status_connected, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
       itoa(WiFi.RSSI(), strtmp, 10);
       output_P(status_rssi, PSTR(TOPIC_RSSI), strtmp);
+      itoa(WIFI_lost, strtmp, 10);
+      output_P(status_wifi_lost, PSTR(TOPIC_WIFI_LOST), strtmp);
+      itoa(MQTT_lost, strtmp, 10);
+      output_P(status_mqtt_lost, PSTR(TOPIC_MQTT_LOST), strtmp);
+      WiFi.BSSIDstr().toCharArray(strtmp, 20);
+      output_P(status_mqtt_lost, PSTR(TOPIC_WIFI_BSSID), strtmp);
+      for (int i = 0; i < networksFound; i++)
+      {
+        if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
+          strcpy(strtmp, "BSSID:");
+          strcat(strtmp, WiFi.BSSIDstr(i).c_str());
+          char strtmp2[20];
+          strcat(strtmp, " RSSI:");
+          itoa(WiFi.RSSI(i), strtmp2, 10);
+          strcat(strtmp, strtmp2);
+          MQTTclient.publish(MQTT_PREFIX "AP", strtmp, true);
+        }
+      }
+      
       MQTTclient.subscribe(MQTT_SET_PREFIX "#");
     }
     else {
@@ -43,7 +101,11 @@ void MQTTreconnect() {
 }
 
 int MQTTloop() {
+  if(WiFi.status() != WL_CONNECTED)
+    WIFI_lost++;
+
   if (!MQTTclient.connected()) {
+    MQTT_lost++;
     MQTTreconnect();
     return 1;         // 1 means that it just reconnected
   }
@@ -82,7 +144,7 @@ OneWire oneWire(ONE_WIRE_BUS);       // Setup a oneWire instance to communicate 
 DallasTemperature sensors(&oneWire); // Pass our oneWire reference to Dallas Temperature.
 DeviceAddress insideThermometer;     // arrays to hold device address
 
-void getDs18x20Temperature(int temp_hysterese) {
+byte getDs18x20Temperature(int temp_hysterese) {
   static unsigned long DS1820Millis = millis();
   static int16_t tempR_old = 0xffff;
 
@@ -93,12 +155,16 @@ void getDs18x20Temperature(int temp_hysterese) {
       tempR_old = tempR;
       char strtmp[10];
       dtostrf(sensors.rawToCelsius(tempR), 0, 2, strtmp);
-      Serial.printf_P(PSTR("new DS18x20 temperature=%s°C\n"), strtmp);
+      //Serial.printf_P(PSTR("new DS18x20 temperature=%s°C\n"), strtmp);
       output_P(status_tds1820, PSTR(TOPIC_TDS1820), strtmp);
     }
     DS1820Millis = millis();
     sensors.requestTemperatures();
   }
+  //Serial.printf_P(PSTR("temp DS18x20 tempR_old=%i %i\n"), tempR_old, (byte)(tempR_old/32 + 61));
+  if(tempR_old < 0)
+    return 0;
+  return tempR_old/32 + 61;
 }
 
 void printAddress(DeviceAddress deviceAddress) {
