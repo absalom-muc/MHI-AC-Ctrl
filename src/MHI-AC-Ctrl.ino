@@ -1,11 +1,14 @@
-// MHI-AC-Ctrl v2.03 by absalom-muc
+// MHI-AC-Ctrl by absalom-muc
 // read + write data via SPI controlled by MQTT
+// for version see support.h
 
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
+
+unsigned long room_temp_MQTT_timeout_Millis = millis();
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -100,6 +103,20 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
         publish_cmd_invalidparameter();
     }
   }
+#ifdef ROOM_TEMP_MQTT
+  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TROOM)) == 0) {
+    float f=atof((char*)payload);
+    if ((f > -10) & (f < 48)) {
+      room_temp_MQTT_timeout_Millis = millis();  // reset timeout
+      byte tmp = f*4+61;
+      mhi_ac_ctrl_core.set_troom(f*4+61);
+      Serial.printf("ROOM_TEMP_MQTT: %f %i %i\n", f, (byte)(f*4+61), (byte)tmp);
+      publish_cmd_ok();
+    }
+    else
+      publish_cmd_invalidparameter();
+  }
+#endif
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_ERROPDATA)) == 0) {
     mhi_ac_ctrl_core.request_ErrOpData();
     publish_cmd_ok();
@@ -302,12 +319,13 @@ StatusHandler mhiStatusHandler;
 void setup() {
   Serial.begin(115200);
   Serial.println();
-  Serial.println(F("MHI-AC-Ctrl starting"));
+  Serial.println(F("Starting MHI-AC-Ctrl v" VERSION));
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
 
 #if TEMP_MEASURE_PERIOD > 0
   setup_ds18x20();
 #endif
+  initWiFi();
   setupWiFi();
   setupOTA();
   MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
@@ -315,15 +333,43 @@ void setup() {
   MQTTreconnect();
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
+  output_P(status_connected, PSTR(TOPIC_VERSION), PSTR(VERSION));
 }
 
+unsigned long previousMillis = millis();
+
 void loop() {
+  static byte ds18x20_value_old = 0;
+#if UseStrongestAP==true
+  if ((WiFi.status() != WL_CONNECTED) || (millis() - previousMillis >= 12*60*1000)) {
+    previousMillis = millis(); 
+    setupWiFi();
+  }
+#endif
+
   if (MQTTloop())
     mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
   ArduinoOTA.handle();
 
 #if TEMP_MEASURE_PERIOD > 0
-  getDs18x20Temperature(25);
+  byte ds18x20_value = getDs18x20Temperature(25);
+#ifdef ROOM_TEMP_DS18X20
+  if(ds18x20_value != ds18x20_value_old) {
+    if ((ds18x20_value > 21) & (ds18x20_value < 253)) {  // use only values -10°C < T < 48°C
+      mhi_ac_ctrl_core.set_troom(ds18x20_value);
+      ds18x20_value_old = ds18x20_value;
+      Serial.printf("update Troom based on DS18x20 value %i\n", ds18x20_value);
+    }
+  }
+#endif 
+#endif
+
+#ifdef ROOM_TEMP_MQTT
+  if(millis() - room_temp_MQTT_timeout_Millis >= ROOM_TEMP_MQTT_TIMEOUT*1000) {
+    mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
+    room_temp_MQTT_timeout_Millis = millis();
+    Serial.println(F("ROOM_TEMP_MQTT_TIMEOUT exceeded, use IU temperature sensor value!"));
+  }
 #endif
 
   int ret = mhi_ac_ctrl_core.loop(100);

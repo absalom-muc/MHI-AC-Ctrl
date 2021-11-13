@@ -3,9 +3,11 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
+#define VERSION "2.5R1"
+			   
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
-#define HOSTNAME "MHI-AC-Ctrl2"
+#define HOSTNAME "MHI-AC-Ctrl"
 
 #define UseStrongestAP true                         // when false then the first WiFi access point with matching SSID found is used.
                                                     // when true then the strongest WiFi access point with matching SSID found is used,
@@ -24,7 +26,7 @@
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
-#define TEMP_MEASURE_PERIOD 20                      // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 

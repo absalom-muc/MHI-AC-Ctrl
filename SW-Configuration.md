@@ -85,15 +85,16 @@ Additionally, the following program status topics are available:
 
 topic    |r/w| value |comment
 ---------|---|---|---
-fSCK     |r  |unsigned integer|frequency of the SCK pin in Hz during boot
-fMOSI    |r  |unsigned integer|frequency of the MOSI pin in Hz during boot
-fMISO    |r  |unsigned integer|frequency of the MISO pin in Hz during boot
-RSSI     |r  |integer         |WiFI RSSI /Received Signal Strength in dBm during boot
-connected|r  |0, 1|MQTT connection status to broker
 cmd_received|r|"o.k.", "unknown command" or "invalid parameter"|feedback for last set command
-WIFI_LOST|r  |number of lost WiFi connections since last reset
-MQTT_LOST|r  |number of lost MQTT connections since last reset
+connected|r  |0, 1|MQTT connection status to broker
+fMISO    |r  |unsigned integer|frequency of the MISO pin in Hz during boot
+fMOSI    |r  |unsigned integer|frequency of the MOSI pin in Hz during boot
+fSCK     |r  |unsigned integer|frequency of the SCK pin in Hz during boot
 reset|w|"reset"|resets the ESP8266
+RSSI     |r  |integer         |WiFI RSSI / signal Strength in dBm after MQTT (re-)connect
+Version  |r  |string          |Version number of MHI-AC-Ctrl
+WIFI_LOST|r  |integer         |number of lost WiFi connections since last reset
+MQTT_LOST|r  |integer         |number of lost MQTT connections since last reset
 
 note: The topic and the payload text of the status data is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
 
@@ -151,6 +152,7 @@ Instead of using the room temperature sensor of the AC, the DS18x20 sensor on th
                                       // time in seconds, after this time w/o receiving a valid room temperature
                                       // via MQTT fallback to IU temperature sensor value
 ```
+If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume
 
 ## Behaviour when changing AC mode ([support.h](src/support.h))
 Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
@@ -179,7 +181,7 @@ Currently the following operating data in double quotes are supported
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
   { 0xc0, 0x81},  //  5 "THI-R1" [°C]
-  { 0x40, 0x81},  //  5 "THI-R2" [°C]
+  { 0x40, 0x81},  //  6 "THI-R2" [°C]
   { 0xc0, 0x87},  //  7 "THI-R3" [°C]
   { 0xc0, 0x1f},  //  8 "IU-FANSPEED"
   { 0xc0, 0x1e},  // 12 "TOTAL-IU-RUN" [h]

@@ -3,6 +3,7 @@
 
 // MQTT topic names
 #define TOPIC_CONNECTED "connected"
+#define TOPIC_VERSION "Version"
 #define TOPIC_RSSI "RSSI"
 #define TOPIC_WIFI_LOST "WIFI_LOST"
 #define TOPIC_MQTT_LOST "MQTT_LOST"

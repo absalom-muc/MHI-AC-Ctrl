@@ -72,6 +72,7 @@ void MQTTreconnect() {
       output_P(status_mqtt_lost, PSTR(TOPIC_MQTT_LOST), strtmp);
       WiFi.BSSIDstr().toCharArray(strtmp, 20);
       output_P(status_mqtt_lost, PSTR(TOPIC_WIFI_BSSID), strtmp);
+      // for testing publish list of access points with the expected SSID 
       for (int i = 0; i < networksFound; i++)
       {
         if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
@@ -81,7 +82,7 @@ void MQTTreconnect() {
           strcat(strtmp, " RSSI:");
           itoa(WiFi.RSSI(i), strtmp2, 10);
           strcat(strtmp, strtmp2);
-          MQTTclient.publish(MQTT_PREFIX "AP", strtmp, true);
+          MQTTclient.publish(MQTT_PREFIX "APs", strtmp, true);
         }
       }
       

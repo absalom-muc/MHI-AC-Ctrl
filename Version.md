@@ -1,5 +1,14 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.5R1** (November 2021, draft version)
+- Version number now located in support.h, published once MQTT connection is available
+
+**Versioning changed**
+
+Released versions are availabe on the [release page](https://github.com/absalom-muc/MHI-AC-Ctrl/releases)
+All other versions are draft. A new version ends with "R1", "R2"-postfix etc. before it is released w/o "R"-postfix, e.g. v2.5R1 => v2.5R2 => v2.5
+For documentation updates usually no new version number is created.
+
 **v2.3** (September 2021, draft version)
 - for MHI_AC_Ctrl_Core::loop return value err_msg_timeout replaced by the more detailed return values err_msg_timeout_SCK_low and err_msg_timeout_SCK_high added
 - output of the number of WiFi and MQTT lost since last reset
