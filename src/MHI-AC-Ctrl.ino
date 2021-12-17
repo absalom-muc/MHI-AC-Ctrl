@@ -74,10 +74,9 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
         publish_cmd_invalidparameter();
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TSETPOINT)) == 0) {
-    if ((atoi((char*)payload) >= 18) & (atoi((char*)payload) <= 30)) {
-      mhi_ac_ctrl_core.set_tsetpoint(atoi((char*)payload));
-      publish_cmd_ok();
-    }
+    float f=atof((char*)payload);
+    if((f >= 18) & (f <= 30))
+      mhi_ac_ctrl_core.set_tsetpoint((byte)(2 * f));
     else
       publish_cmd_invalidparameter();
   }
@@ -139,7 +138,7 @@ class StatusHandler : public CallbackInterface_Status {
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
       static int mode_tmp = 0xff;
-      Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
+      //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
         case status_fsck:
           itoa(value, strtmp, 10);
@@ -216,7 +215,7 @@ class StatusHandler : public CallbackInterface_Status {
         case status_tsetpoint:
         case opdata_tsetpoint:
         case erropdata_tsetpoint:
-          itoa(value, strtmp, 10);
+          dtostrf((value & 0x7f)/ 2.0, 0, 1, strtmp);
           output_P(status, PSTR(TOPIC_TSETPOINT), strtmp);
           break;
         case status_errorcode:
@@ -226,7 +225,7 @@ class StatusHandler : public CallbackInterface_Status {
           break;
         case opdata_return_air:
         case erropdata_return_air:
-          dtostrf(value * 0.25f - 15, 0, 2, strtmp);
+          dtostrf((value - 61) / 4.0, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_RETURNAIR), strtmp);
           break;
         case opdata_thi_r1:

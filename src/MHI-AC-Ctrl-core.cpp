@@ -114,7 +114,8 @@ void MHI_AC_Ctrl_Core::set_mode(ACMode mode) {
 }
 
 void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
-  new_Tsetpoint = 0b10000000 | (2 * tsetpoint);
+  //new_Tsetpoint = 0b10000000 | (2 * tsetpoint);
+  new_Tsetpoint = 0b10000000 | tsetpoint;
 }
 
 void MHI_AC_Ctrl_Core::set_fan(uint fan) {
@@ -141,9 +142,9 @@ void MHI_AC_Ctrl_Core::request_ErrOpData() {
 }
 
 #ifndef ROOM_TEMP_IU
-void MHI_AC_Ctrl_Core::set_troom(byte temperature) {
-  Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", temperature);
-  new_Troom = temperature;
+void MHI_AC_Ctrl_Core::set_troom(byte troom) {
+  Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", troom);
+  new_Troom = troom;
 }
 #endif
 
@@ -302,7 +303,7 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
 
     if (MOSI_frame[DB2] != status_tsetpoint_old) { // Temperature setpoint
       status_tsetpoint_old = MOSI_frame[DB2];
-      m_cbiStatus->cbiStatusFunction(status_tsetpoint, (status_tsetpoint_old & 0x7f) >> 1);
+      m_cbiStatus->cbiStatusFunction(status_tsetpoint, status_tsetpoint_old);
     }
 
     if (MOSI_frame[DB4] != status_errorcode_old) { // error code
@@ -331,11 +332,11 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
           if (MOSI_frame[DB10] == 0x13) {
             if (MOSI_frame[DB11] != op_settemp_old) {
               op_settemp_old = MOSI_frame[DB11];
-              m_cbiStatus->cbiStatusFunction(opdata_tsetpoint, op_settemp_old >> 1);
+              m_cbiStatus->cbiStatusFunction(opdata_tsetpoint, op_settemp_old);
             }
           }
           else if (MOSI_frame[DB10] == 0x33)
-            m_cbiStatus->cbiStatusFunction(erropdata_tsetpoint, MOSI_frame[DB11] >> 1);
+            m_cbiStatus->cbiStatusFunction(erropdata_tsetpoint, MOSI_frame[DB11]);
         }
         break;
       case 0x81:                              // 5 THI-R1 or 6 THI-R2

@@ -142,11 +142,10 @@ note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneW
 If the DS18x20 should replace the room temperature sensor of the AC, you have to confiure it as described in the next clause.
 
 ## Room temperature
-Instead of using the room temperature sensor of the AC, the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom can be used.
+Usage of the room temperature sensor inside the AC is the default, but instead you can use the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom.
 ```
-//Use only one of the follwoing options for the room temperature
-#define ROOM_TEMP_IU                  // use room temperature from indoor unit (default)
 //#define ROOM_TEMP_DS18X20           // use room temperature from DS18x20
+
 //#define ROOM_TEMP_MQTT              // use room temperature from received MQTT topic
 #define ROOM_TEMP_MQTT_TIMEOUT  20    // only considered if ROOM_TEMP_MQTT is defined
                                       // time in seconds, after this time w/o receiving a valid room temperature

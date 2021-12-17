@@ -49,6 +49,9 @@ There was a [bug](https://github.com/knolleary/pubsubclient/issues/747) introduc
 ## :fire: MQTT connects / disconnects periodically
 The HOSTNAME specified in support.h is used as WiFi hostname, MQTT hostname and OTA hostname. In case that you use more than one MHI-AC-Ctrl, e.g. in a multi-split configuration, you have to use unique HOSTNAME to every PCB.
 
+## :fire: AC switches power off sometimes
+When there is for >=120 seconds no valid MISO frame, the AC goes into an error state (MQTT topic Errorcode=1) and the AC switches off. You can leave the error state by sending a command via IR-RC or by sending a command via SPI. I assume this is some kind of safety function. This happens when there is >=120 seconds no WiFi or MQTT connection, because the SW loop related to SPI is not served.
+
 ## :fire: Receiving the AC status works, but can't change values
 Different root causes are possible:
 ### :fire: MISO pin not connected to AC
