@@ -57,11 +57,14 @@ In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I 
 This Software based SPI is reliable and the performance of the ESP8266 is sufficient for this use case.
 In case of problems please check the [Troubleshooting guide](Troubleshooting.md).
 
+# Enhancement
+If you are interested to have a deeper look on the SPI protocol or want to trace the SPI signals, please check [MHI-AC-Trace](https://github.com/absalom-muc/MHI-AC-Trace). But this is not needed for the standard user of MHI-AC-Ctrl.
+
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 # Acknowledgments
-The coding of the [SPI protocol](SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
+The coding of the [SPI protocol](https://github.com/absalom-muc/MHI-AC-Trace/blob/main/SPI.md) of the AC is a nightmare. Without [rjdekker's MHI2MQTT](https://github.com/rjdekker/MHI2MQTT) I had no chance to understand the protocol! Unfortunately rjdekker is no longer active on GitHub. He used an Arduino plus an ESP8266 for his project.
 Also thank you very much on the authors and contributors of [MQTT client](https://github.com/knolleary/pubsubclient), [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA), [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) libraries.
 
 Last but not least thank you for the implementation of MHI-AC-Ctrl in [different environments](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SW-Configuration.md#integration-examples) (FHEM, Tasmota, Home Assistant etc.)
