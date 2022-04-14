@@ -43,6 +43,8 @@ If MISO frequency>10Hz the program will stop and reboot. This prevents damage of
 - SCK frequency < MOSI frequency => SCK and MOSI pins swapped
 - MISO frequency = SCK frequency => MISO and SCK pins shorted
 
+For reference: With a multimeter I measure for SCK and MOSI approx. 4.7V on the HV pins of the level shifter (and X1) and approx. 3V on the LV pins of the level shifter (and D5/D7)
+
 ### :fire: You use PubSubClient v2.8.0
 There was a [bug](https://github.com/knolleary/pubsubclient/issues/747) introduced in PubSubClient version 2.8.0, please use v2.7.0.
 
