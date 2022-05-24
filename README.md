@@ -14,6 +14,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 
 - SRF xx ZJX-S1
 - SRF xx ZMX-S
+- SRF xx ZMXA-S
 - SRK xx ZJ-S
 - SRK xx ZM-S
 - SRK xx ZS-S
@@ -25,6 +26,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - SRK xx ZSX-W
 - SRK xx ZS-W
 - SRR xx ZM-S
+- SRK xx ZMXA-S
 
 Unsupported models:
 
