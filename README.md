@@ -15,6 +15,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - SRF xx ZJX-S1
 - SRF xx ZMX-S
 - SRF xx ZMXA-S
+- SRF xx ZF-W
 - SRK xx ZJ-S
 - SRK xx ZM-S
 - SRK xx ZS-S
