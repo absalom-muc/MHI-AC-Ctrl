@@ -68,7 +68,7 @@ topic|r/w|value|comment
 -----|---|-----|------
 Power|r/w|"On", "Off"|
 Mode|r/w|"Auto", "Dry", "Cool", "Fan", "Heat" and "Off"|"Off" is only supported when option [POWERON_WHEN_CHANGING_MODE](#behaviour-when-changing-ac-mode-supporth) is selected
-Tsetpoint|r/w|18 ... 30|Target room temperature (integer) in °C
+Tsetpoint|r/w|18 ... 30|Target room temperature (float) in °C, resolution is 0.5°C
 Fan|r/w|1 ... 4|Fan level <sup>1</sup>
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>2</sup>
 Troom|r/w|0 ... 35|Room temperature (float) in °C.  <sup>3</sup>
