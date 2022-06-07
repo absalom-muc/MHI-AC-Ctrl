@@ -4,6 +4,7 @@ MHI-AC-Ctrl by absalom-muc
 - calculation of RETURN-AIR in MHI-AC-Ctrl.ino corrected
 - Removed the option #define ROOM_TEMP_IU for adaption by the user in support.h. Now it is generated automatically when ROOM_TEMP_DS18X20 and ROOM_TEMP_MQTT are not defined
 - Reworked WiFi network re-scan function
+- increased resolution of Tsetpoint to 0.5°C
 
 **v2.5R1** (November 2021, draft version)
 - Version number now located in support.h, published once MQTT connection is available
