@@ -6,70 +6,133 @@ PubSubClient MQTTclient(espClient);
 int WIFI_lost = 0;
 int MQTT_lost = 0;
 
+
+struct rising_edge_cnt_struct{
+  volatile uint32_t SCK = 0;
+  volatile uint32_t MOSI = 0;
+  volatile uint32_t MISO = 0;
+} rising_edge_cnt;
+
+
+IRAM_ATTR void handleInterrupt_SCK() {
+  rising_edge_cnt.SCK++;
+}
+
+IRAM_ATTR void handleInterrupt_MOSI() {
+  rising_edge_cnt.MOSI++;
+}
+
+IRAM_ATTR void handleInterrupt_MISO() {
+  rising_edge_cnt.MISO++;
+}
+
+void MeasureFrequency() {  // measure the frequency on the pins
+  pinMode(SCK_PIN, INPUT);
+  pinMode(MOSI_PIN, INPUT);
+  pinMode(MISO_PIN, INPUT);
+  Serial.println(F("Measure frequency for SCK, MOSI and MISO pin"));
+  attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, RISING);
+  attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, RISING);
+  attachInterrupt(digitalPinToInterrupt(MISO_PIN), handleInterrupt_MISO, RISING);
+  unsigned long starttimeMicros = micros();
+  while (micros() - starttimeMicros < 1000000);
+  detachInterrupt(SCK_PIN);
+  detachInterrupt(MOSI_PIN);
+  detachInterrupt(MISO_PIN);
+
+  Serial.printf_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt.SCK);
+  if (rising_edge_cnt.SCK > 3000)
+    Serial.println(F("o.k."));
+  else
+    Serial.println(F("out of range!"));
+
+  Serial.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt.MOSI);
+  if ((rising_edge_cnt.MOSI > 30) & (rising_edge_cnt.MOSI < rising_edge_cnt.SCK))
+    Serial.println(F("o.k."));
+  else
+    Serial.println(F("out of range!"));
+
+  Serial.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt.MISO);
+  if (rising_edge_cnt.MISO <= 10) {
+    Serial.println(F("o.k."));
+  }
+  else {
+    Serial.println(F("out of range!"));
+    while (1);
+  }
+}
+
+
 void initWiFi(){
   WiFi.persistent(false);
   WiFi.disconnect(true);    // Delete SDK wifi config
   delay(200);
   WiFi.mode(WIFI_STA);
   WiFi.hostname(HOSTNAME); 
-#if UseStrongestAP==true
   WiFi.setAutoReconnect(false);
-#else
-  WiFi.setAutoReconnect(true);
-#endif
 }
 
-int networksFound;
-void setupWiFi() {
-#if UseStrongestAP==true
+int networksFound = 0;
+void setupWiFi(int& WiFiStatus) {
   int max_rssi = -999;
   int strongest_AP = -1;
-  WiFi.scanDelete();
-  networksFound = WiFi.scanNetworks();
-  for (int i = 0; i < networksFound; i++)
-  {
-    Serial.printf("%d: %s, Ch:%d (%ddBm) BSSID:%s %s\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "");
-    if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
-        max_rssi = WiFi.RSSI(i);
-        strongest_AP = i;
+  static unsigned long WiFiTimeoutMillis;
+
+  if(WiFiStatus != WIFI_CONNECT_ONGOING) {
+    WiFi.scanDelete();
+    int networksFound = WiFi.scanNetworks();
+    for (int i = 0; i < networksFound; i++)
+    {
+      Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured"),  (uint)WiFi.encryptionType(i);
+      if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
+          max_rssi = WiFi.RSSI(i);
+          strongest_AP = i;
+      }
+    }
+    Serial.printf_P("current BSSID: %s, strongest BSSID: %s\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
+    if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
+      if(strongest_AP != -1) {
+        Serial.printf("Connecting from bssid:%s to bssid:%s, channel:%i\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str(), WiFi.channel(strongest_AP));
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
+      }
+      else {
+        Serial.println("No matching AP found (maybe hidden SSID), however try to connect.");
+        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+      }
+      WiFiStatus = WIFI_CONNECT_ONGOING;
+      Serial.println("WIFI_CONNECT_ONGOING");
+      WiFiTimeoutMillis = millis();
     }
   }
-  Serial.printf_P("current BSSID: %s, strongest BSSID: %s\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
-  if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 6) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
-    Serial.printf("Connecting from bssid:%s to bssid:%s, ", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
-    Serial.printf("channel:%i\n", WiFi.channel(strongest_AP));
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
+  else {
+    if(WiFi.status() == WL_CONNECTED){
+      Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());  // warum wird diese Zeile nicht ausgegeben?
+      WiFiStatus = WIFI_CONNECT_OK;
+      Serial.println("WIFI_CONNECT_OK");
+    }
+    else if(millis() - WiFiTimeoutMillis > 10*1000) {  // timeout after 10 seconds
+      WiFiStatus = WIFI_CONNECT_TIMEOUT;
+      Serial.println(PSTR("WIFI_CONNECT_TIMEOUT"));
+    }
   }
-#else
-  Serial.print(F("Attempting WiFi connection ..."));
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-#endif
-
-  unsigned long previousMillis = millis();
-  while ((WiFi.status() != WL_CONNECTED) && (millis() - previousMillis < 10*1000)) {
-    delay(500);
-    Serial.print(F("."));
-  }
-  if(WiFi.status() == WL_CONNECTED)
-    Serial.printf_P(PSTR(" connected to %s, IP address: %s, BSSID: %s\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.BSSIDstr().c_str());
-  else
-    Serial.printf_P(PSTR(" not connected, timeout!\n"));
 }
 
-void MQTTreconnect() {
-  unsigned long runtimeMillisMQTT;
+int MQTTreconnect() {
   char strtmp[50];
-  while (!MQTTclient.connected()) { // Loop until we're reconnected
+  static int reconnect_trials=0;
+  
+  if(!MQTTclient.connected()) {
     Serial.print(F("Attempting MQTT connection..."));
-      if (WiFi.status() != WL_CONNECTED) {
-        Serial.println(F("WiFi not connected in MQTTreconnect function"));
-        #if UseStrongestAP==true
-          setupWiFi();
-        #endif
-      }
+    if(reconnect_trials++>9){
+      WiFi.disconnect(); // work around for https://github.com/esp8266/Arduino/issues/7432
+      reconnect_trials=0;
+    }
+
     if (MQTTclient.connect(HOSTNAME, MQTT_USER, MQTT_PASSWORD, MQTT_PREFIX TOPIC_CONNECTED, 0, true, PAYLOAD_CONNECTED_FALSE)) {
       Serial.println(F(" connected"));
+      reconnect_trials=0;
       output_P(status_connected, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
+      output_P(status_connected, PSTR(TOPIC_VERSION), PSTR(VERSION));
       itoa(WiFi.RSSI(), strtmp, 10);
       output_P(status_rssi, PSTR(TOPIC_RSSI), strtmp);
       itoa(WIFI_lost, strtmp, 10);
@@ -78,7 +141,8 @@ void MQTTreconnect() {
       output_P(status_mqtt_lost, PSTR(TOPIC_MQTT_LOST), strtmp);
       WiFi.BSSIDstr().toCharArray(strtmp, 20);
       output_P(status_mqtt_lost, PSTR(TOPIC_WIFI_BSSID), strtmp);             // CHECK status_mqtt_lost !!!!!!!!!!!!
-      // for testing publish list of access points with the expected WIFI_SSID 
+
+      // for testing publish list of access points with the expected SSID 
       for (int i = 0; i < networksFound; i++)
       {
         if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
@@ -91,37 +155,28 @@ void MQTTreconnect() {
           MQTTclient.publish(MQTT_PREFIX "APs", strtmp, true);
         }
       }
+
+      itoa(rising_edge_cnt.SCK, strtmp, 10);
+      output_P(status_fsck, PSTR(TOPIC_FSCK), strtmp);
+      itoa(rising_edge_cnt.MOSI, strtmp, 10);
+      output_P(status_fmosi, PSTR(TOPIC_FMOSI), strtmp);
+      itoa(rising_edge_cnt.MISO, strtmp, 10);
+      output_P(status_fmiso, PSTR(TOPIC_FMISO), strtmp);
       
       MQTTclient.subscribe(MQTT_SET_PREFIX "#");
+      return MQTT_RECONNECTED;
     }
     else {
       Serial.print(F(" reconnect failed, reason "));
       itoa(MQTTclient.state(), strtmp, 10);
       Serial.print(strtmp);
-      Serial.println(F(" try again in 5 seconds"));
-      Serial.print("WiFi status: ");
+      Serial.print(", WiFi status: ");
       Serial.println(WiFi.status());
-      runtimeMillisMQTT = millis();
-      MQTTclient.disconnect();
-      while (millis() - runtimeMillisMQTT < 5000) { // Wait 5 seconds before retrying
-        delay(0);
-        ArduinoOTA.handle();
-      }
+      return MQTT_NOT_CONNECTED;
     }
   }
-}
-
-int MQTTloop() {
-  if(WiFi.status() != WL_CONNECTED)
-    WIFI_lost++;
-
-  if (!MQTTclient.connected()) {
-    MQTT_lost++;
-    MQTTreconnect();
-    return 1;         // 1 means that it just reconnected
-  }
   MQTTclient.loop();
-  return 0;
+  return MQTT_CONNECTED;
 }
 
 void publish_cmd_ok() {

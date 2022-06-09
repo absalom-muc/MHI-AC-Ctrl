@@ -1,17 +1,18 @@
-#ifndef SUPPORT_h
-#define SUPPORT_h
+#pragma once
+
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.5R21"
+#define VERSION "2.5R3"
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
 #define HOSTNAME "MHI-AC-Ctrl"
 
-#define UseStrongestAP true                         // when false then the first WiFi access point with matching SSID found is used.
-                                                    // when true then the strongest WiFi access point with matching SSID found is used, and
-                                                    // WiFi network re-scan every 12 minutes with alternate to +5dB stronger signal if detected
+#define WiFI_SEARCHStrongestAP true                 // when false then the first WiFi access point with matching SSID found is used.
+                                                    // when true then the strongest WiFi access point with matching SSID found is used, it doesn't work with hidden SSID
+                                                    
+#define WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL 12    // WiFi network re-scan interval in minutes with alternate to +5dB stronger signal if detected
 
 #define MQTT_SERVER "192.168.178.111"               // broker name or IP address of the broker
 #define MQTT_PORT 1883                              // port number used by the broker
@@ -30,18 +31,16 @@
                                                     // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 
-// Per default AC internal sensor is used for the room temperature. You can select using the DS18x20 sensor or providing Troom via MQTT.
-//#define ROOM_TEMP_DS18X20                         // use room temperature from DS18x20
-//#define ROOM_TEMP_MQTT                            // use room temperature from received MQTT topic
-#define ROOM_TEMP_MQTT_TIMEOUT  20                  // only considered if ROOM_TEMP_MQTT is defined
-                                                    // time in seconds, after this time w/o receiving a valid room temperature
+//#define ROOM_TEMP_DS18X20                           // use room temperature from DS18x20
+
+#define ROOM_TEMP_MQTT_SET_TIMEOUT  40              // time in seconds, after this time w/o receiving a valid room temperature
                                                     // via MQTT fallback to IU temperature sensor value
 
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
                                                     // used e.g. for home assistant support
 
 // *** The configuration ends here ***
-                                                    
+
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
 #include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient
 #include <ArduinoOTA.h>         // https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA
@@ -57,31 +56,25 @@
 #endif
 #endif
 
-#ifndef ROOM_TEMP_DS18X20
-#ifndef ROOM_TEMP_MQTT
-#define ROOM_TEMP_IU
-#endif
-#endif
-
-#ifdef ROOM_TEMP_DS18X20
-#ifdef ROOM_TEMP_MQTT
-#error "It is not valid to select both ROOM_TEMP_DS18X20 and ROOM_TEMP_MQTT. Please select none or one of these options"
-#endif
-#endif
-
 extern PubSubClient MQTTclient;
 
-void initWiFi();
-void setupWiFi();
-int MQTTloop();
-void MQTTreconnect();
-void publish_cmd_ok();
-void publish_cmd_unknown();
-void publish_cmd_invalidparameter();
-void output_P(ACStatus status, PGM_P topic, PGM_P payload);
+void MeasureFrequency();                                      // measures the frequency of the SPI pins
+void initWiFi();                                              // basic WiFi initialization
+void setupWiFi(int& WiFiStatus);                              // setup WIFi connection to AP
+int MQTTreconnect();                                          // (re)connect to MQTT broker
+void publish_cmd_ok();                                        // last MQTT cmd was o.k.
+void publish_cmd_unknown();                                   // last MQTT cmd was unknown
+void publish_cmd_invalidparameter();                          // a paramter of the last MQTT was wrong
+void output_P(ACStatus status, PGM_P topic, PGM_P payload);   // publish via MQTT
 
-void setupOTA();
-void setup_ds18x20();
-byte getDs18x20Temperature(int temp_hysterese);
+void setupOTA();                                              // initialize and start OTA
+void setup_ds18x20();                                         // setup the temperature measurement
+byte getDs18x20Temperature(int temp_hysterese);               // read the temperature from the DS18x20 sensor
 
-#endif
+#define WIFI_CONNECT_TIMEOUT 2
+#define WIFI_CONNECT_ONGOING 1
+#define WIFI_CONNECT_OK 0
+
+#define MQTT_NOT_CONNECTED 2
+#define MQTT_RECONNECTED 1
+#define MQTT_CONNECT_OK 0

@@ -1,5 +1,6 @@
-#ifndef MHI_AC_CTRL_h
-#define MHI_AC_CTRL_h
+#pragma once
+
+#include <cstdint>
 
 // MQTT topic names
 #define TOPIC_CONNECTED "connected"
@@ -63,5 +64,3 @@
 #define PAYLOAD_OP_DEFROST_ON "On"
 #define PAYLOAD_OP_DEFROST_OFF "Off"
 #define PAYLOAD_REQUEST_RESET "reset"
-
-#endif

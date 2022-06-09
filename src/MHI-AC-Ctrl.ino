@@ -8,7 +8,8 @@
 
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
-unsigned long room_temp_MQTT_timeout_Millis = millis();
+unsigned long room_temp_set_timeout_Millis = millis();
+bool troom_was_set_by_MQTT = false;
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -102,11 +103,11 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
         publish_cmd_invalidparameter();
     }
   }
-#ifdef ROOM_TEMP_MQTT
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TROOM)) == 0) {
     float f=atof((char*)payload);
     if ((f > -10) & (f < 48)) {
-      room_temp_MQTT_timeout_Millis = millis();  // reset timeout
+      room_temp_set_timeout_Millis = millis();  // reset timeout
+      troom_was_set_by_MQTT=true;
       byte tmp = f*4+61;
       mhi_ac_ctrl_core.set_troom(f*4+61);
       Serial.printf("ROOM_TEMP_MQTT: %f %i %i\n", f, (byte)(f*4+61), (byte)tmp);
@@ -115,7 +116,6 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
-#endif
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_ERROPDATA)) == 0) {
     mhi_ac_ctrl_core.request_ErrOpData();
     publish_cmd_ok();
@@ -140,18 +140,6 @@ class StatusHandler : public CallbackInterface_Status {
       static int mode_tmp = 0xff;
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
-        case status_fsck:
-          itoa(value, strtmp, 10);
-          output_P(status, PSTR(TOPIC_FSCK), strtmp);
-          break;
-        case status_fmosi:
-          itoa(value, strtmp, 10);
-          output_P(status, PSTR(TOPIC_FMOSI), strtmp);
-          break;
-        case status_fmiso:
-          itoa(value, strtmp, 10);
-          output_P(status, PSTR(TOPIC_FMISO), strtmp);
-          break;
         case status_power:
           if (value == power_on){
             output_P(status, (TOPIC_POWER), PSTR(PAYLOAD_POWER_ON));
@@ -317,6 +305,7 @@ StatusHandler mhiStatusHandler;
 
 void setup() {
   Serial.begin(115200);
+  delay(100);
   Serial.println();
   Serial.println(F("Starting MHI-AC-Ctrl v" VERSION));
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
@@ -325,31 +314,33 @@ void setup() {
   setup_ds18x20();
 #endif
   initWiFi();
-  setupWiFi();
+  MeasureFrequency();
   setupOTA();
   MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
   MQTTclient.setCallback(MQTT_subscribe_callback);
-  MQTTreconnect();
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
-  output_P(status_connected, PSTR(TOPIC_VERSION), PSTR(VERSION));
 }
 
-unsigned long previousMillis = millis();
 
 void loop() {
   static byte ds18x20_value_old = 0;
-#if UseStrongestAP==true
-  if ((WiFi.status() != WL_CONNECTED) || (millis() - previousMillis >= 12*60*1000)) {
-    previousMillis = millis(); 
-    setupWiFi();
+  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;
+  static int MQTTStatus = MQTT_NOT_CONNECTED;
+  static unsigned long previousMillis = millis();
+  //Serial.printf("WiFi.status()=%i\n", WiFi.status());
+  if (WiFi.status() != WL_CONNECTED || WiFiStatus != WIFI_CONNECT_OK || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
+    setupWiFi(WiFiStatus);
+    previousMillis = millis();
+    //Serial.println(WiFiStatus);
   }
-#endif
-
-  if (MQTTloop())
-    mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
-  ArduinoOTA.handle();
-
+  else {
+    MQTTStatus=MQTTreconnect();
+    if (MQTTStatus == MQTT_RECONNECTED)
+      mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
+    ArduinoOTA.handle();
+  }
+  
 #if TEMP_MEASURE_PERIOD > 0
   byte ds18x20_value = getDs18x20Temperature(25);
 #ifdef ROOM_TEMP_DS18X20
@@ -362,16 +353,20 @@ void loop() {
   }
 #endif 
 #endif
-
-#ifdef ROOM_TEMP_MQTT
-  if(millis() - room_temp_MQTT_timeout_Millis >= ROOM_TEMP_MQTT_TIMEOUT*1000) {
+  // fallback to AC internal Troom temperature sensor
+  if(troom_was_set_by_MQTT & (millis() - room_temp_set_timeout_Millis >= ROOM_TEMP_MQTT_SET_TIMEOUT*1000)) {
     mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
-    room_temp_MQTT_timeout_Millis = millis();
-    Serial.println(F("ROOM_TEMP_MQTT_TIMEOUT exceeded, use IU temperature sensor value!"));
+    Serial.println(F("ROOM_TEMP_MQTT_SET_TIMEOUT exceeded, use IU temperature sensor value!"));
+    troom_was_set_by_MQTT=false;
   }
-#endif
 
-  int ret = mhi_ac_ctrl_core.loop(100);
-  if (ret < 0)
-    Serial.printf_P(PSTR("mhi_ac_ctrl_core.loop error: %i\n"), ret);
+
+  if((MQTTStatus==MQTT_RECONNECTED)|(MQTTStatus==MQTT_CONNECT_OK)){
+    //Serial.println("MQTT connected");
+    int ret = mhi_ac_ctrl_core.loop(100);
+    if (ret < 0)
+      Serial.printf_P(PSTR("mhi_ac_ctrl_core.loop error: %i\n"), ret);
+  }
+  /*else
+    Serial.println("MQTT NOT connected");*/
 }

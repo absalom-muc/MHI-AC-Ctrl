@@ -42,63 +42,8 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   op_ou_eev1_old = 0xffff;
 }
 
-volatile uint rising_edge_cnt_SCK = 0;
-ICACHE_RAM_ATTR void handleInterrupt_SCK() {
-  rising_edge_cnt_SCK++;
-}
-
-volatile uint rising_edge_cnt_MOSI = 0;
-ICACHE_RAM_ATTR void handleInterrupt_MOSI() {
-  rising_edge_cnt_MOSI++;
-}
-
-volatile uint rising_edge_cnt_MISO = 0;
-ICACHE_RAM_ATTR void handleInterrupt_MISO() {
-  rising_edge_cnt_MISO++;
-}
-
-void MeasureFrequency(CallbackInterface_Status *m_cbiStatus) {  // measure the frequency on the pins
-  pinMode(SCK_PIN, INPUT);
-  pinMode(MOSI_PIN, INPUT);
-  pinMode(MISO_PIN, INPUT);
-  Serial.println(F("Measure frequency for SCK, MOSI and MISO pin"));
-  attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, RISING);
-  attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, RISING);
-  attachInterrupt(digitalPinToInterrupt(MISO_PIN), handleInterrupt_MISO, RISING);
-  unsigned long starttimeMicros = micros();
-  while (micros() - starttimeMicros < 1000000);
-  detachInterrupt(SCK_PIN);
-  detachInterrupt(MOSI_PIN);
-  detachInterrupt(MISO_PIN);
-
-  m_cbiStatus->cbiStatusFunction(status_fsck, rising_edge_cnt_SCK);
-  m_cbiStatus->cbiStatusFunction(status_fmosi, rising_edge_cnt_MOSI);
-  m_cbiStatus->cbiStatusFunction(status_fmiso, rising_edge_cnt_MISO);
-
-  Serial.printf_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt_SCK);
-  if (rising_edge_cnt_SCK > 3000)
-    Serial.println(F("o.k."));
-  else
-    Serial.println(F("out of range!"));
-
-  Serial.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt_MOSI);
-  if ((rising_edge_cnt_MOSI > 30) & (rising_edge_cnt_MOSI < rising_edge_cnt_SCK))
-    Serial.println(F("o.k."));
-  else
-    Serial.println(F("out of range!"));
-
-  Serial.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt_MISO);
-  if (rising_edge_cnt_MISO <= 10) {
-    Serial.println(F("o.k."));
-  }
-  else {
-    Serial.println(F("out of range!"));
-    while (1);
-  }
-}
-
 void MHI_AC_Ctrl_Core::init() {
-  MeasureFrequency(m_cbiStatus);
+  //MeasureFrequency(m_cbiStatus);
   pinMode(SCK_PIN, INPUT);
   pinMode(MOSI_PIN, INPUT);
   pinMode(MISO_PIN, OUTPUT);
@@ -114,7 +59,6 @@ void MHI_AC_Ctrl_Core::set_mode(ACMode mode) {
 }
 
 void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
-  //new_Tsetpoint = 0b10000000 | (2 * tsetpoint);
   new_Tsetpoint = 0b10000000 | tsetpoint;
 }
 
@@ -141,12 +85,10 @@ void MHI_AC_Ctrl_Core::request_ErrOpData() {
   request_erropData = true;
 }
 
-#ifndef ROOM_TEMP_IU
 void MHI_AC_Ctrl_Core::set_troom(byte troom) {
-  Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", troom);
+  //Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", troom);
   new_Troom = troom;
 }
-#endif
 
 int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
@@ -219,9 +161,9 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
     }
   }
 
-#ifndef ROOM_TEMP_IU
-  MISO_frame[DB3] = new_Troom;
-#endif
+
+  MISO_frame[DB3] = new_Troom;  // from MQTT or DS18x20
+
   uint16_t checksum = calc_checksum(MISO_frame);
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
@@ -545,6 +487,7 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
         break;
       default:    // unknown operating data
         m_cbiStatus->cbiStatusFunction(opdata_unknwon, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
+        Serial.printf("Unknown operating data, MOSI_frame[DB9]=%i MOSI_frame[D10]=%i\n", MOSI_frame[DB9], MOSI_frame[DB10]);
     }
   }
   return call_counter;

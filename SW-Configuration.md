@@ -22,11 +22,14 @@ Adapt the SSID and the password. Changing the hostname is usually not required.
 ```
  Changing the hostname is required when multiple ACs should be supported. E.g. replace "MHI-AC-Ctrl" by "Living-Room-MHI-AC-Ctrl"
 
-Per default ESP8266 uses the first WiFi access point with matching SSID. This behaviour can be changed.
+Per default ESP8266 uses the first WiFi access point (AP) with matching SSID. This behaviour can be changed.
 ```
 #define UseStrongestAP true             // when false then the first WiFi access point with matching SSID found is used.
-                                        // when true then the strongest WiFi access point with matching SSID found is used,
-                                        // Implemented, but not completely tested: The network is rescanned every 12 minutes for the strongest AP.
+                                        // when true then the strongest WiFi access point with matching SSID found is used, it doesn't work with hidden SSID
+```
+Configure the time interval for searching a stronger AP.
+```
+#define WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL 12    // WiFi network re-scan interval in minutes with alternate to +5dB stronger signal if detected
 ```
  
 ## MQTT ([support.h](src/support.h))
@@ -71,8 +74,8 @@ Mode|r/w|"Auto", "Dry", "Cool", "Fan", "Heat" and "Off"|"Off" is only supported 
 Tsetpoint|r/w|18 ... 30|Target room temperature (float) in °C, resolution is 0.5°C
 Fan|r/w|1 ... 4|Fan level <sup>1</sup>
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>2</sup>
-Troom|r/w|0 ... 35|Room temperature (float) in °C.  <sup>3</sup>
-Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C  <sup>4</sup>
+Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>3</sup>
+Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>4</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
 
@@ -142,13 +145,11 @@ note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneW
 If the DS18x20 should replace the room temperature sensor of the AC, you have to confiure it as described in the next clause.
 
 ## Room temperature
-Usage of the room temperature sensor inside the AC is the default, but instead you can use the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom.
+Usage of the room temperature sensor inside the AC is the default, but instead you can use the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom. Setting Troom via MQTT works per default. But you should adapt ROOM_TEMP_MQTT_TIMEOUT. For using DS18x20 as Troom you have to use ROOM_TEMP_DS18X20.
 ```
 //#define ROOM_TEMP_DS18X20           // use room temperature from DS18x20
 
-//#define ROOM_TEMP_MQTT              // use room temperature from received MQTT topic
-#define ROOM_TEMP_MQTT_TIMEOUT  20    // only considered if ROOM_TEMP_MQTT is defined
-                                      // time in seconds, after this time w/o receiving a valid room temperature
+#define ROOM_TEMP_MQTT_TIMEOUT  40    // time in seconds, after this time w/o receiving a valid room temperature
                                       // via MQTT fallback to IU temperature sensor value
 ```
 If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume
@@ -233,6 +234,7 @@ void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool et
 void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
 void set_fan(uint fan);               // set the requested fan speed
 void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
+void set_troom(byte temperature);     // set the room temperature used by AC
 void request_ErrOpData();             // request that the AC provides the error data
 ```
 The following sections describe the usage of these functions.

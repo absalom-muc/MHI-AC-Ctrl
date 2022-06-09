@@ -1,5 +1,4 @@
-#ifndef MHI_AC_CTRL_Core_h
-#define MHI_AC_CTRL_Core_h
+#pragma once
 
 #include <Arduino.h>
 
@@ -137,6 +136,7 @@ class MHI_AC_Ctrl_Core {
       m_cbiStatus = cb;
     };
 
+
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
     int loop(int max_time_ms);            // receive / transmit a frame of 20 bytes
@@ -145,8 +145,6 @@ class MHI_AC_Ctrl_Core {
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
-    void request_ErrOpData();             // request that the AC provides the error data
     void set_troom(byte temperature);     // set the room temperature used by AC
+    void request_ErrOpData();             // request that the AC provides the error data
 };
-
-#endif

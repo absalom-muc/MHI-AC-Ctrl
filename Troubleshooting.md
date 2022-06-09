@@ -16,7 +16,7 @@ If you open a new issue, please consider the following topics:
 For finding a solution for your problem, you should use the log output via the serial monitor (115000 Baud).
 
 ## Known limitations
-MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This is because some functions are not reflected by the SPI payload:
+MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This is because some functions are not reflected by the SPI payload (or I'm not aware of the according SPI codes):
 - "auto" for the fan is not supported, only 1, 2, 3,4 for fan are supported
 - Vanes left/right is not supported
 - Vanes up/down is supported, but with the limitation that if the last command was issued by the IR RC, then the vanes up/down status is not visible in MHI-AC-Ctrl
