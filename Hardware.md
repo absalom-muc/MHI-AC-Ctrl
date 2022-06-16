@@ -54,6 +54,8 @@ The JST connector provides +12V. The DC-DC converter [TSR 1-2450](https://www.tr
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
 In an early version I used a resistor voltage divider, but since the SPI of the AC has high impedance outputs, a voltage level shifter seems to be better. The voltage level shifters are bi-directional. That means the according ESP8266 pins (SCL, MOSI, MISO) could be inputs or outputs.
 
+Please find [here](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/65) the discussion if the level shifter can be omitted. 
+
 ## External Temperature Sensor
 An external temperature sensor DS18x20 (e.g. DS18S20, DS18B20) is supported. If you want to connect a DS18x20 you assemble R1 (4k7) on the PCB. The signals for the DS18x20 are available at X2.
 
