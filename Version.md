@@ -1,5 +1,9 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.5** (August 2022)
+- release w/o changes
+
+
 **v2.5R3** (June 2022, draft version)
 - moved the functions for frequency measurement from MHI-AC-Ctrl.ino to support.cpp
 - moved some MQTT init handling from MHI-AC-Ctrl.ino void setup() to MQTTloop()
