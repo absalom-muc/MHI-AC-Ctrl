@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.5R3"
+#define VERSION "2.5"
 
 #define WIFI_SSID "your SSID"
 #define WIFI_PASSWORD "your WiFi password"
