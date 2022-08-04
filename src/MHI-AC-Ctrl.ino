@@ -81,6 +81,26 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
+  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN2)) == 0) {
+    if (strcmp_P((char*)payload, "Auto") == 0)
+      mhi_ac_ctrl_core.set_fan2(7);
+    else{
+      switch (atoi((char*)payload)) {
+        case 1:
+          mhi_ac_ctrl_core.set_fan2(0);
+          break;
+        case 2:
+          mhi_ac_ctrl_core.set_fan2(1);
+          break;
+        case 3:
+          mhi_ac_ctrl_core.set_fan2(2);
+          break;
+        case 4:
+          mhi_ac_ctrl_core.set_fan2(6);
+          break;
+      }
+    }
+  }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN)) == 0) {
     if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 4)) {
       mhi_ac_ctrl_core.set_fan(atoi((char*)payload));
@@ -182,6 +202,45 @@ class StatusHandler : public CallbackInterface_Status {
         case status_fan:
           itoa(value + 1, strtmp, 10);
           output_P(status, TOPIC_FAN, strtmp);
+          break;
+        case status_fan2:
+          switch (value) {
+            case 0:
+              output_P(status, TOPIC_FAN2, "1-IR");
+              break;
+            case 1:
+              output_P(status, TOPIC_FAN2, "2-IR");
+              break;
+            case 2:
+              output_P(status, TOPIC_FAN2, "3-IR");
+              break;
+            case 6:
+              output_P(status, TOPIC_FAN2, "4-IR");
+              break;
+            case 7: 
+              output_P(status, TOPIC_FAN2, "Auto-IR");
+              break;
+            case 8+0:
+              output_P(status, TOPIC_FAN2, "1");
+              break;
+            case 8+1:
+              output_P(status, TOPIC_FAN2, "2");
+              break;
+            case 8+2:
+              output_P(status, TOPIC_FAN2, "3");
+              break;
+            case 8+6:
+              output_P(status, TOPIC_FAN2, "4");
+              break;
+            case 8+7: 
+              output_P(status, TOPIC_FAN2, "Auto");
+              break;
+            default:
+              itoa(value, strtmp, 10);
+              strcat(strtmp, "?");
+              output_P(status, TOPIC_FAN2, strtmp);
+              break;              
+          }
           break;
         case status_vanes:
           switch (value) {

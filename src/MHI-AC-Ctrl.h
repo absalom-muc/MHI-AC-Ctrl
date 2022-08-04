@@ -18,6 +18,7 @@
 #define TOPIC_POWER "Power"
 #define TOPIC_MODE "Mode"
 #define TOPIC_FAN "Fan"
+#define TOPIC_FAN2 "Fan2"
 #define TOPIC_VANES "Vanes"
 #define TOPIC_TROOM "Troom"
 #define TOPIC_TSETPOINT "Tsetpoint"

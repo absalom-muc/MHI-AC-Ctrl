@@ -1,5 +1,8 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.6R1** (August 2022, draft version)
+- new implementation for fan control incl. 'Auto', see [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99)
+
 **v2.5** (August 2022)
 - release w/o changes
 
