@@ -15,13 +15,13 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_power_old = 0xff;
   status_mode_old = 0xff;
   status_fan_old = 0xff;
-  status_fan2_old = 0xff;
   status_vanes_old = 0xff;
   status_troom_old = 0xfe;
   status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
 
   // old operating data
+  op_0x94_old = 0xff;
   op_mode_old = 0xff;
   op_settemp_old = 0xff;
   op_return_air_old = 0xff;
@@ -63,17 +63,8 @@ void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
   new_Tsetpoint = 0b10000000 | tsetpoint;
 }
 
-void MHI_AC_Ctrl_Core::set_fan2(uint fan) {
-  new_Fan12 = 0b00001000 | fan;
-}
-
 void MHI_AC_Ctrl_Core::set_fan(uint fan) {
-  if (fan == 4) {
-    new_Fan1 = 0b00001010;
-    new_Fan6 = 0b00010000;
-  }
-  else
-    new_Fan1 = 0b00001000 | (fan - 1);
+  new_Fan = 0b00001000 | fan;
 }
 
 void MHI_AC_Ctrl_Core::set_vanes(uint vanes) {
@@ -148,21 +139,8 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       MISO_frame[DB2] = new_Tsetpoint;
       new_Tsetpoint = 0;
 
-      if(new_Fan1>0){
-        MISO_frame[DB1] = new_Fan1;       // Abfrage auf new_Fan1>0 ???
-        new_Fan1 = 0;
-      }
-      if(new_Fan12>0){
-        MISO_frame[DB1] = new_Fan12;      // Abfrage auf new_Fan21>0
-        new_Fan12 = 0;
-      }
-      if(new_Fan6>0){
-        MISO_frame[DB6] |= new_Fan6;    // Abfrage auf new_Fan6>0
-        new_Fan6 = 0;
-      }
-      /*new_Fan1 = 0;
-      new_Fan12 = 0;
-      new_Fan6 = 0;*/
+      MISO_frame[DB1] = new_Fan;
+      new_Fan = 0;
 
       MISO_frame[DB0] |= new_Vanes0;
       MISO_frame[DB1] |= new_Vanes1;
@@ -230,22 +208,11 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       m_cbiStatus->cbiStatusFunction(status_power, status_power_old);
     }
 
-    uint fantmp;
-    if ((MOSI_frame[DB6] & 0x40) != 0) // Fan status
-      fantmp = 3;
-    else
-      fantmp = (MOSI_frame[DB1] & 0x03);                // warum auf die untersten 2 bits beschränkt, warum nicht bit 2 mitnehmen???? entspricht aber dem Fan_1_2_3_4_Auto_IR.log
-    if (fantmp != status_fan_old) {                     // FAN mit IR-RC testen ohne andere wired RC, evtl. auch mit AC vorher mal stromlos machen
+    uint fantmp = MOSI_frame[DB1] & 0x07;
+    if (fantmp != status_fan_old) {
       status_fan_old = fantmp;
       m_cbiStatus->cbiStatusFunction(status_fan, status_fan_old);
     }
-
-    uint fantmp2 = MOSI_frame[DB1] & 0x0f;
-    if (fantmp2 != status_fan2_old) {
-      status_fan2_old = fantmp2;
-      m_cbiStatus->cbiStatusFunction(status_fan2, status_fan2_old);
-    }
-    
 
     // Only updated when Vanes command via wired RC
     uint vanestmp = (MOSI_frame[DB0] & 0xc0) + ((MOSI_frame[DB1] & 0xB0) >> 4);
@@ -280,6 +247,18 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
     bool MOSI_type_opdata = (MOSI_frame[DB10] & 0x30) == 0x10;
 
     switch (MOSI_frame[DB9]) {
+      case 0x94:                              // opdata_0x94
+        if ((MOSI_frame[DB6] & 0x80) != 0) {  // 
+          if (MOSI_type_opdata) {
+            if ((MOSI_frame[DB10] != op_0x94_old)) {
+              op_0x94_old = (MOSI_frame[DB10]<<16)+(MOSI_frame[DB11]<<8)+MOSI_frame[DB12];
+              m_cbiStatus->cbiStatusFunction(opdata_0x94, op_0x94_old);
+            }
+          }
+          //else
+          //  m_cbiStatus->cbiStatusFunction(erropdata_unknown, op_unknown_old);  // noch nie gesehen, dass es auftaucht
+        }
+        break;
       case 0x02:
         if ((MOSI_frame[DB6] & 0x80) != 0) {  // 1 MODE
           if (MOSI_type_opdata) {
@@ -509,7 +488,7 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       case 0xff:  // default
         break;
       default:    // unknown operating data
-        m_cbiStatus->cbiStatusFunction(opdata_unknwon, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
+        m_cbiStatus->cbiStatusFunction(opdata_unknown, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
         Serial.printf("Unknown operating data, MOSI_frame[DB9]=%i MOSI_frame[D10]=%i\n", MOSI_frame[DB9], MOSI_frame[DB10]);
     }
   }

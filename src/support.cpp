@@ -72,7 +72,7 @@ void initWiFi(){
   WiFi.setAutoReconnect(false);
 }
 
-int networksFound = 0;
+uint networksFound = 0;
 void setupWiFi(int& WiFiStatus) {
   int max_rssi = -999;
   int strongest_AP = -1;
@@ -81,6 +81,7 @@ void setupWiFi(int& WiFiStatus) {
   if(WiFiStatus != WIFI_CONNECT_ONGOING) {
     WiFi.scanDelete();
     int networksFound = WiFi.scanNetworks();
+    Serial.printf("setupWiFi:%i access points available\n", networksFound);
     for (int i = 0; i < networksFound; i++)
     {
       Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured"),  (uint)WiFi.encryptionType(i);
@@ -89,6 +90,7 @@ void setupWiFi(int& WiFiStatus) {
           strongest_AP = i;
       }
     }
+    Serial.printf("setupWiFi2:%i access points available\n", networksFound);
     Serial.printf_P("current BSSID: %s, strongest BSSID: %s\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
     if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
       if(strongest_AP != -1) {
@@ -103,10 +105,11 @@ void setupWiFi(int& WiFiStatus) {
       Serial.println("WIFI_CONNECT_ONGOING");
       WiFiTimeoutMillis = millis();
     }
+    //Serial.printf("setupWiFi3:%i access points available\n", networksFound);
   }
   else {
     if(WiFi.status() == WL_CONNECTED){
-      Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());  // warum wird diese Zeile nicht ausgegeben?
+      Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());
       WiFiStatus = WIFI_CONNECT_OK;
       Serial.println("WIFI_CONNECT_OK");
     }
@@ -114,35 +117,40 @@ void setupWiFi(int& WiFiStatus) {
       WiFiStatus = WIFI_CONNECT_TIMEOUT;
       Serial.println(PSTR("WIFI_CONNECT_TIMEOUT"));
     }
+    //Serial.printf("setupWiFi4:%i access points available\n", networksFound);
   }
+  //Serial.printf("setupWiFi E:%i access points available\n", networksFound);          // Warum ist hier networksFound=0?????
 }
 
 int MQTTreconnect() {
   char strtmp[50];
   static int reconnect_trials=0;
-  
+  //Serial.printf("MQTTreconnect(): (MQTTclient.state=%i), WiFi.status()=%i networksFound=%i ...\n", MQTTclient.state(), WiFi.status(), networksFound);
   if(!MQTTclient.connected()) {
-    Serial.print(F("Attempting MQTT connection..."));
-    if(reconnect_trials++>9){
+    Serial.printf("MQTTreconnect(): Attempting MQTT connection (MQTTclient.state=%i), WiFi.status()=%i ...\n", MQTTclient.state(), WiFi.status());  // state(), see https://pubsubclient.knolleary.net/api#state
+    if(reconnect_trials++>9){                                                                                                                       // WiFi.status()=3=connected, see https://realglitch.com/2018/07/arduino-wifi-status-codes/
+      Serial.printf("MQTTreconnect(): reconnect_trials=%i\n", reconnect_trials);
       WiFi.disconnect(); // work around for https://github.com/esp8266/Arduino/issues/7432
       reconnect_trials=0;
     }
 
     if (MQTTclient.connect(HOSTNAME, MQTT_USER, MQTT_PASSWORD, MQTT_PREFIX TOPIC_CONNECTED, 0, true, PAYLOAD_CONNECTED_FALSE)) {
       Serial.println(F(" connected"));
+      Serial.printf("MQTTclient.connected=%i\n", MQTTclient.connected());
       reconnect_trials=0;
-      output_P(status_connected, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
-      output_P(status_connected, PSTR(TOPIC_VERSION), PSTR(VERSION));
+      output_P((ACStatus)type_status, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
+      output_P((ACStatus)type_status, PSTR(TOPIC_VERSION), PSTR(VERSION));
       itoa(WiFi.RSSI(), strtmp, 10);
-      output_P(status_rssi, PSTR(TOPIC_RSSI), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_RSSI), strtmp);
       itoa(WIFI_lost, strtmp, 10);
-      output_P(status_wifi_lost, PSTR(TOPIC_WIFI_LOST), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_LOST), strtmp);
       itoa(MQTT_lost, strtmp, 10);
-      output_P(status_mqtt_lost, PSTR(TOPIC_MQTT_LOST), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_MQTT_LOST), strtmp);
       WiFi.BSSIDstr().toCharArray(strtmp, 20);
-      output_P(status_mqtt_lost, PSTR(TOPIC_WIFI_BSSID), strtmp);             // CHECK status_mqtt_lost !!!!!!!!!!!!
+      output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_BSSID), strtmp);
 
       // for testing publish list of access points with the expected SSID 
+      Serial.printf("%i access points available\n", networksFound);         // unlar, warum hier networksFound=0 !!!
       for (int i = 0; i < networksFound; i++)
       {
         if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
@@ -157,11 +165,11 @@ int MQTTreconnect() {
       }
 
       itoa(rising_edge_cnt.SCK, strtmp, 10);
-      output_P(status_fsck, PSTR(TOPIC_FSCK), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_FSCK), strtmp);
       itoa(rising_edge_cnt.MOSI, strtmp, 10);
-      output_P(status_fmosi, PSTR(TOPIC_FMOSI), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_FMOSI), strtmp);
       itoa(rising_edge_cnt.MISO, strtmp, 10);
-      output_P(status_fmiso, PSTR(TOPIC_FMISO), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_FMISO), strtmp);
       
       MQTTclient.subscribe(MQTT_SET_PREFIX "#");
       return MQTT_RECONNECTED;
@@ -180,13 +188,13 @@ int MQTTreconnect() {
 }
 
 void publish_cmd_ok() {
-  output_P(status_cmd, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_OK));
+  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_OK));
 }
 void publish_cmd_unknown() {
-  output_P(status_cmd, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_UNKNOWN));
+  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_UNKNOWN));
 }
 void publish_cmd_invalidparameter() {
-  output_P(status_cmd, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_INVALID_PARAMETER));
+  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_INVALID_PARAMETER));
 }
 
 void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
@@ -222,7 +230,7 @@ byte getDs18x20Temperature(int temp_hysterese) {
       char strtmp[10];
       dtostrf(sensors.rawToCelsius(tempR), 0, 2, strtmp);
       //Serial.printf_P(PSTR("new DS18x20 temperature=%s°C\n"), strtmp);
-      output_P(status_tds1820, PSTR(TOPIC_TDS1820), strtmp);
+      output_P((ACStatus)type_status, PSTR(TOPIC_TDS1820), strtmp);
     }
     DS1820Millis = millis();
     sensors.requestTemperatures();

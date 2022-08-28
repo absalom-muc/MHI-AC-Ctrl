@@ -17,8 +17,8 @@ For finding a solution for your problem, you should use the log output via the s
 
 ## Known limitations
 MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This is because some functions are not reflected by the SPI payload (or I'm not aware of the according SPI codes):
-- "auto" for the fan is not supported, only 1, 2, 3,4 for fan are supported
 - Vanes left/right is not supported
+- 3D is not supported
 - Vanes up/down is supported, but with the limitation that if the last command was issued by the IR RC, then the vanes up/down status is not visible in MHI-AC-Ctrl
 
 This should be considered especially when you use the IR RC in parallel to MHI-AC-Ctrl.
@@ -63,8 +63,6 @@ Please check this [section](#fire-pins-not-properly-connected)
 The MQTT path for receiving the status is different from the MQTT path for setting values. Re-check that you use the set-path described in [SW-Configuration.md](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/SW-Configuration.md#mqtt-status). Please pay attention to the case sensitivity.
 ## :fire: Last Vanes up/down status not visible in MHI-AC-Ctrl
 That is no bug, but a restriction because the SPI unfortunately doesn't provide the Vanes status when the IR remote control was used for the last command.
-## :fire: Fan auto not working
-That is no bug, but a restriction because the SPI unfortunately doesn't support 'auto' for the Fan.
 
 ## :fire: Log shows errors, but it works nevertheless
 With some ACs the SPI connection is fragile because of a different timing. However, this does not appear to be critical and is usually not noticed by the user.

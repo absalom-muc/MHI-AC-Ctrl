@@ -81,29 +81,25 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     else
       publish_cmd_invalidparameter();
   }
-  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN2)) == 0) {
-    if (strcmp_P((char*)payload, "Auto") == 0)
-      mhi_ac_ctrl_core.set_fan2(7);
-    else{
-      switch (atoi((char*)payload)) {
-        case 1:
-          mhi_ac_ctrl_core.set_fan2(0);
-          break;
-        case 2:
-          mhi_ac_ctrl_core.set_fan2(1);
-          break;
-        case 3:
-          mhi_ac_ctrl_core.set_fan2(2);
-          break;
-        case 4:
-          mhi_ac_ctrl_core.set_fan2(6);
-          break;
-      }
-    }
-  }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN)) == 0) {
-    if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 4)) {
-      mhi_ac_ctrl_core.set_fan(atoi((char*)payload));
+    if (strcmp_P((char*)payload, PAYLOAD_FAN_AUTO) == 0){
+      mhi_ac_ctrl_core.set_fan(7);
+      publish_cmd_ok();
+    }
+    else if (strcmp_P((char*)payload, "1") == 0){
+      mhi_ac_ctrl_core.set_fan(0);
+      publish_cmd_ok();
+    }
+    else if (strcmp_P((char*)payload, "2") == 0){
+      mhi_ac_ctrl_core.set_fan(1);
+      publish_cmd_ok();
+    }
+    else if (strcmp_P((char*)payload, "3") == 0){
+      mhi_ac_ctrl_core.set_fan(2);
+      publish_cmd_ok();
+    }
+    else if (strcmp_P((char*)payload, "4") == 0){
+      mhi_ac_ctrl_core.set_fan(6);
       publish_cmd_ok();
     }
     else
@@ -199,46 +195,35 @@ class StatusHandler : public CallbackInterface_Status {
               break;
           }
           break;
-        case status_fan:
-          itoa(value + 1, strtmp, 10);
-          output_P(status, TOPIC_FAN, strtmp);
+        case opdata_0x94:
+          itoa(value, strtmp, 10);
+          output_P(status, PSTR(TOPIC_0X94), strtmp);
           break;
-        case status_fan2:
+        case opdata_unknown:
+          itoa(value, strtmp, 10);
+          output_P(status, PSTR(TOPIC_UNKNOWN), strtmp);
+          break;
+        case status_fan:
           switch (value) {
             case 0:
-              output_P(status, TOPIC_FAN2, "1-IR");
+              output_P(status, TOPIC_FAN, "1");
               break;
             case 1:
-              output_P(status, TOPIC_FAN2, "2-IR");
+              output_P(status, TOPIC_FAN, "2");
               break;
             case 2:
-              output_P(status, TOPIC_FAN2, "3-IR");
+              output_P(status, TOPIC_FAN, "3");
               break;
             case 6:
-              output_P(status, TOPIC_FAN2, "4-IR");
+              output_P(status, TOPIC_FAN, "4");
               break;
             case 7: 
-              output_P(status, TOPIC_FAN2, "Auto-IR");
+              output_P(status, TOPIC_FAN, PAYLOAD_FAN_AUTO);
               break;
-            case 8+0:
-              output_P(status, TOPIC_FAN2, "1");
-              break;
-            case 8+1:
-              output_P(status, TOPIC_FAN2, "2");
-              break;
-            case 8+2:
-              output_P(status, TOPIC_FAN2, "3");
-              break;
-            case 8+6:
-              output_P(status, TOPIC_FAN2, "4");
-              break;
-            case 8+7: 
-              output_P(status, TOPIC_FAN2, "Auto");
-              break;
-            default:
+            default: // invalid values
               itoa(value, strtmp, 10);
               strcat(strtmp, "?");
-              output_P(status, TOPIC_FAN2, strtmp);
+              output_P(status, TOPIC_FAN, strtmp);
               break;              
           }
           break;
@@ -368,6 +353,9 @@ void setup() {
   Serial.println();
   Serial.println(F("Starting MHI-AC-Ctrl v" VERSION));
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
+  Serial.printf("ESP.getCoreVersion()=%s\n", ESP.getCoreVersion());
+  Serial.printf("ESP.getSdkVersion()=%s\n", ESP.getSdkVersion());
+  Serial.printf("ESP.checkFlashCRC()=%i\n", ESP.checkFlashCRC());
 
 #if TEMP_MEASURE_PERIOD > 0
   setup_ds18x20();
@@ -387,13 +375,14 @@ void loop() {
   static int WiFiStatus = WIFI_CONNECT_TIMEOUT;
   static int MQTTStatus = MQTT_NOT_CONNECTED;
   static unsigned long previousMillis = millis();
-  //Serial.printf("WiFi.status()=%i\n", WiFi.status());
-  if (WiFi.status() != WL_CONNECTED || WiFiStatus != WIFI_CONNECT_OK || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
+  if (((WiFi.status() != WL_CONNECTED) & (WiFiStatus != WIFI_CONNECT_OK)) || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
+    //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
     setupWiFi(WiFiStatus);
     previousMillis = millis();
     //Serial.println(WiFiStatus);
   }
   else {
+    //Serial.printf("loop: WiFi.status()=%i\n", WiFi.status()); // see https://realglitch.com/2018/07/arduino-wifi-status-codes/
     MQTTStatus=MQTTreconnect();
     if (MQTTStatus == MQTT_RECONNECTED)
       mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
@@ -419,13 +408,12 @@ void loop() {
     troom_was_set_by_MQTT=false;
   }
 
-
   if((MQTTStatus==MQTT_RECONNECTED)|(MQTTStatus==MQTT_CONNECT_OK)){
-    //Serial.println("MQTT connected");
-    int ret = mhi_ac_ctrl_core.loop(100);
+    //Serial.println("MQTT connected in main loop");
+    int ret = mhi_ac_ctrl_core.loop(80);
     if (ret < 0)
       Serial.printf_P(PSTR("mhi_ac_ctrl_core.loop error: %i\n"), ret);
   }
   /*else
-    Serial.println("MQTT NOT connected");*/
+    Serial.println("MQTT NOT connected in main loop");*/
 }

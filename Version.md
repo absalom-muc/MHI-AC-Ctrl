@@ -1,5 +1,9 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.6R2** (August 2022, draft version)
+- final implementation for fan control incl. 'Auto', see [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99). This is a breaking change, because in the past only the values 1, 2 , 3, 4 were supported for fan status and fan control. Now "Auto" was added.
+- added temporary operating data "unknwon" to find out which functions are supported by SPI dependent on the indoor AC unit.
+
 **v2.6R1** (August 2022, draft version)
 - new implementation for fan control incl. 'Auto', see [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99)
 
