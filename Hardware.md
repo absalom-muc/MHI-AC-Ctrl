@@ -35,7 +35,7 @@ The following photos show the assembled PCB (without R1 and X1, which are used i
 User [oliv3r](https://github.com/oliv3r) converted the eagle model to KiCad, see [here](kicad).   
 <img src="images/PCB_bottom_3d.png" width=400/>
 <img src="images/PCB_top_3d.png" width=400/>   
-Please note that the KiCad design hasn't been tested so far.
+Please note that the KiCad design hasn't been tested so far (see also this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/111)).
 
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the AC indoor unit PCB.
