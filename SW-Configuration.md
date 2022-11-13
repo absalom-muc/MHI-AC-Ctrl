@@ -151,7 +151,8 @@ Usage of the room temperature sensor inside the AC is the default, but instead y
 #define ROOM_TEMP_MQTT_TIMEOUT  40    // time in seconds, after this time w/o receiving a valid room temperature
                                       // via MQTT fallback to IU temperature sensor value
 ```
-If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume
+ROOM_TEMP_MQTT_TIMEOUT must be greater than the period of room temperature update via MQTT. E.g. when the room temperature update via MQTT is done every minute, then ROOM_TEMP_MQTT_TIMEOUT could be 2 minutes.
+If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume.
 
 ## Behaviour when changing AC mode ([support.h](src/support.h))
 Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).

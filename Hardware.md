@@ -3,7 +3,7 @@
 ## Schematic
 ![schematic](images/MHI-AC-Ctrl_Schematic.png)
 
-## PCB
+## PCB (Eagle)
 ![PCB](images/PCB.png)
 
 You find the eagle schematic and the layout in the [eagle folder](eagle). The Gerber data is in [MHI-AC-Ctrl_v2.2_2021-01-22.zip](eagle/Gerber/MHI-AC-Ctrl_v2.2_2021-01-22.zip). I used this Gerber data for the PCB order at [JLCPCB](https://jlcpcb.com).
@@ -30,6 +30,12 @@ The following photos show the assembled PCB (without R1 and X1, which are used i
 <img src="images/Assembled-Board-top1.jpg" width=300/>
 <img src="images/Assembled-Board-top2.jpg" width=300/>
 <img src="images/Assembled-Board-bottom.jpg" width=300/>
+
+# PCB (KiCad)
+User [oliv3r](https://github.com/oliv3r) converted the eagle model to KiCad, see [here](kicad).   
+<img src="images/PCB_bottom_3d.png" width=400/>
+<img src="images/PCB_top_3d.png" width=400/>   
+Please note that the KiCad design hasn't been tested so far (see also this [issue](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/111)).
 
 ## Connector
 The AC provides the signals via the CNS connector. It has 5 pins with a pitch of 2.5 mm. It is out of the [XH series from JST](http://www.jst-mfg.com/product/detail_e.php?series=277). The position of the connector is visible on the following photo of the AC indoor unit PCB.
