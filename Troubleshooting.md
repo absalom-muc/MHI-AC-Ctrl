@@ -11,9 +11,13 @@ If you open a new issue, please consider the following topics:
 - Use a use a meaningful title, so that the next user with a similar problem can recognize it
 - Which program version do you use?
 - Add the exact name of your AC indoor unit, e.g. SRK 35 ZS-S 
-- MHI-AC-Ctrl outputs some basic status information via the serial terminal (115000 Baud). Please use it for your first analysis and upload it together with a new Issue
-- Sometimes you will be asked to generate a detailed log of the SPI waveforms. This is done via the [SPI-logger](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/testprog/SPI_logger.ino). Please don't copy the log output into the Issue description, instead attach it to the Issue.
-For finding a solution for your problem, you should use the log output via the serial monitor (115000 Baud).
+- MHI-AC-Ctrl outputs some basic status information via the serial terminal. Please use it for your first analysis and upload it together with a new Issue. Check this [section](#recording-a-basic-log-file)
+
+## Recording a basic log file
+You can use e.g. the Arduino IDE to record the serial output. Apply a baud rate of 115000 Baud and switch **on** the time stamp. In order not to overload the Issue, the log should not be copied directly into the Issue, but copied to a text file and attached to the Issue.
+
+## Recording a detailed log of the SPI waveforms
+This is done via the [SPI-logger](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/testprog/SPI_logger.ino). You can use e.g. the Arduino IDE to record the serial output. Apply a baud rate of 115000 Baud and switch **off** the time stamp. In order not to overload the Issue, the log should not be copied directly into the Issue, but copied to a text file and attached to the Issue.
 
 ## Known limitations
 MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This is because some functions are not reflected by the SPI payload (or I'm not aware of the according SPI codes):
@@ -65,7 +69,20 @@ The MQTT path for receiving the status is different from the MQTT path for setti
 That is no bug, but a restriction because the SPI unfortunately doesn't provide the Vanes status when the IR remote control was used for the last command.
 
 ## :fire: Log shows errors, but it works nevertheless
-With some ACs the SPI connection is fragile because of a different timing. However, this does not appear to be critical and is usually not noticed by the user.
+With some ACs the SPI connection is fragile because of a different timing. E.g.
+```
+mhi_ac_ctrl_core.loop error: -4
+```
+
+Possible error codes:
+```
+err_msg_invalid_signature = -1
+err_msg_invalid_checksum = -2
+err_msg_timeout_SCK_low = -3
+err_msg_timeout_SCK_high = -4
+```
+
+However, this does not appear to be critical and is usually not noticed by the user.
 
 ## :fire: Room temperature is toggling
 This effect occurs with some AC models. The cause is unclear. 
