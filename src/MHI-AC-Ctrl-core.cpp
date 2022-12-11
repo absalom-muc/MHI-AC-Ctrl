@@ -20,6 +20,8 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
 
+  Troom_offset_old = 999.0;
+
   // old operating data
   op_0x94_old = 0xff;
   op_mode_old = 0xff;
@@ -85,6 +87,15 @@ void MHI_AC_Ctrl_Core::set_troom(byte troom) {
   //Serial.printf("MHI_AC_Ctrl_Core::set_troom %i\n", troom);
   new_Troom = troom;
 }
+
+float MHI_AC_Ctrl_Core::get_troom_offset() {
+  return Troom_offset;
+}
+
+void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
+  Troom_offset = offset;
+}
+
 
 int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
@@ -228,7 +239,11 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
     }
 
     int8_t troom_diff = MOSI_frame[DB3] - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
+#ifdef DISABLE_FILTER_TROOM
+    if (abs(troom_diff) > 0) { // Room temperature delta > 0.0°C
+#else
     if (abs(troom_diff) > 1) { // Room temperature delta > 0.25°C
+#endif    
       status_troom_old = MOSI_frame[DB3];
       m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
     }
@@ -492,5 +507,12 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
         Serial.printf("Unknown operating data, MOSI_frame[DB9]=%i MOSI_frame[D10]=%i\n", MOSI_frame[DB9], MOSI_frame[DB10]);
     }
   }
+
+  // Troom_offset is not received from but calculated when Tsetpoint x.5 degrees and ENHANCED_RESOLUTION is used
+  if (Troom_offset != Troom_offset_old) {
+	  Troom_offset_old = Troom_offset;
+	  m_cbiStatus->cbiStatusFunction(troom_offset, (int)(Troom_offset*1000.0));
+  }
+
   return call_counter;
 }

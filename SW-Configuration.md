@@ -78,6 +78,7 @@ Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
+Troom_offset|r|0.00 .. 0.50|Offset in °C for Troom used when ENHANCED RESOLUTION is used
 
 <sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
 <sup>2</sup> Please compare with section [Room temperature](#room-temperature) for writing.   

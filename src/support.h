@@ -39,6 +39,10 @@
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
                                                     // used e.g. for home assistant support
 
+//#define ENHANCED_RESOLUTION true                    // when using Tsetpoint with x.5 degrees, airco will use (x+1).0 setpoint
+                                                    // uncomment this to compensatie (offset) Troom for this.
+                                                    // this will simulate .x degrees resolution
+
 // *** The configuration ends here ***
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi

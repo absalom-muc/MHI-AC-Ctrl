@@ -2,6 +2,12 @@
 
 #include <Arduino.h>
 
+//#define DISABLE_FILTER_TROOM true                   // only Troom delta > 0.25 degrees are reported in MQTT
+                                                    // uncomment this to report delta > 0.00
+
+// *** The configuration ends here ***
+
+
 // comment out the data you are not interested, but at least leave the last dummy row
 const byte opdata[][2] PROGMEM = {
   //{ 0xc0, 0x94},  //  ? "opdata_0x94", background is unknown.
@@ -63,6 +69,7 @@ enum ACType {   // Type enum
 
 enum ACStatus { // Status enum
   status_power = type_status, status_mode, status_fan, status_vanes, status_troom, status_tsetpoint, status_errorcode,
+  troom_offset,
   opdata_mode = type_opdata, opdata_0x94, opdata_tsetpoint, opdata_return_air, opdata_outdoor, opdata_tho_r1, opdata_iu_fanspeed, opdata_thi_r1, opdata_thi_r2, opdata_thi_r3,
   opdata_ou_fanspeed, opdata_total_iu_run, opdata_total_comp_run, opdata_comp, opdata_ct, opdata_td,
   opdata_tdsh, opdata_protection_no, opdata_defrost, opdata_ou_eev1, opdata_unknown,
@@ -130,6 +137,10 @@ class MHI_AC_Ctrl_Core {
     bool request_erropData = false;
     byte new_Troom = 0xff;
 
+    float Troom_offset = 0.0;
+    float Troom_offset_old = 999.0;
+
+
     CallbackInterface_Status *m_cbiStatus;
 
   public:
@@ -148,4 +159,7 @@ class MHI_AC_Ctrl_Core {
     void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
     void set_troom(byte temperature);     // set the room temperature used by AC
     void request_ErrOpData();             // request that the AC provides the error data
+    float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
+    void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
+
 };
