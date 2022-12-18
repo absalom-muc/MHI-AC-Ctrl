@@ -171,7 +171,8 @@ The AC is only accepting a setpoint in x.0 degrees. If you send x.5 degrees, the
                                                     // this will simulate .x degrees resolution
 ```
 If you now send x.5 degrees as setpoint, still the setpoint on the AC will be (x+1). But when sending the received Troom (from MQTT or the external temperature sensor) to the AC, Troom with an offset of .5 degrees will be send to the AC. This way the AC will increase the temperature in the room with .5 degrees instead of 1 degree.
-The MQTT topic Troom_offset displays the offset which is added to Troom sent to the AC. The topic Troom will show (like before) the the Troom received by the AC (including the offset). 
+
+The MQTT topic Troom_offset displays the offset which is added to Troom sent to the AC. The topic Troom will show (like before) the Troom received by the AC (including the offset). 
 
 For example: when setpoint is 20.5, MQTT topic Troom_offset will display 0.5. When Troom 19.5 is received (from MQTT or DS18x20), Troom sent to the AC will be 20.0. Topic Troom will also show 20.0.
 
