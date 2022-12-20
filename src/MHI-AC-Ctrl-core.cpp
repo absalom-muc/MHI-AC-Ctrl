@@ -20,8 +20,6 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
 
-  Troom_offset_old = 999.0;
-
   // old operating data
   op_0x94_old = 0xff;
   op_mode_old = 0xff;
@@ -506,12 +504,6 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
         m_cbiStatus->cbiStatusFunction(opdata_unknown, MOSI_frame[DB10] << 8 | MOSI_frame[DB9]);
         Serial.printf("Unknown operating data, MOSI_frame[DB9]=%i MOSI_frame[D10]=%i\n", MOSI_frame[DB9], MOSI_frame[DB10]);
     }
-  }
-
-  // Troom_offset is not received from but calculated when Tsetpoint x.5 degrees and ENHANCED_RESOLUTION is used
-  if (Troom_offset != Troom_offset_old) {
-	  Troom_offset_old = Troom_offset;
-	  m_cbiStatus->cbiStatusFunction(troom_offset, (int)(Troom_offset*1000.0));
   }
 
   return call_counter;

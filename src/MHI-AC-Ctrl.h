@@ -23,8 +23,6 @@
 #define TOPIC_TSETPOINT "Tsetpoint"
 #define TOPIC_ERRORCODE "Errorcode"
 
-#define TOPIC_TROOM_OFFSET "Troom_offset"
-
 #define TOPIC_UNKNOWN "unknown"
 #define TOPIC_0X94 "OPDATA_0x94"
 #define TOPIC_RETURNAIR "RETURN-AIR"

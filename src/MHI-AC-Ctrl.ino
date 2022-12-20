@@ -252,10 +252,6 @@ class StatusHandler : public CallbackInterface_Status {
           dtostrf((value - 61) / 4.0, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_TROOM), strtmp);
           break;
-        case troom_offset:
-          dtostrf(value/1000.0, 0, 2, strtmp);
-          output_P(status, PSTR(TOPIC_TROOM_OFFSET), strtmp);
-          break;	   
         case status_tsetpoint:
 #ifdef ENHANCED_RESOLUTION
           tmp_value = (value & 0x7f)/ 2.0;

@@ -78,12 +78,10 @@ Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
-Troom_offset|r|0.00 .. 0.50|Offset in °C used for Troom when ENHANCED RESOLUTION is used  <sup>4</sup>
 
 <sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
 <sup>2</sup> Please compare with section [Room temperature](#room-temperature) for writing.   
 <sup>3</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
-<sup>4</sup> See the description in section [Enhance resolution of setpoint](#Enhance-resolution-of-setpoint-supporth).
 
 Additionally, the following program status topics are available:
 
@@ -171,10 +169,9 @@ The AC is only accepting a setpoint in x.0 degrees. If you send x.5 degrees, the
                                                     // this will simulate .x degrees resolution
 ```
 If you now send x.5 degrees as setpoint, still the setpoint on the AC will be (x+1). But when sending the received Troom (from MQTT or the external temperature sensor) to the AC, Troom with an offset of .5 degrees will be send to the AC. This way the AC will increase the temperature in the room with .5 degrees instead of 1 degree.
+The MQTT topic Troom will show (like before) the Troom received by the AC (including the offset). 
 
-The MQTT topic Troom_offset displays the offset which is added to Troom sent to the AC. The topic Troom will show (like before) the Troom received by the AC (including the offset). 
-
-For example: when setpoint is 20.5, MQTT topic Troom_offset will display 0.5. When Troom 19.5 is received (from MQTT or DS18x20), Troom sent to the AC will be 20.0. Topic Troom will also show 20.0.
+For example: when setpoint is 20.5. When Troom 19.5 is received (from MQTT or DS18x20), Troom sent to the AC will be 20.0. Topic Troom will also show 20.0.
 
 # Advanced settings
 
