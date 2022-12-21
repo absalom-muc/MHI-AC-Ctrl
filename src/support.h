@@ -3,10 +3,10 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.6R2"
+#define VERSION "2.6R3"
 
-#define WIFI_SSID "your SSID"
-#define WIFI_PASSWORD "your WiFi password"
+#define WIFI_SSID "fb1"
+#define WIFI_PASSWORD ""
 #define HOSTNAME "MHI-AC-Ctrl"
 
 #define WiFI_SEARCHStrongestAP true                 // when false then the first WiFi access point with matching SSID found is used.
@@ -27,7 +27,7 @@
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
-#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+#define TEMP_MEASURE_PERIOD 60                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 
@@ -39,6 +39,8 @@
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
                                                     // used e.g. for home assistant support
 
+#define TROOM_FILTER_LIMIT 0.25                     // Defines from which Troom delta value a new Troom value is pubslised. Resolution 0.25°C.
+                                                    // With a smaller resolution, Troom could toggle more. So deactivate the filter use 0.
 // *** The configuration ends here ***
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi

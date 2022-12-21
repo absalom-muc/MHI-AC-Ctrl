@@ -154,6 +154,7 @@ class StatusHandler : public CallbackInterface_Status {
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
       static int mode_tmp = 0xff;
+      static byte status_troom_old=0xff;
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
         case status_power:
@@ -241,8 +242,14 @@ class StatusHandler : public CallbackInterface_Status {
           }
           break;
         case status_troom:
-          dtostrf((value - 61) / 4.0, 0, 2, strtmp);
-          output_P(status, PSTR(TOPIC_TROOM), strtmp);
+          {
+            int8_t troom_diff = value - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
+            if (abs(troom_diff) > TROOM_FILTER_LIMIT/0.25f) { // Room temperature delta > 0.25°C
+              status_troom_old = value;
+              dtostrf((value - 61) / 4.0, 0, 2, strtmp);
+              output_P(status, PSTR(TOPIC_TROOM), strtmp);
+            }
+          }
           break;
         case status_tsetpoint:
         case opdata_tsetpoint:
@@ -353,7 +360,7 @@ void setup() {
   Serial.println();
   Serial.println(F("Starting MHI-AC-Ctrl v" VERSION));
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
-  Serial.printf("ESP.getCoreVersion()=%s\n", ESP.getCoreVersion());
+  Serial.printf("ESP.getCoreVersion()=%s\n", ESP.getCoreVersion().c_str());
   Serial.printf("ESP.getSdkVersion()=%s\n", ESP.getSdkVersion());
   Serial.printf("ESP.checkFlashCRC()=%i\n", ESP.checkFlashCRC());
 

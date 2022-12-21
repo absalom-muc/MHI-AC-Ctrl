@@ -227,12 +227,11 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       status_vanes_old = vanestmp;
     }
 
-    int8_t troom_diff = MOSI_frame[DB3] - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
-    if (abs(troom_diff) > 1) { // Room temperature delta > 0.25°C
+    if(MOSI_frame[DB3] != status_troom_old) {
       status_troom_old = MOSI_frame[DB3];
       m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
     }
-
+    
     if (MOSI_frame[DB2] != status_tsetpoint_old) { // Temperature setpoint
       status_tsetpoint_old = MOSI_frame[DB2];
       m_cbiStatus->cbiStatusFunction(status_tsetpoint, status_tsetpoint_old);

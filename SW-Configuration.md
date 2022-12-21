@@ -150,6 +150,9 @@ Usage of the room temperature sensor inside the AC is the default, but instead y
 
 #define ROOM_TEMP_MQTT_TIMEOUT  40    // time in seconds, after this time w/o receiving a valid room temperature
                                       // via MQTT fallback to IU temperature sensor value
+#define TROOM_FILTER_LIMIT 0.25       // Defines from which Troom delta value a new Troom value is published. Resolution 0.25°C.
+                                      // With a smaller resolution, Troom could toggle more. To deactivate the filter use 0.
+
 ```
 ROOM_TEMP_MQTT_TIMEOUT must be greater than the period of room temperature update via MQTT. E.g. when the room temperature update via MQTT is done every minute, then ROOM_TEMP_MQTT_TIMEOUT could be 2 minutes.
 If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume.
