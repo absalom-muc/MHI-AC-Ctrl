@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.6R3"
+#define VERSION "2.6R4"
 
 #define WIFI_SSID "fb1"
 #define WIFI_PASSWORD ""
@@ -41,6 +41,9 @@
 
 #define TROOM_FILTER_LIMIT 0.25                     // Defines from which Troom delta value a new Troom value is pubslised. Resolution 0.25°C.
                                                     // With a smaller resolution, Troom could toggle more. So deactivate the filter use 0.
+//#define ENHANCED_RESOLUTION true                    // when using Tsetpoint with x.5 degrees, airco will use (x+1).0 setpoint
+                                                    // uncomment this to compensatie (offset) Troom for this.
+                                                    // this will simulate .x degrees resolution
 // *** The configuration ends here ***
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi

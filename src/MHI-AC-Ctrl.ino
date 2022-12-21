@@ -121,6 +121,9 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TROOM)) == 0) {
     float f=atof((char*)payload);
+#ifdef ENHANCED_RESOLUTION
+    f = f + mhi_ac_ctrl_core.get_troom_offset() ;  // increase Troom with current offset to compensate higher setpoint
+#endif
     if ((f > -10) & (f < 48)) {
       room_temp_set_timeout_Millis = millis();  // reset timeout
       troom_was_set_by_MQTT=true;
@@ -154,6 +157,10 @@ class StatusHandler : public CallbackInterface_Status {
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
       static int mode_tmp = 0xff;
+#ifdef ENHANCED_RESOLUTION      
+      float offset = mhi_ac_ctrl_core.get_troom_offset();
+      float tmp_value;
+#endif
       static byte status_troom_old=0xff;
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
@@ -252,6 +259,11 @@ class StatusHandler : public CallbackInterface_Status {
           }
           break;
         case status_tsetpoint:
+#ifdef ENHANCED_RESOLUTION
+          tmp_value = (value & 0x7f)/ 2.0;
+          offset = round(tmp_value) - tmp_value;  // Calculate offset when setpoint is changed
+          mhi_ac_ctrl_core.set_troom_offset(offset);
+#endif          
         case opdata_tsetpoint:
         case erropdata_tsetpoint:
           dtostrf((value & 0x7f)/ 2.0, 0, 1, strtmp);
@@ -398,6 +410,12 @@ void loop() {
   
 #if TEMP_MEASURE_PERIOD > 0
   byte ds18x20_value = getDs18x20Temperature(25);
+#ifdef ENHANCED_RESOLUTION
+  float offset = mhi_ac_ctrl_core.get_troom_offset();
+  byte tmp = offset*4;
+  ds18x20_value = ds18x20_value + tmp;   // add offset
+#endif
+
 #ifdef ROOM_TEMP_DS18X20
   if(ds18x20_value != ds18x20_value_old) {
     if ((ds18x20_value > 21) & (ds18x20_value < 253)) {  // use only values -10°C < T < 48°C

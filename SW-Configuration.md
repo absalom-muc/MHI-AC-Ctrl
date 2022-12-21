@@ -157,6 +157,19 @@ Usage of the room temperature sensor inside the AC is the default, but instead y
 ROOM_TEMP_MQTT_TIMEOUT must be greater than the period of room temperature update via MQTT. E.g. when the room temperature update via MQTT is done every minute, then ROOM_TEMP_MQTT_TIMEOUT could be 2 minutes.
 If the timeout occurs, and the system falls back to IU temperature, it will return to using the MQTT room temperature if the MQTT messages resume.
 
+## Enhance resolution of Tsetpoint ([support.h](src/support.h))
+The AC is only accepting a setpoint in x.0 degrees. If you send x.5 degrees, the AC will convert this to (x+1).0 degrees. So using .5 degrees as a setpoint will increase the setpoint on the AC not with .5 degrees but with 1 degree. This behaviour can be changed with: 
+```
+#define ENHANCED_RESOLUTION true                    // when using Tsetpoint with x.5 degrees, airco will use (x+1).0 setpoint
+                                                    // uncomment this to compensatie (offset) Troom for this.
+                                                    // this will simulate .x degrees resolution
+```
+If you now send x.5 degrees as setpoint, still the setpoint on the AC will be (x+1). But when sending the received Troom (from MQTT or the external temperature sensor) to the AC, Troom with an offset of .5 degrees will be send to the AC. This way the AC will increase the temperature in the room with .5 degrees instead of 1 degree.
+
+The MQTT topic Troom_offset displays the offset which is added to Troom sent to the AC. The topic Troom will show (like before) the Troom received by the AC (including the offset). 
+
+For example: when setpoint is 20.5, MQTT topic Troom_offset will display 0.5. When Troom 19.5 is received (from MQTT or DS18x20), Troom sent to the AC will be 20.0. Topic Troom will also show 20.0.
+
 ## Behaviour when changing AC mode ([support.h](src/support.h))
 Per default the power on/off state is not changed, when you change the AC mode (e.g. heat, dry, cold etc.).
 But when you uncomment the following line, then the AC is switched on, once you change the AC mode and switched off if you publish "Off" to Mode (instead of Power). This beahviour is requested for use with [Home Assistant](https://www.home-assistant.io/).

@@ -86,6 +86,14 @@ void MHI_AC_Ctrl_Core::set_troom(byte troom) {
   new_Troom = troom;
 }
 
+float MHI_AC_Ctrl_Core::get_troom_offset() {
+  return Troom_offset;
+}
+
+void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
+  Troom_offset = offset;
+}
+
 int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
   static byte opdataNo = 0;               //

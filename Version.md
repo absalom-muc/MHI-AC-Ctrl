@@ -1,5 +1,8 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.6R4** (December 2022, draft version)
+- Added Enhance resolution of Tsetpoint according to [pull request #123](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/123) by [glsf91](https://github.com/glsf91).
+
 **v2.6R3** (December 2022, draft version)
 - Added switch for Troom filtering to address [issue #82](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/82).
 

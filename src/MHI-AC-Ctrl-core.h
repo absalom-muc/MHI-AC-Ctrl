@@ -4,7 +4,7 @@
 
 // comment out the data you are not interested, but at least leave the last dummy row
 const byte opdata[][2] PROGMEM = {
-  { 0xc0, 0x94},  //  ? "opdata_0x94", background is unknown.
+  //{ 0xc0, 0x94},  //  ? "opdata_0x94", background is unknown.
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
@@ -131,7 +131,8 @@ class MHI_AC_Ctrl_Core {
     byte new_Vanes1 = 0;
     bool request_erropData = false;
     byte new_Troom = 0xff;    // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
-
+    float Troom_offset = 0.0;
+    
     CallbackInterface_Status *m_cbiStatus;
 
   public:
@@ -150,4 +151,8 @@ class MHI_AC_Ctrl_Core {
     void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
     void set_troom(byte temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
     void request_ErrOpData();             // request that the AC provides the error data
+    float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
+    void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
+
+
 };
