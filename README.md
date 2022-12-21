@@ -53,7 +53,7 @@ and optionally you need for the use of an external temperature sensor DS18x20 th
 
 Please check the GitHub pages to see how to install them (usually via tools -> libraries).
 
-Create a sub-directory "MHI-AC-Ctrl" and copy the files from the latest [release](https://github.com/absalom-muc/MHI-AC-Ctrl/releases)  src directory in your MHI-AC-Ctrl sub-directory. You could also use the recently updated version in the [src folder](src) but with the risk that it is more unstable.
+Create a sub-directory "MHI-AC-Ctrl" and copy the files from the latest [release](https://github.com/absalom-muc/MHI-AC-Ctrl/releases) src directory in your MHI-AC-Ctrl sub-directory. You could also use the recently updated version in the [src folder](src) but with the risk that it is more unstable. The stability of the program is better when you compile it for a CPU frequency of 160MHz.
 The configuration options are described in [SW-Configuration.md](SW-Configuration.md).
 
 In a previous version (see [here](https://github.com/absalom-muc/MHI-AC-SPY)) I used the Hardware-SPI of the ESP8266. But since the SPI documentation of ESP8266 is poor, I decided to switch to a Software based SPI.
