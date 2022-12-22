@@ -1,5 +1,8 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.6R5** (December 2022, draft version)
+- Added ROOM_TEMP_DS18X20_OFFSET 
+
 **v2.6R4** (December 2022, draft version)
 - Added Enhance resolution of Tsetpoint according to [pull request #123](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/123) by [glsf91](https://github.com/glsf91).
 

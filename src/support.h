@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.6R4"
+#define VERSION "2.6R5"
 
 #define WIFI_SSID "fb1"
 #define WIFI_PASSWORD ""
@@ -27,9 +27,10 @@
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
-#define TEMP_MEASURE_PERIOD 60                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
+#define ROOM_TEMP_DS18X20_OFFSET 0.0                // Temperature offset for DS18x20 sensor, can be positive or negative (examples: 0.0, -1.0, 1.5)
 
 //#define ROOM_TEMP_DS18X20                           // use room temperature from DS18x20
 

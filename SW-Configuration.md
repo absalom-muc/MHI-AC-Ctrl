@@ -138,6 +138,8 @@ and how often the sensor should be read. To use reading of the external sensor y
 #define TEMP_MEASURE_PERIOD 0   // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                 // set to e.g. 30 to read the sensor every 30 seconds. 
 #define ONE_WIRE_BUS 4          // D2, PIN for connecting temperature sensor DS18x20 DQ pin
+#define ROOM_TEMP_DS18X20_OFFSET 0.0   // Temperature offset for DS18x20 sensor, can be positive or negative (examples: 0.0, -1.0, 1.5)
+
 ```
 note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) are only used if TEMP_MEASURE_PERIOD > 0.
 
