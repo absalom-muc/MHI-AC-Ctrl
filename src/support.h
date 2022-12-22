@@ -27,7 +27,7 @@
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
 
-#define TEMP_MEASURE_PERIOD 60                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
+#define TEMP_MEASURE_PERIOD 0                       // period in seconds for temperature measurement with the external DS18x20 temperature sensor
                                                     // enter 0 if you don't use the DS18x20 
 #define ONE_WIRE_BUS 4                              // D2, PIN for connecting temperature sensor DS18x20 DQ pin
 
