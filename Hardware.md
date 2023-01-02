@@ -16,10 +16,12 @@ C1   |22µ/25V          |E15-5                      |consider the polarity
 C2, C3   |100n             |C025-024X044
 LS1  |LEVEL-SHIFTER-4CH|LEVEL-SHIFTER-4CH          |consider the polarity
 U$1  |WEMOS-D1-MINI    |WEMOS-D1-MINI              |consider the polarity
-U1   |TSR_1-2450       |TSR-1                      |consider the polarity
+U1   |TSR_1-2450       |TSR-1                      |consider the polarity  <sup>1</sup>
 X1   |JST 05JQ-BT      |JST-XH-05-PACKAGE-LONG-PAD                     |consider the polarity
 
-and the following parts are only needed when externally a DS18x20 should be connected:
+<sup>1</sup>According to the discussions [here](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/102) and [here](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17) TSR 1-2450 can be replaced by TSR 1-2450E.
+
+The following parts are only needed when externally a DS18x20 should be connected:
 Part |Value            |Package                    |comment
 ---- | ----            |----                       |-----
 R1   |4k7              |R-EU_0207/10       
