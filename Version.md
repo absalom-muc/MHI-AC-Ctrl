@@ -1,7 +1,11 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.6** (January 2023)
+- Fix of [Wifi reconnect takes too long #125](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/125)
+- Typo related to the unit of TD fixed in MHI-AC-Ctrl-core.h and SW-Configuration.md
+
 **v2.6R5** (December 2022, draft version)
-- Added ROOM_TEMP_DS18X20_OFFSET 
+- Added ROOM_TEMP_DS18X20_OFFSET for issue [Adding offset for external temperature sensor #119](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/119)
 
 **v2.6R4** (December 2022, draft version)
 - Added Enhance resolution of Tsetpoint according to [pull request #123](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/123) by [glsf91](https://github.com/glsf91).

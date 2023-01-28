@@ -235,6 +235,7 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       status_vanes_old = vanestmp;
     }
 
+    
     if(MOSI_frame[DB3] != status_troom_old) {
       status_troom_old = MOSI_frame[DB3];
       m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);

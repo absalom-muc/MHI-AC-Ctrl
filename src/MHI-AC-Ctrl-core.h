@@ -16,7 +16,7 @@ const byte opdata[][2] PROGMEM = {
   { 0x40, 0x80},  // 21 "OUTDOOR" [°C]
   { 0x40, 0x82},  // 22 "THO-R1" [°C]
   { 0x40, 0x11},  // 24 "COMP" [Hz]
-  { 0x40, 0x85},  // 27 "TD" [A]
+  { 0x40, 0x85},  // 27 "TD" [°C]
   { 0x40, 0x90},  // 29 "CT" [A]
   { 0x40, 0xb1},  // 32 "TDSH" [°C]
   { 0x40, 0x7c},  // 33 "PROTECTION-No"

@@ -6,13 +6,11 @@ PubSubClient MQTTclient(espClient);
 int WIFI_lost = 0;
 int MQTT_lost = 0;
 
-
 struct rising_edge_cnt_struct{
   volatile uint32_t SCK = 0;
   volatile uint32_t MOSI = 0;
   volatile uint32_t MISO = 0;
 } rising_edge_cnt;
-
 
 IRAM_ATTR void handleInterrupt_SCK() {
   rising_edge_cnt.SCK++;
@@ -62,7 +60,6 @@ void MeasureFrequency() {  // measure the frequency on the pins
   }
 }
 
-
 void initWiFi(){
   WiFi.persistent(false);
   WiFi.disconnect(true);    // Delete SDK wifi config
@@ -107,7 +104,7 @@ void setupWiFi(int& WiFiStatus) {
     }
     //Serial.printf("setupWiFi3:%i access points available\n", networksFound);
   }
-  else {
+  else { // WiFiStatus == WIFI_CONNECT_ONGOING
     if(WiFi.status() == WL_CONNECTED){
       Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());
       WiFiStatus = WIFI_CONNECT_OK;
@@ -119,7 +116,7 @@ void setupWiFi(int& WiFiStatus) {
     }
     //Serial.printf("setupWiFi4:%i access points available\n", networksFound);
   }
-  //Serial.printf("setupWiFi E:%i access points available\n", networksFound);          // Warum ist hier networksFound=0?????
+  //Serial.printf("setupWiFi E:%i access points available\n", networksFound);
 }
 
 int MQTTreconnect() {

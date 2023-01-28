@@ -386,6 +386,7 @@ void setup() {
   MQTTclient.setCallback(MQTT_subscribe_callback);
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
+  // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
 }
 
 
@@ -394,7 +395,7 @@ void loop() {
   static int WiFiStatus = WIFI_CONNECT_TIMEOUT;
   static int MQTTStatus = MQTT_NOT_CONNECTED;
   static unsigned long previousMillis = millis();
-  if (((WiFi.status() != WL_CONNECTED) & (WiFiStatus != WIFI_CONNECT_OK)) || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
+  if (((WiFi.status() != WL_CONNECTED) | (WiFiStatus != WIFI_CONNECT_OK)) || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
     //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
     setupWiFi(WiFiStatus);
     previousMillis = millis();

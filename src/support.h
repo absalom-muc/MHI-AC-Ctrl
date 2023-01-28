@@ -3,9 +3,9 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.6R5"
+#define VERSION "2.6"
 
-#define WIFI_SSID "fb1"
+#define WIFI_SSID ""
 #define WIFI_PASSWORD ""
 #define HOSTNAME "MHI-AC-Ctrl"
 
