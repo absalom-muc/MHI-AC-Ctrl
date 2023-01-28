@@ -167,7 +167,9 @@ The AC is only accepting a setpoint in x.0 degrees. If you send x.5 degrees, the
                                                     // this will simulate .x degrees resolution
 ```
 If you now send x.5 degrees as setpoint, still the setpoint on the AC will be (x+1). But when sending the received Troom (from MQTT or the external temperature sensor) to the AC, Troom with an offset of .5 degrees will be send to the AC. This way the AC will increase the temperature in the room with .5 degrees instead of 1 degree.
+
 The MQTT topic Troom will show (like before) the Troom received by the AC (including the offset).
+
 For example: when setpoint is 20.5. When Troom 19.5 is received (from MQTT or DS18x20), Troom sent to the AC will be 20.0. Topic Troom will also show 20.0.
 
 ## Behaviour when changing AC mode ([support.h](src/support.h))
@@ -205,7 +207,7 @@ Currently the following operating data in double quotes are supported
   { 0x40, 0x80},  // 21 "OUTDOOR" [°C]
   { 0x40, 0x82},  // 22 "THO-R1" [°C]
   { 0x40, 0x11},  // 24 "COMP" [Hz]
-  { 0x40, 0x85},  // 27 "TD" [A]
+  { 0x40, 0x85},  // 27 "TD" [°C]
   { 0x40, 0x90},  // 29 "CT" [A]
   { 0x40, 0xb1},  // 32 "TDSH" [°C]
   { 0x40, 0x7c},  // 33 "PROTECTION-No"
@@ -218,7 +220,7 @@ Currently the following operating data in double quotes are supported
 
 note: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
 For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
-You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/41/42/ed/Beijer-Ref-Service-Support-Handbook-19cWKESQUhzVIy5.pdf#page=7).    
+You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/41/42/ed/Beijer-Ref-Service-Support-Handbook-19cWKESQUhzVIy5.pdf#page=7). Addtional opdata infomration is available [here](https://github.com/absalom-muc/MHI-AC-Trace/blob/main/SPI.md#operation-data-details).  
 
 hint: The error operating data is usually a sub-set of the operating data above. If user requests error operating data, all available error operating data is provided independent from the list above.
 
