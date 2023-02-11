@@ -67,3 +67,9 @@
 #define PAYLOAD_OP_DEFROST_ON "On"
 #define PAYLOAD_OP_DEFROST_OFF "Off"
 #define PAYLOAD_REQUEST_RESET "reset"
+
+enum POWER_STATUS {
+    unknown,
+    off,
+    on
+};

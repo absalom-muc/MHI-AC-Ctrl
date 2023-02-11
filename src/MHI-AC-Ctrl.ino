@@ -8,6 +8,8 @@
 
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
+POWER_STATUS power_status = unknown;
+
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
 
@@ -165,14 +167,30 @@ class StatusHandler : public CallbackInterface_Status {
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
         case status_power:
+          // After powerdown AC (230V), fan status is only showing 1, 2 or 3. 4 and Auto is not shown when changing with RC.
+          // Only when setting fan to Auto one time after powerdown AC, it will show 4 and Auto.
+          // Below will take care of this.
+          if (power_status == unknown) {  // First time after startup esp
+            Serial.printf("power_status: unknown; received status_power: %i\n", value);
+            if (value == power_off) {  // Only when status is power off, set fan to Auto. 
+              Serial.println("Set fan to Auto to fix fan status after powerdown (230V) AC");
+              mhi_ac_ctrl_core. set_fan(7);
+            }
+          } else if (power_status == off) 
+            Serial.printf("power_status: off; received status_power: %i\n", value);
+          else if (power_status == on) 
+            Serial.printf("power_status: on; received status_power: %i\n", value);
+
           if (value == power_on){
             output_P(status, (TOPIC_POWER), PSTR(PAYLOAD_POWER_ON));
+            power_status = on;
 #ifdef POWERON_WHEN_CHANGING_MODE
             cbiStatusFunction(status_mode, mode_tmp);
 #endif
           }
           else {
             output_P(status, (TOPIC_POWER), (PAYLOAD_POWER_OFF));
+            power_status = off;
 #ifdef POWERON_WHEN_CHANGING_MODE
             output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_OFF));
 #endif

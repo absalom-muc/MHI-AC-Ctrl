@@ -1,5 +1,8 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.7R1** (February 2023)
+-  Fix for fan not showing 4 and Auto after powerdown AC [pull request #132](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/132#) according to [issue #99](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99#issuecomment-1407615341) by [glsf91](https://github.com/glsf91).
+
 **v2.6** (January 2023)
 - Fix of [Wifi reconnect takes too long #125](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/125)
 - Typo related to the unit of TD fixed in MHI-AC-Ctrl-core.h and SW-Configuration.md
