@@ -221,9 +221,9 @@ class StatusHandler : public CallbackInterface_Status {
               break;
           }
           break;
-        case opdata_0x94:
-          itoa(value, strtmp, 10);
-          output_P(status, PSTR(TOPIC_0X94), strtmp);
+        case opdata_kwh:
+          dtostrf(highByte(value)*64.0f + lowByte(value)*0.25f, 0, 2, strtmp);
+          output_P(status, PSTR(TOPIC_KWH), strtmp);
           break;
         case opdata_unknown:
           itoa(value, strtmp, 10);

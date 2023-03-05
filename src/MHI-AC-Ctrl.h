@@ -24,7 +24,7 @@
 #define TOPIC_ERRORCODE "Errorcode"
 
 #define TOPIC_UNKNOWN "unknown"
-#define TOPIC_0X94 "OPDATA_0x94"
+#define TOPIC_KWH "KWH"
 #define TOPIC_RETURNAIR "RETURN-AIR"
 #define TOPIC_THI_R1 "THI-R1"
 #define TOPIC_THI_R2 "THI-R2"

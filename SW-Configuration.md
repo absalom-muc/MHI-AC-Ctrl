@@ -195,7 +195,7 @@ if your framework prefers lower case. These topics and payloads are used for MQT
 ## Operating data ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h))
 Currently the following operating data in double quotes are supported
 ```
-  { 0xc0, 0x94},  //  ? "unknown"
+  { 0xc0, 0x94},  //  0 "energy-used" [kWh]
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
@@ -218,9 +218,11 @@ Currently the following operating data in double quotes are supported
   { 0x00, 0x00},  // dummy
 ```
 
-note: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
+note1: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
 For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
 You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/41/42/ed/Beijer-Ref-Service-Support-Handbook-19cWKESQUhzVIy5.pdf#page=7). Addtional opdata infomration is available [here](https://github.com/absalom-muc/MHI-AC-Trace/blob/main/SPI.md#operation-data-details).  
+
+note2: The energy-used is the energy in kWh counting from power on the AC. If you power off the AC, the value (in kWh) will keep the last value. When you power on the AC again, it will start from 0 again.
 
 hint: The error operating data is usually a sub-set of the operating data above. If user requests error operating data, all available error operating data is provided independent from the list above.
 

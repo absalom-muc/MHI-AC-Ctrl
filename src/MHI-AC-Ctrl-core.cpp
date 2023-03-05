@@ -21,7 +21,7 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_errorcode_old = 0xff;
 
   // old operating data
-  op_0x94_old = 0xff;
+  op_kwh_old = 0xffff;
   op_mode_old = 0xff;
   op_settemp_old = 0xff;
   op_return_air_old = 0xff;
@@ -255,12 +255,12 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
     bool MOSI_type_opdata = (MOSI_frame[DB10] & 0x30) == 0x10;
 
     switch (MOSI_frame[DB9]) {
-      case 0x94:                              // opdata_0x94
+      case 0x94:                              // 0 energy-kwh n * 0.25 kWh used since power on
         if ((MOSI_frame[DB6] & 0x80) != 0) {  // 
           if (MOSI_type_opdata) {
-            if ((MOSI_frame[DB10] != op_0x94_old)) {
-              op_0x94_old = (MOSI_frame[DB10]<<16)+(MOSI_frame[DB11]<<8)+MOSI_frame[DB12];
-              m_cbiStatus->cbiStatusFunction(opdata_0x94, op_0x94_old);
+            if (((MOSI_frame[DB12]<<8)+(MOSI_frame[DB11])) != op_kwh_old) {
+              op_kwh_old = (MOSI_frame[DB12]<<8)+(MOSI_frame[DB11]);
+              m_cbiStatus->cbiStatusFunction(opdata_kwh, op_kwh_old);
             }
           }
           //else
