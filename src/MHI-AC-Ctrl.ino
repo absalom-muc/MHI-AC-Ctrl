@@ -158,7 +158,9 @@ class StatusHandler : public CallbackInterface_Status {
   public:
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
+#ifdef POWERON_WHEN_CHANGING_MODE
       static int mode_tmp = 0xff;
+#endif
 #ifdef ENHANCED_RESOLUTION      
       float offset = mhi_ac_ctrl_core.get_troom_offset();
       float tmp_value;
@@ -197,7 +199,9 @@ class StatusHandler : public CallbackInterface_Status {
           }
           break;
         case status_mode:
+#ifdef POWERON_WHEN_CHANGING_MODE        
           mode_tmp = value;
+#endif          
         case opdata_mode:
         case erropdata_mode:
           switch (value) {

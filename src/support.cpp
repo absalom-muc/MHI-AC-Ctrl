@@ -81,7 +81,7 @@ void setupWiFi(int& WiFiStatus) {
     Serial.printf("setupWiFi:%i access points available\n", networksFound);
     for (uint i = 0; i < networksFound; i++)
     {
-      Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured"), (uint)WiFi.encryptionType(i);
+      Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured", (uint)WiFi.encryptionType(i));
       if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
           max_rssi = WiFi.RSSI(i);
           strongest_AP = i;
@@ -222,6 +222,9 @@ byte getDs18x20Temperature(int temp_hysterese) {
   if (millis() - DS1820Millis > TEMP_MEASURE_PERIOD * 1000) {
     int16_t tempR = sensors.getTemp(insideThermometer);
     tempR += ROOM_TEMP_DS18X20_OFFSET*128;
+    if (tempR > (48*128) || tempR < (-10*128)) {    // skip onrealistic values
+      tempR = tempR_old;    // use previous value
+    }
     int16_t tempR_diff = tempR - tempR_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
     if (abs(tempR_diff) > temp_hysterese) {
       tempR_old = tempR;

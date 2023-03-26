@@ -143,7 +143,7 @@ and how often the sensor should be read. To use reading of the external sensor y
 ```
 note: The according libraries [OneWire](https://www.pjrc.com/teensy/td_libs_OneWire.html) and [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library) are only used if TEMP_MEASURE_PERIOD > 0.
 
-If the DS18x20 should replace the room temperature sensor of the AC, you have to confiure it as described in the next clause.
+If the DS18x20 should replace the room temperature sensor of the AC, you have to configure it as described in the next clause.
 
 ## Room temperature
 Usage of the room temperature sensor inside the AC is the default, but instead you can use the DS18x20 sensor on the MHI-AC-Ctrl board or the received temperature via the MQTT topic Troom. Setting Troom via MQTT works per default. But you should adapt ROOM_TEMP_MQTT_TIMEOUT. For using DS18x20 as Troom you have to use ROOM_TEMP_DS18X20.
@@ -195,7 +195,6 @@ if your framework prefers lower case. These topics and payloads are used for MQT
 ## Operating data ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h))
 Currently the following operating data in double quotes are supported
 ```
-  { 0xc0, 0x94},  //  0 "energy-used" [kWh]
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
@@ -215,12 +214,12 @@ Currently the following operating data in double quotes are supported
   { 0x40, 0x0c},  // 36 "DEFROST"
   { 0x40, 0x1e},  // 37 "TOTAL-COMP-RUN" [h]
   { 0x40, 0x13},  // 38 "OU-EEV" [Puls]
-  { 0x00, 0x00},  // dummy
+  { 0xc0, 0x94},  //    "energy-used" [kWh]
 ```
 
-note1: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least the dummy line must be available.
+note1: If you are not interested in these operating modes (e.g. to reduce the MQTT load) you can comment out the according lines. But at least 1 line has to stay.
 For THI-R2, THO-R1 and TDSH the formula for calculation is not yet known.
-You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/41/42/ed/Beijer-Ref-Service-Support-Handbook-19cWKESQUhzVIy5.pdf#page=7). Addtional opdata infomration is available [here](https://github.com/absalom-muc/MHI-AC-Trace/blob/main/SPI.md#operation-data-details).  
+You can find some hints related to the meaning of the operating data [here](https://www.hrponline.co.uk/media/pdf/41/42/ed/Beijer-Ref-Service-Support-Handbook-19cWKESQUhzVIy5.pdf#page=7). Addtional opdata information is available [here](https://github.com/absalom-muc/MHI-AC-Trace/blob/main/SPI.md#operation-data-details).  
 
 note2: The energy-used is the energy in kWh counting from power on the AC. If you power off the AC, the value (in kWh) will keep the last value. When you power on the AC again, it will start from 0 again.
 
@@ -228,14 +227,25 @@ hint: The error operating data is usually a sub-set of the operating data above.
 
 
 ## Access Speed ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h ))
-With the following parameter you can determine the number of frames used for writing to the AC. It is used
-for writing status values and for reading (error) operating data.
+Default the above operating data is requested within 400 frames. Because 20 frames takes 1 second, the update interval for all operating data will be  400/20 = 20 seconds. If you disable some operating data (above), the update interval will stay 20 seconds.
+With the following parameter you can change this interval of 20 seconds.
 ```
-#define NoFramesPerPacket 20  // number of frames/packet, must be an even number
+#define NoFramesPerOpDataCycle 400             // number of frames used for a OpData request cycle; will be 20s (20 frames are 1s)
 ```
-A high number increases the probability that an access is successful also in the case of noisy SPI communication,
-but it reduces the access speed and the frequency of operating data reads.
-Since this parameter also influences the time available for the processing of AC commands, the parameter should not be chosen too small.
+Some operating data (32 -38) will take some time at the AC for processing. So don't decrease this value too much.
+
+Changes to Power, Mode, Tsetpoint, Fan and Vanes wll be written to the AC right away. Above parameter will not influence this.
+
+## Jitter internal temperature sensor ([MHI-AC-Ctrl-core.h](src/MHI-AC-Ctrl-core.h ))
+If the AC internal temperature sensor is used, the received Troom can changes (+/- 0.25 degrees) sometimes several times in a second. This will give a burst of MQTT Troom messages.
+To avoid this behaviour, the changed received Troom will only be published after at least 5 seconds. This is ONLY the case when the AC internal temperature sensor is used.
+With the following parameter you can change this minimum interval of 5 seconds.
+```
+#define minTimeInternalTroom 5000              // minimal time in ms used for Troom internal sensor changes for publishing to avoid jitter 
+```
+
+This jitter can also be avoided by using the TROOM_FILTER_LIMIT as descibed above. But this filter is also used if the temperature is provided by an external temperature sensor or a connected DS18B20. With above it will be also possible to see smaller changes.
+
 
 ## MHI-AC-Ctrl partitioning
 MHI-AC-Ctrl-core implements the core functions (SPI read/write, communication with the wrapper).
