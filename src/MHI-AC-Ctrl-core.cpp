@@ -94,7 +94,7 @@ void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
   Troom_offset = offset;
 }
 
-int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
+int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
   static byte opdataNo = 0;               //
   long startMillis = millis();             // start time of this loop run
@@ -102,13 +102,14 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
   bool new_datapacket_received = false;   // indicated that a new frame was received
   static byte erropdataCnt = 0;           // number of expected error operating data
   static bool doubleframe = false;
-  static byte frame = 0;
+  static int frame = 1;
   static byte MOSI_frame[20];
   //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
   static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
 
   static uint call_counter = 0;           // counts how often this loop was called
-
+  static unsigned long lastTroomInternalMillis = 0; // remember when Troom internal has changed
+  
   call_counter++;
   int SCKMillis = millis();               // time of last SCK low level
   while (millis() - SCKMillis < 5) {      // wait for 5ms stable high signal to detect a frame start
@@ -118,51 +119,69 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
       return err_msg_timeout_SCK_low;       // SCK stuck@ low error detection
   }
   // build the next MISO frame
-  if (frame++ >= NoFramesPerPacket) {       // setup MISO frame with each frame packet
-    doubleframe = !doubleframe;             // toggle
-    MISO_frame[DB14] = doubleframe << 2;    // MISO_frame[DB14] bit2 toggels with every frame packet
-    frame = 1;
-    if (doubleframe) {                     // and the other MISO data are updated after two frame packets
-      MISO_frame[DB0] = 0x00;
-      MISO_frame[DB1] = 0x00;
-      MISO_frame[DB2] = 0x00;
+
+  doubleframe = !doubleframe;             // toggle every frame
+  MISO_frame[DB14] = doubleframe << 2;    // MISO_frame[DB14] bit2 toggles with every frame
+  
+  // Requesting all different opdata's is an opdata cycle. A cycle will take 20s.
+  // With the current 20 different opdata's, every opdata request will take 1sec (interval).
+  // If there are only 5 different opdata's defined, these 5 will be spread about the 20s cycle. The interval will increase.
+  // requesting a new opdata will always start at a doubleframe start
+  if ((frame > (NoFramesPerOpDataCycle / opdataCnt)) && doubleframe ) {    // interval for requesting new opdata depending on de number of opdata requests
+    frame = 1;                              // start requesting new OpData
+  }
+
+  if (frame++ <= 2) {                       // use opdata request only for 2 subsequent frames
+    if (doubleframe) {                      // start when MISO_frame[DB14] bit2 is set
       if (erropdataCnt == 0) {
         MISO_frame[DB6] = pgm_read_word(opdata + opdataNo);
         MISO_frame[DB9] = pgm_read_word(opdata + opdataNo) >> 8;
         opdataNo = (opdataNo + 1) % opdataCnt;
       }
-      else { // error operating data available
-        MISO_frame[DB6] = 0x80;
-        MISO_frame[DB9] = 0xff;
-        erropdataCnt--;
-      }
 
-      // set Power, Mode, Tsetpoint, Fan, Vanes
-      MISO_frame[DB0] = new_Power;
-      new_Power = 0;
-
-      MISO_frame[DB0] |= new_Mode;
-      new_Mode = 0;
-
-      MISO_frame[DB2] = new_Tsetpoint;
-      new_Tsetpoint = 0;
-
-      MISO_frame[DB1] = new_Fan;
-      new_Fan = 0;
-
-      MISO_frame[DB0] |= new_Vanes0;
-      MISO_frame[DB1] |= new_Vanes1;
-      new_Vanes0 = 0;
-      new_Vanes1 = 0;
-
-      if (request_erropData) {
-        MISO_frame[DB6] = 0x80;
-        MISO_frame[DB9] = 0x45;
-        request_erropData = false;
-      }
     }
   }
+  else  // reset OpData request
+  {
+    MISO_frame[DB6] = 0x80;
+    MISO_frame[DB9] = 0xff;    
+  }
+  
+  if (doubleframe) {                        // and the other MISO data changes are updated when MISO_frame[DB14] bit2 is set
+    MISO_frame[DB0] = 0x00;
+    MISO_frame[DB1] = 0x00;
+    MISO_frame[DB2] = 0x00;
 
+    if (erropdataCnt > 0) {                 // error operating data available
+      MISO_frame[DB6] = 0x80;
+      MISO_frame[DB9] = 0xff;
+      erropdataCnt--;
+    }
+
+    // set Power, Mode, Tsetpoint, Fan, Vanes
+    MISO_frame[DB0] = new_Power;
+    new_Power = 0;
+
+    MISO_frame[DB0] |= new_Mode;
+    new_Mode = 0;
+
+    MISO_frame[DB2] = new_Tsetpoint;
+    new_Tsetpoint = 0;
+
+    MISO_frame[DB1] = new_Fan;
+    new_Fan = 0;
+
+    MISO_frame[DB0] |= new_Vanes0;
+    MISO_frame[DB1] |= new_Vanes1;
+    new_Vanes0 = 0;
+    new_Vanes1 = 0;
+
+    if (request_erropData) {
+      MISO_frame[DB6] = 0x80;
+      MISO_frame[DB9] = 0x45;
+      request_erropData = false;
+    }
+  }
 
   MISO_frame[DB3] = new_Troom;  // from MQTT or DS18x20
 
@@ -237,8 +256,18 @@ int MHI_AC_Ctrl_Core::loop(int max_time_ms) {
 
     
     if(MOSI_frame[DB3] != status_troom_old) {
-      status_troom_old = MOSI_frame[DB3];
-      m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
+      // To avoid jitter with the fast changing AC internal temperature sensor
+      if (MISO_frame[DB3] != 0xff) {                                      // not internal sensor used, just publish
+        status_troom_old = MOSI_frame[DB3];
+        m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
+        lastTroomInternalMillis = 0;
+      }
+      else                                                               //  internal sensor used
+        if ((unsigned long)(millis() - lastTroomInternalMillis) > minTimeInternalTroom) { // Only publish when last change was more then minTimeInternalTroom ago
+          lastTroomInternalMillis = millis();
+          status_troom_old = MOSI_frame[DB3];
+          m_cbiStatus->cbiStatusFunction(status_troom, status_troom_old);
+        }
     }
     
     if (MOSI_frame[DB2] != status_tsetpoint_old) { // Temperature setpoint

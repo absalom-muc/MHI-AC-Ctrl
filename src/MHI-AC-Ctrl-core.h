@@ -2,9 +2,8 @@
 
 #include <Arduino.h>
 
-// comment out the data you are not interested, but at least leave the last dummy row
+// comment out the data you are not interested, but at least leave one row !
 const byte opdata[][2] PROGMEM = {
-  { 0xc0, 0x94},  //  0 "energy-used" [kWh]
   { 0xc0, 0x02},  //  1 "MODE"
   { 0xc0, 0x05},  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80},  //  3 "RETURN-AIR" [°C]
@@ -24,11 +23,13 @@ const byte opdata[][2] PROGMEM = {
   { 0x40, 0x0c},  // 36 "DEFROST"
   { 0x40, 0x1e},  // 37 "TOTAL-COMP-RUN" [h]
   { 0x40, 0x13},  // 38 "OU-EEV" [Puls]
-  { 0x00, 0x00},  // dummy
+  { 0xc0, 0x94},  //    "energy-used" [kWh]
+
 };
 
-#define NoFramesPerPacket 20                 // number of frames/packet, must be an even number
-
+//#define NoFramesPerPacket 20                 // number of frames/packet, must be an even number
+#define NoFramesPerOpDataCycle 400             // number of frames used for a OpData request cycle; will be 20s (20 frames are 1s)
+#define minTimeInternalTroom 5000              // minimal time in ms used for Troom internal sensor changes for publishing to avoid jitter 
 
 // pin defintions
 #define SCK_PIN  14
@@ -143,7 +144,7 @@ class MHI_AC_Ctrl_Core {
 
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
-    int loop(int max_time_ms);            // receive / transmit a frame of 20 bytes
+    int loop(uint max_time_ms);            // receive / transmit a frame of 20 bytes
     void set_power(boolean power);        // power on/off the AC
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)

@@ -1,5 +1,13 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.7R3** (March 2023)
+-  fix some compiler warnings by [glsf91](https://github.com/glsf91)
+-  change sending MISO with faster refresh of data every 20s by [glsf91](https://github.com/glsf91)
+-  avoid jitter with internal temperature sensor, now updating atmost every 5s by [glsf91](https://github.com/glsf91)
+-  fix print wifi encryption type by [glsf91](https://github.com/glsf91)
+-  skip not usable values for DB18B20 by [glsf91](https://github.com/glsf91)
+
+
 **v2.7R2** (March 2023)
 -  Added energy kWh from airco by [glsf91](https://github.com/glsf91).
 
