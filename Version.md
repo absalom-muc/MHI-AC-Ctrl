@@ -1,12 +1,18 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.7R4** (April 2023)
+- changed setup WiFi connection to async; module starts already communicating with AC during WiFi setup and also during scanning when WiFI_SEARCHStrongestAP is used by [glsf91](https://github.com/glsf91)
+- added CONTINUE_WITHOUT_MQTT; module keeps communicating with AC if MQTT is disconnected. See also description in SW-Configuration.md and  [Question: why mhi_ac_ctrl_core.loop only when MQTT connected? #144] (https://github.com/absalom-muc/MHI-AC-Ctrl/issues/144) by [glsf91](https://github.com/glsf91)
+- fix bug for publish list of access points by [glsf91](https://github.com/glsf91)
+- added SRK71ZEA-S1 to unsupported list [Addition to unsupported list #143] (https://github.com/absalom-muc/MHI-AC-Ctrl/issues/143) by [glsf91](https://github.com/glsf91)
+- added Web page [Webpage for accessing MQTT data #141] (https://github.com/absalom-muc/MHI-AC-Ctrl/issues/141) to integration list by [glsf91](https://github.com/glsf91)
+
 **v2.7R3** (March 2023)
 -  fix some compiler warnings by [glsf91](https://github.com/glsf91)
 -  change sending MISO with faster refresh of data every 20s by [glsf91](https://github.com/glsf91)
 -  avoid jitter with internal temperature sensor, now updating atmost every 5s by [glsf91](https://github.com/glsf91)
 -  fix print wifi encryption type by [glsf91](https://github.com/glsf91)
 -  skip not usable values for DB18B20 by [glsf91](https://github.com/glsf91)
-
 
 **v2.7R2** (March 2023)
 -  Added energy kWh from airco by [glsf91](https://github.com/glsf91).

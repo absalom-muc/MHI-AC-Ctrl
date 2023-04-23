@@ -414,10 +414,13 @@ void setup() {
 
 void loop() {
   static byte ds18x20_value_old = 0;
-  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;
+  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
   static int MQTTStatus = MQTT_NOT_CONNECTED;
   static unsigned long previousMillis = millis();
-  if (((WiFi.status() != WL_CONNECTED) | (WiFiStatus != WIFI_CONNECT_OK)) || (WiFI_SEARCHStrongestAP & (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
+
+  if (((WiFi.status() != WL_CONNECTED)  || 
+       (WiFiStatus != WIFI_CONNECT_OK)) || 
+       (WiFI_SEARCHStrongestAP && (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
     //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
     setupWiFi(WiFiStatus);
     previousMillis = millis();
@@ -449,6 +452,7 @@ void loop() {
   }
 #endif 
 #endif
+
   // fallback to AC internal Troom temperature sensor
   if(troom_was_set_by_MQTT & (millis() - room_temp_set_timeout_Millis >= ROOM_TEMP_MQTT_SET_TIMEOUT*1000)) {
     mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
@@ -456,12 +460,15 @@ void loop() {
     troom_was_set_by_MQTT=false;
   }
 
-  if((MQTTStatus==MQTT_RECONNECTED)|(MQTTStatus==MQTT_CONNECT_OK)){
+#ifndef CONTINUE_WITHOUT_MQTT 
+  if((MQTTStatus==MQTT_RECONNECTED) || (MQTTStatus==MQTT_CONNECT_OK)){
+#endif    
     //Serial.println("MQTT connected in main loop");
     int ret = mhi_ac_ctrl_core.loop(80);
     if (ret < 0)
       Serial.printf_P(PSTR("mhi_ac_ctrl_core.loop error: %i\n"), ret);
+#ifndef CONTINUE_WITHOUT_MQTT 
   }
-  /*else
-    Serial.println("MQTT NOT connected in main loop");*/
+#endif
+
 }

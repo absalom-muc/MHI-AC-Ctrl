@@ -32,7 +32,8 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 Unsupported models:
 
 – SRK xx ZSPR-S
-
+- SRK71ZEA-S1
+ 
 If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list.
 
 # Installing:

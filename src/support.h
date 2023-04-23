@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.7R3"
+#define VERSION "2.7R4"
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
@@ -45,6 +45,12 @@
 //#define ENHANCED_RESOLUTION true                    // when using Tsetpoint with x.5 degrees, airco will use (x+1).0 setpoint
                                                     // uncomment this to compensatie (offset) Troom for this.
                                                     // this will simulate .x degrees resolution
+//#define CONTINUE_WITHOUT_MQTT true                  // uncomment if communication with AC has to continue when MQTT or WiFi connection is disconnected.
+                                                    // When Troom is supplied from external, it will fallback to AC internal Troom temperature sensor
+                                                    // When ROOM_TEMP_DS18X20 is used, it will use room temperature from DS18x20
+
+
+
 // *** The configuration ends here ***
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
@@ -77,6 +83,8 @@ void setupOTA();                                              // initialize and 
 void setup_ds18x20();                                         // setup the temperature measurement
 byte getDs18x20Temperature(int temp_hysterese);               // read the temperature from the DS18x20 sensor
 
+#define WIFI_CONNECT_SCANNING 4
+#define WIFI_CONNECT_SCANNING_DONE 3
 #define WIFI_CONNECT_TIMEOUT 2
 #define WIFI_CONNECT_ONGOING 1
 #define WIFI_CONNECT_OK 0

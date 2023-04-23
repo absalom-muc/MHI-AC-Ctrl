@@ -69,54 +69,73 @@ void initWiFi(){
   WiFi.setAutoReconnect(false);
 }
 
+int WiFiStatus = WIFI_CONNECT_TIMEOUT;
 uint networksFound = 0;
-void setupWiFi(int& WiFiStatus) {
+unsigned long WiFiTimeoutMillis;
+
+void handleWiFiScanResult(int WifinetworksFound) {  // Handles async WiFi scan result
   int max_rssi = -999;
   int strongest_AP = -1;
-  static unsigned long WiFiTimeoutMillis;
 
-  if(WiFiStatus != WIFI_CONNECT_ONGOING) {
-    WiFi.scanDelete();
-    uint networksFound = WiFi.scanNetworks();
-    Serial.printf("setupWiFi:%i access points available\n", networksFound);
-    for (uint i = 0; i < networksFound; i++)
-    {
-      Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured", (uint)WiFi.encryptionType(i));
-      if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
-          max_rssi = WiFi.RSSI(i);
-          strongest_AP = i;
-      }
+  networksFound = WifinetworksFound;  // will be used other places
+ 
+  Serial.printf_P(PSTR("handleWiFiScanResult(): %i access points available\n"), networksFound);
+  for (uint i = 0; i < networksFound; i++)
+  {
+    Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured", (uint)WiFi.encryptionType(i));
+    if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
+        max_rssi = WiFi.RSSI(i);
+        strongest_AP = i;
     }
-    Serial.printf("setupWiFi2:%i access points available\n", networksFound);
-    Serial.printf_P("current BSSID: %s, strongest BSSID: %s\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
-    if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
-      if(strongest_AP != -1) {
-        Serial.printf("Connecting from bssid:%s to bssid:%s, channel:%i\n", WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str(), WiFi.channel(strongest_AP));
-        WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
-      }
-      else {
-        Serial.println("No matching AP found (maybe hidden SSID), however try to connect.");
-        WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-      }
-      WiFiStatus = WIFI_CONNECT_ONGOING;
-      Serial.println("WIFI_CONNECT_ONGOING");
-      WiFiTimeoutMillis = millis();
+  }
+  Serial.printf_P(PSTR("current BSSID: %s, strongest BSSID: %s\n"), WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
+  if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
+    if(strongest_AP != -1) {
+      Serial.printf_P(PSTR("Connecting from bssid:%s to bssid:%s, channel:%i\n"), WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str(), WiFi.channel(strongest_AP));
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
     }
-    //Serial.printf("setupWiFi3:%i access points available\n", networksFound);
+    else {
+      Serial.println(F("No matching AP found (maybe hidden SSID), however try to connect."));
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    }
+    WiFiStatus = WIFI_CONNECT_ONGOING;
+    Serial.println(F("WIFI_CONNECT_ONGOING"));
+    WiFiTimeoutMillis = millis();
+  }
+  else {  // scanning is started for WiFI_SEARCHStrongestAP and WiFi was already connected
+    WiFiStatus = WIFI_CONNECT_SCANNING_DONE;
+    Serial.println(F("WIFI_CONNECT_SCANNING_DONE"));
+  }
+}
+
+void setupWiFi(int& WiFiStatusParam) {
+
+  if(WiFiStatus != WIFI_CONNECT_ONGOING) {   // WIFI_CONNECT_OK or WIFI_CONNECT_TIMEOUT or WIFI_CONNECT_SCANNING or WIFI_CONNECT_SCANNING_DONE
+    if (WiFiStatus == WIFI_CONNECT_OK || WiFiStatus == WIFI_CONNECT_TIMEOUT){  // Start scanning async if not in already in progress 
+      WiFi.scanDelete();
+      Serial.println(F("setupWiFi: Start async scanNetworks"));
+      WiFi.scanNetworksAsync(handleWiFiScanResult);
+      WiFiStatus = WIFI_CONNECT_SCANNING;
+      Serial.println(F("WIFI_CONNECT_SCANNING"));
+    }
+
+    if (WiFiStatus == WIFI_CONNECT_SCANNING_DONE){ // after scanning for WiFI_SEARCHStrongestAP. Should be still connected
+        WiFiStatus = WIFI_CONNECT_OK;
+        Serial.println(F("WIFI_CONNECT_OK"));
+    }
   }
   else { // WiFiStatus == WIFI_CONNECT_ONGOING
     if(WiFi.status() == WL_CONNECTED){
       Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());
       WiFiStatus = WIFI_CONNECT_OK;
-      Serial.println("WIFI_CONNECT_OK");
+      Serial.println(F("WIFI_CONNECT_OK"));
     }
     else if(millis() - WiFiTimeoutMillis > 10*1000) {  // timeout after 10 seconds
       WiFiStatus = WIFI_CONNECT_TIMEOUT;
-      Serial.println(PSTR("WIFI_CONNECT_TIMEOUT"));
+      Serial.println(F("WIFI_CONNECT_TIMEOUT"));
     }
-    //Serial.printf("setupWiFi4:%i access points available\n", networksFound);
   }
-  //Serial.printf("setupWiFi E:%i access points available\n", networksFound);
+  WiFiStatusParam = WiFiStatus; // return WiFiStatus to caller
 }
 
 int MQTTreconnect() {
@@ -147,7 +166,7 @@ int MQTTreconnect() {
       output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_BSSID), strtmp);
 
       // for testing publish list of access points with the expected SSID 
-      Serial.printf("%i access points available\n", networksFound);         // unlar, warum hier networksFound=0 !!!
+      Serial.printf("MQTTreconnect(): %i access points available\n", networksFound);         
       for (uint i = 0; i < networksFound; i++)
       {
         if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
