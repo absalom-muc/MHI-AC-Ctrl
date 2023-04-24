@@ -97,6 +97,7 @@ RSSI     |r  |integer         |WiFI RSSI / signal Strength in dBm after MQTT (re
 Version  |r  |string          |Version number of MHI-AC-Ctrl
 WIFI_LOST|r  |integer         |number of lost WiFi connections since last reset
 MQTT_LOST|r  |integer         |number of lost MQTT connections since last reset
+APs      |r  |string          |Matched APs seen at scan with RSSI value
 
 note: The topic and the payload text of the status data is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
 
@@ -246,6 +247,20 @@ With the following parameter you can change this minimum interval of 5 seconds.
 
 This jitter can also be avoided by using the TROOM_FILTER_LIMIT as descibed above. But this filter is also used if the temperature is provided by an external temperature sensor or a connected DS18B20. With above it will be also possible to see smaller changes.
 
+## Not switching off AC when MQTT connections fails ([MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h))
+Default the module stops communicating with the AC when the MQTT connection get disconnected. After 120 sec the AC will power off because of [this](https://github.com/absalom-muc/MHI-AC-Ctrl/blob/master/Troubleshooting.md#fire-ac-switches-power-off-sometimes).
+When using a DS18x20 as room temperature sensor, this can be unwanted behaviour. Also at night or when not at home when this happens, can be unwanted behaviour. 
+This behaviour can be changed by changing the following line:
+```
+//#define CONTINUE_WITHOUT_MQTT true
+```
+to
+```
+#define CONTINUE_WITHOUT_MQTT true
+```
+
+Warning: be aware that there might be some safety implication and that the deactivation of this feature is on your own risk.
+The AC now keeps running and no control is possible anymore when MQTT is disconnected. Also of course no MQTT topics are updated anymore. Of course control is still possible with the remote control.
 
 ## MHI-AC-Ctrl partitioning
 MHI-AC-Ctrl-core implements the core functions (SPI read/write, communication with the wrapper).
@@ -325,3 +340,4 @@ You find here some examples for integration of MHI-AC-Ctrl
 - [ioBroker](https://forum.iobroker.net/topic/17041/anfrage-airconwithme-intesishome-klimasteuerung-adapter/14)
 - [FHEM](https://forum.fhem.de/index.php/topic,88841.0/all.html)
 - [WiFi SSID, hostname and MQTT server dynamic](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/69)
+- [Web page with MQTT](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/141)
