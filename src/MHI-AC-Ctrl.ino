@@ -273,7 +273,7 @@ class StatusHandler : public CallbackInterface_Status {
         case status_troom:
           {
             int8_t troom_diff = value - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
-            if (abs(troom_diff) > TROOM_FILTER_LIMIT/0.25f) { // Room temperature delta > 0.25°C
+            if ((abs(troom_diff) > TROOM_FILTER_LIMIT/0.25f) & (value != 254)) // Room temperature delta > 0.25°C & room temperature not 48,25°C (generated some random spikes in my Home Assistant environment).
               status_troom_old = value;
               dtostrf((value - 61) / 4.0, 0, 2, strtmp);
               output_P(status, PSTR(TOPIC_TROOM), strtmp);
