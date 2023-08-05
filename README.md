@@ -12,29 +12,25 @@ For use of the program you have to connect your ESP8266 (I use a LOLIN(WEMOS) D1
 cable connector to your air conditioner. This has to be a split device (separated indoor and outdoor unit).
 I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are supported. I use the indoor unit SRK 35 ZS-S and the outdoor unit SRC 35 ZS-S. Users reported that additionally the following models are supported:
 
-- SRF xx ZJX-S1
-- SRF xx ZMX-S
-- SRF xx ZMXA-S
+- [SRF xx ZJX-S1](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issue-632187165)
+- [SRF xx ZMX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-704789297)
+- [SRF xx ZMXA-S](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/91)
 - SRF xx ZF-W
-- SRK xx ZJ-S
-- SRK xx ZM-S
-- SRK xx ZS-S
-- SRK xx ZJX-S
-- SRK xx ZJX-S1
-- SRK xx ZRA-W
-- SRK xx ZSA-W
-- SRK xx ZSX-S
-- SRK xx ZSX-W
-- SRK xx ZS-W
-- SRR xx ZM-S
-- SRK xx ZMXA-S
+- [SRK xx ZJ-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/10)
+- [SRK xx ZM-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/9)
+- [SRK xx ZJX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-646469621)
+- [SRK xx ZJX-S1](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-646968940)
+- [SRK xx ZRA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-730628655)
+- [SRK xx ZSA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-891649495)
+- [SRK xx ZSPR-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/149)
+- [SRK xx ZSX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issuecomment-582242372)
+- [SRK xx ZSX-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-643748095)
+- [SRK xx ZS-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/121)
 
 Unsupported models:
-
-- SRK xx ZSPR-S
-- SRK71ZEA-S1
+- [SRK71ZEA-S1](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/143)
  
-If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list.
+If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list. In general, please recheck if your AC has a CNS connector before you spend time and money to build the hardware.
 
 # Installing:
 
