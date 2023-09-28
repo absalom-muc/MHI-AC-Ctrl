@@ -78,10 +78,13 @@ Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
+VanesLR|r/w|1,2,3,4,5,6,7,"Swing"|Vanes left/right position <sup>4</sup>
+3Dauto|r/w|"On", "Off"|3D auto <sup>4</sup>
 
 <sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
 <sup>2</sup> Please compare with section [Room temperature](#room-temperature) for writing.   
 <sup>3</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
+<sup>4</sup> Only available if USE_EXTENDED_FRAME_SIZE is enabled in [support.h](src/support.h)
 
 Additionally, the following program status topics are available:
 
@@ -178,6 +181,14 @@ Per default the power on/off state is not changed, when you change the AC mode (
 But when you uncomment the following line, then the AC is switched on, once you change the AC mode and switched off if you publish "Off" to Mode (instead of Power). This beahviour is requested for use with [Home Assistant](https://www.home-assistant.io/).
 ```
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+```
+
+## Using extended frame size for enabling 3D auto and vanes L/R ([support.h](src/support.h))
+Per default the 3D auto and vanes left/right is not supported. 
+But when you uncomment the following line, the frame size is extended to 33 bytes (like the WR-RAC module). This will make it possible to use 3D auto and vanes L/R.
+```
+//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used bij WF-RAC module
+                                                    // Then it will be possible to get and set the 3D auto and vanes left/right
 ```
 
 # Advanced settings

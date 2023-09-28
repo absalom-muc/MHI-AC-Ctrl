@@ -1,5 +1,10 @@
 MHI-AC-Ctrl by absalom-muc
 
+**v2.8** (September 2023)
+- when ds18x20 used and get disconnected, fallback to  IU temperature sensor by [glsf91](https://github.com/glsf91)
+- added status and control 3D auto and vanes L/R (extended frame size (33) used like WF-RAC module). You have to enable this! [3d auto and vanes l/r seems possible over CNS #77](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/77) by [glsf91](https://github.com/glsf91) 
+- added SRK35ZC-S to unsupported list [Addition to unsupported list #154](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/154) by [glsf91](https://github.com/glsf91)
+
 **v2.7R4** (April 2023)
 - changed setup WiFi connection to async; module starts already communicating with AC during WiFi setup and also during scanning when WiFI_SEARCHStrongestAP is used by [glsf91](https://github.com/glsf91)
 - added CONTINUE_WITHOUT_MQTT; module keeps communicating with AC if MQTT is disconnected. See also description in SW-Configuration.md and [Question: why mhi_ac_ctrl_core.loop only when MQTT connected? #144](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/144) by [glsf91](https://github.com/glsf91)
