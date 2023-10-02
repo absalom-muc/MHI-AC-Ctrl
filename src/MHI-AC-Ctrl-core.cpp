@@ -138,7 +138,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   static uint call_counter = 0;           // counts how often this loop was called
   static unsigned long lastTroomInternalMillis = 0; // remember when Troom internal has changed
   
-  if (frameSize == 33 )
+  if (frameSize == 33)
     MISO_frame[0] = 0xAA;
 
   call_counter++;
@@ -220,7 +220,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
-  if (frameSize == 33 ) { // Only for framesize 33 (WF-RAC)
+  if (frameSize == 33) { // Only for framesize 33 (WF-RAC)
     MISO_frame[DB16] = 0;
     MISO_frame[DB16] |= new_VanesLR1;
     MISO_frame[DB17] = 0;
@@ -267,9 +267,9 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   if ((MOSI_frame[CBH] << 8 | MOSI_frame[CBL]) != checksum)
     return err_msg_invalid_checksum;
 
-  if (frameSize == 33 ) { // Only for framesize 33 (WF-RAC)
+  if (frameSize == 33) { // Only for framesize 33 (WF-RAC)
     checksum = calc_checksumFrame33(MOSI_frame);
-    if ( MOSI_frame[CBL2] != lowByte(checksum ) ) 
+    if (MOSI_frame[CBL2] != lowByte(checksum)) 
       return err_msg_invalid_checksum;
   }
 

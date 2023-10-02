@@ -184,8 +184,8 @@ class MHI_AC_Ctrl_Core {
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_frame_size(byte framesize);  // set framesize to 20 or 33
-    void set_3Dauto(AC3Dauto Dauto);      // set the requested 3D auto mode
-    void set_vanesLR(uint vanesLR);      // set the requested 3D auto mode
+    void set_3Dauto(AC3Dauto Dauto);      // set the 3D auto mode on or off
+    void set_vanesLR(uint vanesLR);       // set the vanes LR (vertical) position
 
 
 };

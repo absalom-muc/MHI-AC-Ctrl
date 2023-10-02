@@ -48,7 +48,7 @@
 //#define CONTINUE_WITHOUT_MQTT true                  // uncomment if communication with AC has to continue when MQTT or WiFi connection is disconnected.
                                                     // When Troom is supplied from external, it will fallback to AC internal Troom temperature sensor
                                                     // When ROOM_TEMP_DS18X20 is used, it will use room temperature from DS18x20
-//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used bij WF-RAC module
+//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used by the WF-RAC module
                                                     // Then it will be possible to get and set the 3D auto and vanes left/right
 
 

@@ -79,7 +79,7 @@ Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C,
 Errorcode|r|0 .. 255|error code (unsigned int)
 ErrOpData|w||triggers the reading of last error operating data
 VanesLR|r/w|1,2,3,4,5,6,7,"Swing"|Vanes left/right position <sup>4</sup>
-3Dauto|r/w|"On", "Off"|3D auto <sup>4</sup>
+3Dauto|r/w|"On", "Off"|3D auto only works for mode Auto, Cool and heat<sup>4</sup>
 
 <sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
 <sup>2</sup> Please compare with section [Room temperature](#room-temperature) for writing.   
@@ -185,7 +185,7 @@ But when you uncomment the following line, then the AC is switched on, once you 
 
 ## Using extended frame size for enabling 3D auto and vanes L/R ([support.h](src/support.h))
 Per default the 3D auto and vanes left/right is not supported. 
-But when you uncomment the following line, the frame size is extended to 33 bytes (like the WR-RAC module). This will make it possible to use 3D auto and vanes L/R.
+But when you uncomment the following line, the frame size is extended to 33 bytes (like the WF-RAC module). This will make it possible to use 3D auto and vanes L/R.
 ```
 //#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used bij WF-RAC module
                                                     // Then it will be possible to get and set the 3D auto and vanes left/right
