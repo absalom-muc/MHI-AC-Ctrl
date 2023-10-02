@@ -29,6 +29,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 
 Unsupported models:
 - [SRK71ZEA-S1](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/143)
+- [SRK35ZC-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/154)
  
 If you find out that also other models are supported that are not listed here, please give feedback so that I can expand the list. In general, please recheck if your AC has a CNS connector before you spend time and money to build the hardware.
 

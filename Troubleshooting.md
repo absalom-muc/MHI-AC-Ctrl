@@ -21,9 +21,8 @@ This is done via the [SPI-logger](https://github.com/absalom-muc/MHI-AC-Ctrl/blo
 
 ## Known limitations
 MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This is because some functions are not reflected by the SPI payload (or I'm not aware of the according SPI codes):
-- Vanes left/right is not supported
-- 3D is not supported
 - Vanes up/down is supported, but with the limitation that if the last command was issued by the IR RC, then the vanes up/down status is not visible in MHI-AC-Ctrl
+- ECO, Silent and Night set back mode
 
 This should be considered especially when you use the IR RC in parallel to MHI-AC-Ctrl.
 

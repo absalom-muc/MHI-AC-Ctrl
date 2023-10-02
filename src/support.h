@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.7R4"
+#define VERSION "2.8"
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
@@ -48,6 +48,8 @@
 //#define CONTINUE_WITHOUT_MQTT true                  // uncomment if communication with AC has to continue when MQTT or WiFi connection is disconnected.
                                                     // When Troom is supplied from external, it will fallback to AC internal Troom temperature sensor
                                                     // When ROOM_TEMP_DS18X20 is used, it will use room temperature from DS18x20
+//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used by the WF-RAC module
+                                                    // Then it will be possible to get and set the 3D auto and vanes left/right
 
 
 
@@ -92,3 +94,5 @@ byte getDs18x20Temperature(int temp_hysterese);               // read the temper
 #define MQTT_NOT_CONNECTED 2
 #define MQTT_RECONNECTED 1
 #define MQTT_CONNECT_OK 0
+
+#define DS18X20_NOT_CONNECTED 1

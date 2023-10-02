@@ -10,6 +10,13 @@ uint16_t calc_checksum(byte* frame) {
   return checksum;
 }
 
+uint16_t calc_checksumFrame33(byte* frame) {
+  uint16_t checksum = 0;
+  for (int i = 0; i < CBL2; i++)
+    checksum += frame[i];
+  return checksum;
+}
+
 void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection to broker is lost, to re-output data
   // old status
   status_power_old = 0xff;
@@ -19,6 +26,8 @@ void MHI_AC_Ctrl_Core::reset_old_values() {  // used e.g. when MQTT connection t
   status_troom_old = 0xfe;
   status_tsetpoint_old = 0x00;
   status_errorcode_old = 0xff;
+  status_vanesLR_old = 0xff;
+  status_3Dauto_old = 0xff;
 
   // old operating data
   op_kwh_old = 0xffff;
@@ -67,6 +76,10 @@ void MHI_AC_Ctrl_Core::set_fan(uint fan) {
   new_Fan = 0b00001000 | fan;
 }
 
+void MHI_AC_Ctrl_Core::set_3Dauto(AC3Dauto Dauto) {
+  new_3Dauto = 0b00001010 | Dauto;
+}
+
 void MHI_AC_Ctrl_Core::set_vanes(uint vanes) {
   if (vanes == vanes_swing) {
     new_Vanes0 = 0b11000000; // enable swing
@@ -74,6 +87,16 @@ void MHI_AC_Ctrl_Core::set_vanes(uint vanes) {
   else {
     new_Vanes0 = 0b10000000; // disable swing
     new_Vanes1 = 0b10000000 | ((vanes - 1) << 4);
+  }
+}
+
+void MHI_AC_Ctrl_Core::set_vanesLR(uint vanesLR) {
+  if (vanesLR == vanesLR_swing) {
+    new_VanesLR0 = 0b00001011; // enable swing
+  }
+  else {
+    new_VanesLR0 = 0b00001010; // disable swing
+    new_VanesLR1 = 0b00010000 | (vanesLR - 1);
   }
 }
 
@@ -94,6 +117,11 @@ void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
   Troom_offset = offset;
 }
 
+void MHI_AC_Ctrl_Core::set_frame_size(byte framesize) {
+  if (framesize == 20 || framesize == 33)
+    frameSize = framesize;
+}
+
 int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   const byte opdataCnt = sizeof(opdata) / sizeof(byte) / 2;
   static byte opdataNo = 0;               //
@@ -103,13 +131,16 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   static byte erropdataCnt = 0;           // number of expected error operating data
   static bool doubleframe = false;
   static int frame = 1;
-  static byte MOSI_frame[20];
-  //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL
-  static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00 };
+  static byte MOSI_frame[33];
+  //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL  db15  db16  db17  db18  db19  db20  db21  db22  db23  db24  db25  db26  chk2L
+  static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
 
   static uint call_counter = 0;           // counts how often this loop was called
   static unsigned long lastTroomInternalMillis = 0; // remember when Troom internal has changed
   
+  if (frameSize == 33)
+    MISO_frame[0] = 0xAA;
+
   call_counter++;
   int SCKMillis = millis();               // time of last SCK low level
   while (millis() - SCKMillis < 5) {      // wait for 5ms stable high signal to detect a frame start
@@ -189,10 +220,23 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
+  if (frameSize == 33) { // Only for framesize 33 (WF-RAC)
+    MISO_frame[DB16] = 0;
+    MISO_frame[DB16] |= new_VanesLR1;
+    MISO_frame[DB17] = 0;
+    MISO_frame[DB17] |= new_VanesLR0;  
+    MISO_frame[DB17] |= new_3Dauto;
+    new_3Dauto = 0;
+    new_VanesLR0 = 0;
+    new_VanesLR1 = 0;
+
+    checksum = calc_checksumFrame33(MISO_frame);
+    MISO_frame[CBL2] = lowByte(checksum);
+  }
   //Serial.println();
   //Serial.print(F("MISO:"));
   // read/write MOSI/MISO frame
-  for (uint8_t byte_cnt = 0; byte_cnt < sizeof(MOSI_frame); byte_cnt++) { // read and write a data packet of 20 bytes
+  for (uint8_t byte_cnt = 0; byte_cnt < frameSize; byte_cnt++) { // read and write a data packet of 20 bytes
     //Serial.printf("x%02x ", MISO_frame[byte_cnt]);
     MOSI_byte = 0;
     byte bit_mask = 1;
@@ -223,7 +267,30 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   if ((MOSI_frame[CBH] << 8 | MOSI_frame[CBL]) != checksum)
     return err_msg_invalid_checksum;
 
+  if (frameSize == 33) { // Only for framesize 33 (WF-RAC)
+    checksum = calc_checksumFrame33(MOSI_frame);
+    if (MOSI_frame[CBL2] != lowByte(checksum)) 
+      return err_msg_invalid_checksum;
+  }
+
   if (new_datapacket_received) {
+
+    if (frameSize == 33 ) { // Only for framesize 33 (WF-RAC)
+      byte vanesLRtmp = (MOSI_frame[DB16] & 0x07) + ((MOSI_frame[DB17] & 0x01) << 4);
+      if (vanesLRtmp != status_vanesLR_old) { // Vanes Left Right
+        if ((vanesLRtmp & 0x10) != 0) // Vanes LR status swing
+          m_cbiStatus->cbiStatusFunction(status_vanesLR, vanesLR_swing);
+        else {
+          m_cbiStatus->cbiStatusFunction(status_vanesLR, (vanesLRtmp & 0x07) + 1 );
+        }
+        status_vanesLR_old = vanesLRtmp;
+      }
+
+      if ((MOSI_frame[DB17] & 0x04) != status_3Dauto_old) { // 3D auto
+        status_3Dauto_old = MOSI_frame[DB17] & 0x04;
+        m_cbiStatus->cbiStatusFunction(status_3Dauto, status_3Dauto_old);
+      }
+    }
     // evaluate status
     if ((MOSI_frame[DB0] & 0x1c) != status_mode_old) { // Mode
       status_mode_old = MOSI_frame[DB0] & 0x1c;

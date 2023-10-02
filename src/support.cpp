@@ -240,6 +240,10 @@ byte getDs18x20Temperature(int temp_hysterese) {
 
   if (millis() - DS1820Millis > TEMP_MEASURE_PERIOD * 1000) {
     int16_t tempR = sensors.getTemp(insideThermometer);
+    if (tempR == DEVICE_DISCONNECTED_RAW) {
+      tempR_old = tempR;
+      return DS18X20_NOT_CONNECTED;
+    }
     tempR += ROOM_TEMP_DS18X20_OFFSET*128;
     if (tempR > (48*128) || tempR < (-10*128)) {    // skip onrealistic values
       tempR = tempR_old;    // use previous value

@@ -12,6 +12,7 @@ POWER_STATUS power_status = unknown;
 
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
+bool troom_was_set_by_DS18X20 = false;
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -121,6 +122,34 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
         publish_cmd_invalidparameter();
     }
   }
+#ifdef USE_EXTENDED_FRAME_SIZE  
+  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_VANESLR)) == 0) {
+    if (strcmp_P((char*)payload, PSTR(PAYLOAD_VANESLR_SWING)) == 0) {
+      mhi_ac_ctrl_core.set_vanesLR(vanesLR_swing);
+      publish_cmd_ok();
+    }
+    else {
+      if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 7)) {
+        mhi_ac_ctrl_core.set_vanesLR(atoi((char*)payload));
+        publish_cmd_ok();
+      }
+      else
+        publish_cmd_invalidparameter();
+    }
+  }
+  else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_3DAUTO)) == 0) {
+    if (strcmp_P((char*)payload, PSTR(PAYLOAD_3DAUTO_ON)) == 0) {
+      mhi_ac_ctrl_core.set_3Dauto(Dauto_on);
+      publish_cmd_ok();
+    }
+    else if (strcmp_P((char*)payload, PSTR(PAYLOAD_3DAUTO_OFF)) == 0) {
+      mhi_ac_ctrl_core.set_3Dauto(Dauto_off);
+      publish_cmd_ok();
+    }
+    else
+      publish_cmd_invalidparameter();
+  }
+#endif
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_TROOM)) == 0) {
     float f=atof((char*)payload);
 #ifdef ENHANCED_RESOLUTION
@@ -270,6 +299,28 @@ class StatusHandler : public CallbackInterface_Status {
               output_P(status, PSTR(TOPIC_VANES), strtmp);
           }
           break;
+#ifdef USE_EXTENDED_FRAME_SIZE            
+        case status_vanesLR:
+          switch (value) {
+            case vanesLR_swing:
+              output_P(status, PSTR(TOPIC_VANESLR), PSTR(PAYLOAD_VANESLR_SWING));
+              break;
+            default:
+              itoa(value, strtmp, 10);
+              output_P(status, PSTR(TOPIC_VANESLR), strtmp);
+          }
+          break;
+        case status_3Dauto:
+          switch (value) {
+            case Dauto_on:
+              output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_ON));
+              break;
+            case Dauto_off:
+              output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_OFF));
+              break;
+          }
+          break;
+#endif
         case status_troom:
           {
             int8_t troom_diff = value - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
@@ -284,6 +335,7 @@ class StatusHandler : public CallbackInterface_Status {
 #ifdef ENHANCED_RESOLUTION
           tmp_value = (value & 0x7f)/ 2.0;
           offset = round(tmp_value) - tmp_value;  // Calculate offset when setpoint is changed
+          Serial.printf("status_tsetpoint: Set Troom offset: %f\n", offset);
           mhi_ac_ctrl_core.set_troom_offset(offset);
 #endif          
         case opdata_tsetpoint:
@@ -408,6 +460,9 @@ void setup() {
   MQTTclient.setCallback(MQTT_subscribe_callback);
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
+#ifdef USE_EXTENDED_FRAME_SIZE    
+  mhi_ac_ctrl_core.set_frame_size(33); // switch to framesize 33 (like WF-RAC). Only 20 or 33 possible
+#endif  
   // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
 }
 
@@ -433,24 +488,39 @@ void loop() {
       mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
     ArduinoOTA.handle();
   }
-  
+
 #if TEMP_MEASURE_PERIOD > 0
-  byte ds18x20_value = getDs18x20Temperature(25);
+  if (!troom_was_set_by_MQTT) {  // Only use ds18x20 if MQTT is NOT used for setting Troom
+    byte ds18x20_value = getDs18x20Temperature(25);
+    if (ds18x20_value == DS18X20_NOT_CONNECTED) {
+      // fallback to AC internal Troom temperature sensor
+      if(troom_was_set_by_DS18X20 ) {  // earlier DS18X20 was working
+        mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
+        Serial.println(F("DS18X20 disconnected, use IU temperature sensor value!"));
+        troom_was_set_by_DS18X20 = false;
+        ds18x20_value_old = 0;
+        Serial.println(F("Try setup DS18X20 again"));
+        setup_ds18x20();  // try setup again
+      }
+    }
 #ifdef ENHANCED_RESOLUTION
-  float offset = mhi_ac_ctrl_core.get_troom_offset();
-  byte tmp = offset*4;
-  ds18x20_value = ds18x20_value + tmp;   // add offset
+    float offset = mhi_ac_ctrl_core.get_troom_offset();
+    byte tmp = offset*4;
+    ds18x20_value = ds18x20_value + tmp;   // add offset
 #endif
 
 #ifdef ROOM_TEMP_DS18X20
-  if(ds18x20_value != ds18x20_value_old) {
-    if ((ds18x20_value > 21) & (ds18x20_value < 253)) {  // use only values -10°C < T < 48°C
-      mhi_ac_ctrl_core.set_troom(ds18x20_value);
-      ds18x20_value_old = ds18x20_value;
-      Serial.printf("update Troom based on DS18x20 value %i\n", ds18x20_value);
+    if(ds18x20_value != ds18x20_value_old) {
+      if ((ds18x20_value > 21) & (ds18x20_value < 253)) {  // use only values -10°C < T < 48°C
+        mhi_ac_ctrl_core.set_troom(ds18x20_value);
+        troom_was_set_by_DS18X20 = true;
+        ds18x20_value_old = ds18x20_value;
+        Serial.printf("update Troom based on DS18x20 value %i\n", ds18x20_value);
+      }
     }
-  }
+
 #endif 
+  }
 #endif
 
   // fallback to AC internal Troom temperature sensor
