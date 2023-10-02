@@ -187,7 +187,7 @@ But when you uncomment the following line, then the AC is switched on, once you 
 Per default the 3D auto and vanes left/right is not supported. 
 But when you uncomment the following line, the frame size is extended to 33 bytes (like the WF-RAC module). This will make it possible to use 3D auto and vanes L/R.
 ```
-//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used bij WF-RAC module
+//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used by the WF-RAC module
                                                     // Then it will be possible to get and set the 3D auto and vanes left/right
 ```
 
