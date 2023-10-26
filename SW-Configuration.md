@@ -76,7 +76,7 @@ Fan|r/w|1,2,3,4,"Auto"|Fan level
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
 Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>2</sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
-Errorcode|r|0 .. 255|error code (unsigned int) [MQTT Errorcode topic](#MQTT Errorcode topic)
+Errorcode|r|0 .. 255|error code (unsigned int) [MQTT Errorcode topic](#mqtt-errorcode-topic)
 ErrOpData|w||triggers the reading of last error operating data
 VanesLR|r/w|1,2,3,4,5,6,7,"Swing"|Vanes left/right position <sup>4</sup>
 3Dauto|r/w|"On", "Off"|3D auto only works for mode Auto, Cool and heat<sup>4</sup>
