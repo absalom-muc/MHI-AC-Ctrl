@@ -76,7 +76,7 @@ Fan|r/w|1,2,3,4,"Auto"|Fan level
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
 Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>2</sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
-Errorcode|r|0 .. 255|error code (unsigned int)
+Errorcode|r|0 .. 255|error code (unsigned int) [MQTT Errorcode topic](#mqtt-errorcode-topic)
 ErrOpData|w||triggers the reading of last error operating data
 VanesLR|r/w|1,2,3,4,5,6,7,"Swing"|Vanes left/right position <sup>4</sup>
 3Dauto|r/w|"On", "Off"|3D auto only works for mode Auto, Cool and heat<sup>4</sup>
@@ -126,6 +126,32 @@ The path to the operating data topic is defined in
 The readout of last error operating data is triggered by publishing *ErrOpData* to topic ErrOpData. Not all of the operating data from section [Operating data](#operating-data-mhi-ac-ctrl-coreh) might be available as last error operating data.
 
 note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+
+### MQTT Errorcode topic
+When an error in the AC occurs, the Errorcode topic will show a numeric value > 0.
+The meaning of this numeric value is:
+
+Value |meaning
+------|-----
+0  |Normal
+1  |Discharge pipe temperature protection control
+2  |Discharge pipe temperature anomaly
+3  |Current safe control of inverter primary current
+4  |High pressure protection control
+5  |High pressure anomaly
+6  |Low pressure protection control
+7  |Low pressure anomaly
+8  |Anti-frost prevention control
+9  |Current cut
+10 |Power transistor protection control
+11 |Power transistor anomaly (Overheat)
+12 |Compression ratio control
+13 |-
+14 |Condensation prevention control
+15 |Current safe control of inverter secondary current
+16 |Stop by compressor rotor lock
+17 |Stop by compressor startup failure
+
 
 ## OTA Settings ([support.h](src/support.h))
 OTA (Over the Air) update is the process of loading the firmware to ESP module using Wi-Fi connection rather than a serial port.
