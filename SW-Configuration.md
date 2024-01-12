@@ -378,3 +378,4 @@ You find here some examples for integration of MHI-AC-Ctrl
 - [FHEM](https://forum.fhem.de/index.php/topic,88841.0/all.html)
 - [WiFi SSID, hostname and MQTT server dynamic](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/69)
 - [Web page with MQTT](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/141)
+- [Display with AC controller](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/173)
