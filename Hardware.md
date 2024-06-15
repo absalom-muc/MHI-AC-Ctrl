@@ -71,3 +71,6 @@ An external temperature sensor DS18x20 (e.g. DS18S20, DS18B20) is supported. If 
 If you prefer to assemble X1 on the top of the PCB because e.g. you want to place the MHI-AC-Ctrl outside of the AC, you have to consider the direction of X1 as shown on the following photo.
 
 <img src="images/Assembled-Board-HQ-top.jpg" width=400 align="center"/>
+
+## ESP32
+There is also an ESP32 variant available created by user [hberntsen](https://github.com/hberntsen/mhi-ac-ctrl-esp32-c3). It is a rewite of the core files and using esphome. Issues with it should be posted there :-) 
