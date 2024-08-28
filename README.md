@@ -41,7 +41,7 @@ If you find out that also other models are supported that are not listed here, p
 ## Hardware:
 The ESP8266 is powered from the AC via DC-DC (12V -> 5V) converter. 
 The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Master In Slave Out) are connected via a voltage level shifter 5V <-> 3.3V with the AC. Direct connection of the signals without a level shifter could damage your ESP8266!
-More details are described in [Hardware.md](Hardware.md).
+More details are described in the [hardware repo](https://gitlab.com/olliver/MHI-AC-Ctrl_PCB).
 
 ## Software:
 The program uses the following libraries
