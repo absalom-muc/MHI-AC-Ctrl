@@ -28,6 +28,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - [SRK xx ZS-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/121)
 - [SRK xx ZS-WF](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/121#issuecomment-1938350129)
 - [SRC 35Z SA-W]
+- [DXK xx ZMA-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/201)
 
 Unsupported models:
 - [SRK71ZEA-S1](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/143)
