@@ -47,7 +47,7 @@ More details are described in [Hardware.md](Hardware.md).
 
 ## Software:
 The program uses the following libraries
- - :warning:[MQTT client library](https://github.com/knolleary/pubsubclient) - please don't use v2.8.0! (because of this [issue](https://github.com/knolleary/pubsubclient/issues/747)). Better use v2.7.0:warning:
+ - :warning:[MQTT client library](https://github.com/knolleary/pubsubclient) - please don't use v2.8.0! (because of this [issue](https://github.com/knolleary/pubsubclient/issues/747)). Better use v2.7.0 :warning:
  - [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) (might be removed in future)
  
 and optionally you need for the use of an external temperature sensor DS18x20 the libraries
