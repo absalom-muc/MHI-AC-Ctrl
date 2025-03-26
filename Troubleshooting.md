@@ -24,6 +24,8 @@ MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This i
 - Vanes up/down is supported, but with the limitation that if the last command was issued by the IR RC, then the vanes up/down status is not visible in MHI-AC-Ctrl
 - ECO, Silent and Night set back mode
 
+Connecting the WiFi controller will **disable** the remote timer functionality. See [here](https://forums.whirlpool.net.au/archive/35qmk853) for more information.
+
 This should be considered especially when you use the IR RC in parallel to MHI-AC-Ctrl.
 
 ## :fire: ESP8266 crashes periodically
