@@ -23,6 +23,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - [SRK xx ZRA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-730628655) / DXK xx ZRA-W
 - [SRK xx ZSA-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-891649495) / DXK xx ZSA-W
 - [SRK63ZSPR-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/149)
+- SRK xx ZSXA-W/A
 - [SRK xx ZSX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/6#issuecomment-582242372)
 - [SRK xx ZSX-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-643748095)
 - [SRK xx ZS-W](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/121)
