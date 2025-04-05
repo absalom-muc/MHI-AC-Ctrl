@@ -26,6 +26,8 @@ MHI-AC-Ctrl doesn't support all functions of the infrared remote control. This i
 
 This should be considered especially when you use the IR RC in parallel to MHI-AC-Ctrl.
 
+Connecting the MHI-AC-Ctrl controller will **disable** the RC timer functionality. This also apply to the standard MHI WiFi (or other) controller. See [here](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/148) for more information.
+
 ## :fire: ESP8266 crashes periodically
 For a periodic crash there are different causes possible:
 
