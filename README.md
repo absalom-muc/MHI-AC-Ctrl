@@ -16,6 +16,7 @@ I assume that all AC units of the type "SRK xx ZS-S" / "SRC xx ZS-S" are support
 - [SRF xx ZMX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-704789297)
 - [SRF xx ZMXA-S](https://github.com/absalom-muc/MHI-AC-Ctrl/pull/91)
 - SRF xx ZF-W
+- [SRF xx ZS-W]() works with frame size 20
 - [SRK xx ZJ-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/10)
 - [SRK xx ZM-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/9)
 - [SRK xx ZJX-S](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/17#issuecomment-646469621)
