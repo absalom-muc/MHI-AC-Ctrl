@@ -50,8 +50,9 @@ The ESP8266 SPI signals SCL (SPI clock), MOSI (Master Out Slave In) and MISO (Ma
 More details are described in [Hardware.md](Hardware.md).
 
 ## Software:
-The program uses the following libraries
- - :warning:[MQTT client library](https://github.com/knolleary/pubsubclient) - please don't use v2.8.0! (because of this [issue](https://github.com/knolleary/pubsubclient/issues/747)). Better use v2.7.0 :warning:
+The program uses the following libraries:
+ - MQTT client library [PubSubClient3](https://github.com/hmueller01/pubsubclient3)
+   - :warning: Don't use PubSubClient v2.8.0, it is broken due to issue [#747](https://github.com/knolleary/pubsubclient/issues/747) :warning:
  - [ArduinoOTA](https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA) (might be removed in future)
  
 and optionally you need for the use of an external temperature sensor DS18x20 the libraries

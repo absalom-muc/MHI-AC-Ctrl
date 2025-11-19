@@ -56,7 +56,7 @@
 // *** The configuration ends here ***
 
 #include <ESP8266WiFi.h>        // https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
-#include <PubSubClient.h>       // https://github.com/knolleary/pubsubclient
+#include <PubSubClient.h>       // https://github.com/hmueller01/pubsubclient3
 #include <ArduinoOTA.h>         // https://github.com/esp8266/Arduino/tree/master/libraries/ArduinoOTA
 
 #if TEMP_MEASURE_PERIOD > 0

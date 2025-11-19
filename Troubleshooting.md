@@ -51,7 +51,7 @@ If MISO frequency>10Hz the program will stop and reboot. This prevents damage of
 For reference: With a multimeter I measure for SCK and MOSI approx. 4.7V on the HV pins of the level shifter (and X1) and approx. 3V on the LV pins of the level shifter (and D5/D7)
 
 ### :fire: You use PubSubClient v2.8.0
-There was a [bug](https://github.com/knolleary/pubsubclient/issues/747) introduced in PubSubClient version 2.8.0, please use v2.7.0.
+There was a [bug](https://github.com/knolleary/pubsubclient/issues/747) introduced in PubSubClient version 2.8.0. Please use [PubSubClient3](https://github.com/hmueller01/pubsubclient3) instead, or downgrade to PubSubClient v2.7.0.
 
 ## :fire: MQTT connects / disconnects periodically
 The HOSTNAME specified in support.h is used as WiFi hostname, MQTT hostname and OTA hostname. In case that you use more than one MHI-AC-Ctrl, e.g. in a multi-split configuration, you have to use unique HOSTNAME to every PCB.
